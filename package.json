@@ -9,15 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/third-parties": "^15.3.2",
+    "bcrypt": "^6.0.0",
+    "framer-motion": "^12.11.3",
+    "lucide-react": "^0.510.0",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.14.3",
+    "next": "15.3.2",
+    "next-auth": "^4.24.11",
+    "next-videos": "^1.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.2"
+    "react-hook-form": "^7.56.3",
+    "react-icons": "^5.5.0",
+    "react-toastify": "^11.0.5",
+    "resend": "^4.5.1",
+    "swiper": "^11.2.6",
+    "yet-another-react-lightbox": "^3.23.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4"
   }
 }
