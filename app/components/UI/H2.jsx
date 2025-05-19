@@ -3,7 +3,7 @@
 export default function H2({children, classname}) {
   return (
     <h2
-    className={`font-bold xl:text-5xl md:text-4xl text-3xl tracking-tighter ${classname}`}
+    className={`font-bold lg:text-4xl md:text-3xl text-2xl tracking-normal ${classname}`}
     >
         {children}
     </h2>

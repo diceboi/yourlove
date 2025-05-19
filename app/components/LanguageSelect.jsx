@@ -13,10 +13,10 @@ export default function LanguageSelect() {
   const [selected, setSelected] = useState(languages[0]);
 
   return (
-    <div className="relative">
+    <div className="relative xl:flex hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-[44px] h-[44px] rounded-full hover:bg-[var(--border)] flex items-center justify-center cursor-pointer"
+        className="xl:w-[44px] w-[40px] xl:h-[44px] h-[40px] rounded-full hover:bg-[var(--border)] flex items-center justify-center cursor-pointer"
       >
         <Image src={selected.flag} alt={selected.code} width={20} height={20} className="w-5 h-5 object-cover rounded-full" />
       </button>

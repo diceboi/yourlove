@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Logo from "./UI/Logo";
-import SearchBar from "./SearchBar";
+import SearchBarDesktop from "./SearchBarDesktop";
 import UserMenu from "./UserMenu";
 import LanguageSelect from "./LanguageSelect";
+import MobileToggle from "./MobileToggle";
 import Favourites from "./Favourites";
 import Cart from "./Cart";
 import MenuText from "./UI/MenuText";
@@ -22,23 +23,30 @@ export default function Mainnav() {
   const { subMenu } = useContext(MenuContext);
 
   return (
-    <nav className="flex flex-col w-full py-4 px-12">
-      <div className="flex flex-col w-full gap-6">
+    <nav className="flex flex-col w-full xl:py-4 py-2">
+      <div className="flex flex-col w-full xl:gap-6 gap-2">
         <div className="flex flex-row w-full justify-between gap-8">
-          <div className="flex flex-row w-fit gap-8 items-center justify-start">
+          <div id="desktop-search-logo" className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start">
             <Logo />
-            <SearchBar />
+            <SearchBarDesktop />
+          </div>
+          <div id="mobile-logo" className="xl:hidden flex flex-row w-fit gap-8 items-center justify-start">
+            <Logo />
           </div>
           <div className="flex flex-row w-fit items-center justify-end">
             <UserMenu />
             <LanguageSelect />
             <Favourites />
             <Cart />
+            <MobileToggle />
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div id="desktop-menu" className="hidden xl:flex flex-col gap-2">
           <MainMenu />
           <Submenu />
+        </div>
+        <div id="mobile-search" className="flex xl:hidden flex-col gap-2 min-w-full">
+          <SearchBarDesktop />
         </div>
       </div>
     </nav>
