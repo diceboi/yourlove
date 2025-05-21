@@ -20,7 +20,7 @@ export default function ProductList() {
     <Swiper
       modules={[Navigation, Pagination, Scrollbar, A11y, Autoplay]}
       spaceBetween={8}
-      slidesPerView={2}
+      slidesPerView={1.5}
       navigation
       pagination={{
         clickable: true,
@@ -31,12 +31,16 @@ export default function ProductList() {
         pauseOnMouseEnter: true,
       }}
       breakpoints={{
+        640: {
+          slidesPerView: 1.5,
+          spaceBetween: 8,
+        },
         768: {
-          slidesPerView: 2,
+          slidesPerView: 2.5,
           spaceBetween: 8,
         },
         1024: {
-          slidesPerView: 3,
+          slidesPerView: 3.5,
           spaceBetween: 8,
         },
         1280: {

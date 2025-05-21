@@ -18,8 +18,8 @@ export default function ProductListItem(
   colors
 ) {
   return (
-    <div className="flex flex-col gap-4 lg:p-4 p-2 h-[80vh]">
-      <div className="relative w-full h-1/2">
+    <div className="flex flex-col gap-4 lg:p-4 p-2">
+      <div className="relative w-full lg:h-[50vh] h-[150px]">
         <Image
           src={"/termekkepek/1.jpg"}
           fill
@@ -38,8 +38,10 @@ export default function ProductListItem(
             <CompareButton />
           </div>
         </div>
-        <Stock stock={""} />
-        <ProductColors />
+        <div className="flex flex-col gap-2">
+          <Stock stock={""} />
+          <ProductColors />
+        </div>
       </div>
     </div>
   );

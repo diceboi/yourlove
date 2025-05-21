@@ -13,7 +13,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${sora.className} px-4 xl:px-12`}>
+      <body className={`${sora.className}`}>
         <MenuContextProvider>
           <Mainnav/>
         </MenuContextProvider>

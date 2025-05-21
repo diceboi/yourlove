@@ -23,7 +23,7 @@ export default function Mainnav() {
   const { subMenu } = useContext(MenuContext);
 
   return (
-    <nav className="flex flex-col w-full xl:py-4 py-2">
+    <nav className="flex flex-col w-full xl:py-4 py-2 px-4 xl:px-12">
       <div className="flex flex-col w-full xl:gap-6 gap-2">
         <div className="flex flex-row w-full justify-between gap-8">
           <div id="desktop-search-logo" className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start">

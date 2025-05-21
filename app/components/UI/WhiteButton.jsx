@@ -1,3 +1,5 @@
+"use client"
+
 import * as TablerIcons from "react-icons/tb";
 import Button from "./Button";
 

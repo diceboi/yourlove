@@ -24,7 +24,6 @@ export default function HomeHeroInner() {
         disableOnInteraction: false,
         pauseOnMouseEnter: true,
       }}
-      loop={true}
       className="w-full rounded-2xl overflow-hidden"
     >
       <SwiperSlide>

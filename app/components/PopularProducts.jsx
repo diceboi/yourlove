@@ -1,13 +1,13 @@
 import { TbFlameFilled } from "react-icons/tb";
-import H2 from "./UI/H2";
+import H3 from "./UI/H3";
 import ProductList from "./UI/ProductList";
 
 export default function PopularProducts() {
   return (
-    <div className="flex flex-col gap-8 w-full xl:py-8 py-4">
+    <div className="flex flex-col gap-4  w-full py-16 px-4 xl:px-12">
       <div className="flex flex-nowrap gap-4">
         <TbFlameFilled className="text-[var(--pink)] w-10 h-10" />
-        <H2>Népszerű termékek</H2>
+        <H3>Népszerű termékek</H3>
       </div>
       <ProductList />
     </div>
