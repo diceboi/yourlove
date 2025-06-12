@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { TbSearch } from "react-icons/tb"; // vagy bármelyik ikonlib, amit használsz
 import { AnimatePresence, motion } from "framer-motion";
-import Paragraph from "./UI/MenuText";
-import Label from "./UI/Label";
+import Paragraph from "./UI/Texts/MenuText";
+import Label from "./UI/Texts/Label";
 
 const placeholders = [
   "Műpénisz...",

@@ -5,7 +5,7 @@ import MainMenuItem from "./MainMenuItem";
 export default function MainMenu() {
 
   return (
-      <div className="flex flex-row items-end justify-start gap-4 border-b border-[var(--border)] w-fit bg-white z-10">
+      <div className="flex flex-row items-end justify-start gap-4 border-b border-[var(--border)] w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white z-10">
         <MainMenuItem
           title={"Férfiaknak"}
           icon={"/icons/ferfi.svg"}
@@ -31,6 +31,7 @@ export default function MainMenu() {
           icon={"/icons/drogeria.svg"}
           onclick={"drogeria"}
         />
+        <MainMenuItem title={"Blog"} onclick={"blog"} />
         <MainMenuItem title={"GYIK"} onclick={"gyik"} />
         <MainMenuItem title={"Rólunk"} onclick={"rolunk"} />
         <MainMenuItem title={"Kapcsolat"} onclick={"kapcsolat"} />

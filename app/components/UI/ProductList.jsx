@@ -15,12 +15,12 @@ import "swiper/css/scrollbar";
 import { AnimatePresence, motion } from "framer-motion";
 import ProductListItem from "./ProductListItem";
 
-export default function ProductList() {
+export default function ProductList({slidesPerView640, slidesPerView768, slidesPerView1024, slidesPerView1280}) {
   return (
     <Swiper
       modules={[Navigation, Pagination, Scrollbar, A11y, Autoplay]}
-      spaceBetween={8}
-      slidesPerView={1.5}
+      spaceBetween={0}
+      slidesPerView={slidesPerView640}
       navigation
       pagination={{
         clickable: true,
@@ -32,23 +32,23 @@ export default function ProductList() {
       }}
       breakpoints={{
         640: {
-          slidesPerView: 1.5,
-          spaceBetween: 8,
+          slidesPerView: slidesPerView640,
+          spaceBetween: 0,
         },
         768: {
-          slidesPerView: 2.5,
-          spaceBetween: 8,
+          slidesPerView: slidesPerView768,
+          spaceBetween: 0,
         },
         1024: {
-          slidesPerView: 3.5,
-          spaceBetween: 8,
+          slidesPerView: slidesPerView1024,
+          spaceBetween: 0,
         },
         1280: {
-          slidesPerView: 4,
-          spaceBetween: 8,
+          slidesPerView: slidesPerView1280,
+          spaceBetween: 0,
         },
       }}
-      className="w-full rounded-2xl overflow-hidden"
+      className="w-full border-l border-t border-[var(--border)]"
     >
       <SwiperSlide>
         <ProductListItem />

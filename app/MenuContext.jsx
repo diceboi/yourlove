@@ -21,7 +21,7 @@ export default function MenuContextProvider({ children }) {
   const scheduleCloseSubmenu = () => {
     closeTimeoutRef.current = setTimeout(() => {
       setSubMenu(false);
-    }, 3000);
+    }, 300);
   };
 
   const cancelCloseSubmenu = () => {

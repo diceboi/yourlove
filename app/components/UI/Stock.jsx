@@ -1,5 +1,5 @@
-import Label from "./Label";
-import Paragraph from "./Paragraph";
+import Label from "./Texts/Label";
+import Paragraph from "./Texts/Paragraph";
 
 
 export default function Rating({ stock }) {

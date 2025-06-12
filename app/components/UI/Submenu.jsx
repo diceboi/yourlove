@@ -25,6 +25,7 @@ export default function Submenu() {
           transition={{ duration: 0.3, type: "spring", bounce: 0.3 }}
           onMouseEnter={cancelCloseSubmenu}
           onMouseLeave={scheduleCloseSubmenu}
+          className="w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto"
         >
           {subMenu === "ferfiaknak" && (
             <Swiper
@@ -32,7 +33,7 @@ export default function Submenu() {
               spaceBetween={16}
               slidesPerView={10}
               navigation
-              className="w-full" // opcionális belső padding
+              className="w-full my-4" // opcionális belső padding
               breakpoints={{
                 0: { slidesPerView: 2.5, spaceBetween: 8 },
                 640: { slidesPerView: 4, spaceBetween: 12 },
@@ -83,7 +84,7 @@ export default function Submenu() {
               spaceBetween={16}
               slidesPerView={10}
               navigation
-              className="w-full" // opcionális belső padding
+              className="w-full my-4" // opcionális belső padding
               breakpoints={{
                 0: { slidesPerView: 2.5, spaceBetween: 8 },
                 640: { slidesPerView: 4, spaceBetween: 12 },

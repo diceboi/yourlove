@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Paragraph from "./UI/Paragraph";
+import Paragraph from "./UI/Texts/Paragraph";
 
 export default function Benefits() {
   return (

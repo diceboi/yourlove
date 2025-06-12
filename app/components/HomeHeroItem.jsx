@@ -1,14 +1,14 @@
 import Image from "next/image";
-import H1 from "./UI/H1";
-import H2 from "./UI/H2";
-import PinkButton from "./UI/PinkButton";
-import GreenButton from "./UI/GreenButton";
-import CreamPinkButton from "./UI/CreamPinkButton";
-import BlackButton from "./UI/BlackButton";
+import H1 from "./UI/Texts/H1";
+import H2 from "./UI/Texts/H2";
+import PinkButton from "./UI/Buttons/PinkButton";
+import GreenButton from "./UI/Buttons/GreenButton";
+import CreamPinkButton from "./UI/Buttons/CreamPinkButton";
+import BlackButton from "./UI/Buttons/BlackButton";
 import WhiteButton from "./UI/WhiteButton";
-import BlackBorderButton from "./UI/BlackBorderButton";
+import BlackBorderButton from "./UI/Buttons/BlackBorderButton";
 import WhiteBorderButton from "./UI/WhiteBorderButton";
-import Paragraph from "./UI/Paragraph";
+import Paragraph from "./UI/Texts/Paragraph";
 
 export default function HomeHeroItem({
   title,

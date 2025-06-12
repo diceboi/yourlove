@@ -1,5 +1,5 @@
 import { TbUser } from "react-icons/tb"
-import Paragraph from "./UI/Paragraph"
+import Paragraph from "./UI/Texts/Paragraph"
 
 export default function UserMenu() {
   return (

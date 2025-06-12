@@ -1,5 +1,5 @@
 import * as TablerIcons from "react-icons/tb";
-import Button from "./Button";
+import Button from "./Buttons/Button";
 
 export default function WhiteBorderButton({
   title,

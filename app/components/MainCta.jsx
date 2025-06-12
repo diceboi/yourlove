@@ -1,7 +1,7 @@
 import React from "react";
 import WhiteButton from "./UI/WhiteButton";
-import H1 from "./UI/H1";
-import H2 from "./UI/H2";
+import H1 from "./UI/Texts/H1";
+import H2 from "./UI/Texts/H2";
 import Image from "next/image";
 
 export default function MainCta() {
