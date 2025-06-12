@@ -5,6 +5,7 @@ import Image from "next/image";
 import H1 from "./UI/Texts/H1";
 import Paragraph from "./UI/Texts/Paragraph";
 import CategoryFilterBar from "./BlogCategoryFilterBar";
+import { Suspense } from "react";
 
 export default function BlogHero() {
   return (
@@ -24,7 +25,9 @@ export default function BlogHero() {
           </div>
         </div>
         <div className="absolute lg:-bottom-6 -bottom-12 z-10">
-          <CategoryFilterBar />
+          <Suspense fallback={<div>Betöltés...</div>}>
+            <CategoryFilterBar />
+          </Suspense>
         </div>
       </div>
     </>
