@@ -1,10 +1,10 @@
 import { Sora } from "next/font/google";
 import "./globals.css";
-import MainNav from "@/app/components/MainNav"
 import MenuContextProvider from "../MenuContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
+import MainNav from "../components/MainNav";
 
 const sora = Sora({ subsets: ["latin"] });
 
