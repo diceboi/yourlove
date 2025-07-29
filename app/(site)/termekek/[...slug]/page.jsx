@@ -37,8 +37,6 @@ export default async function Page({ params }) {
     .select("*")
     .lt("eladasi_ar_brutto", freeShippingLimit); // itt használj lt = less than
 
-    console.log("FREE SHIPPING PRODUCTS:", productsUnderFreeShipping);
-
   if (product) {
     // 🟢 TERMÉKOLDAL nézet
     return (
