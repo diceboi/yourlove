@@ -8,7 +8,6 @@ import AdminPageLogo from "./UI/AdminPageLogo";
 
 export default function AdminNav() {
   const pathname = usePathname();
-  const pathSegments = pathname.split("/").filter();
 
   return (
     <div
