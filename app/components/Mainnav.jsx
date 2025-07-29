@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Logo from "./UI/Logo";
 import SearchBarDesktop from "./SearchBarDesktop";
 import UserMenu from "./UserMenu";

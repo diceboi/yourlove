@@ -1,28 +1,14 @@
 "use client";
 
-import Image from "next/image";
-import Logo from "./UI/Logo";
 import SearchBarAdmin from "./SearchBarAdmin";
 import UserMenu from "./UserMenu";
-import LanguageSelect from "./LanguageSelect";
 import MobileToggle from "./MobileToggle";
-import Favourites from "./Favourites";
-import Cart from "./Cart";
-import MenuText from "./UI/Texts/MenuText";
-import MainMenuItem from "./UI/MainMenuItem";
-import SubmenuItem from "./UI/SubmenuItem";
-import Paragraph from "./UI/Texts/MenuText";
-import MainMenu from "./UI/MainMenu";
-import Submenu from "./UI/Submenu";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect, useContext } from "react";
-import { MenuContext } from "../MenuContext";
 import { usePathname } from "next/navigation";
 import AdminPageLogo from "./UI/AdminPageLogo";
 
 export default function AdminNav() {
   const pathname = usePathname();
-  const pathSegments = pathname.split("/").filter(Boolean);
+  const pathSegments = pathname.split("/").filter();
 
   return (
     <div
