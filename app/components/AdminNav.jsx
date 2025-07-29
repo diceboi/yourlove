@@ -20,7 +20,7 @@ import { MenuContext } from "../MenuContext";
 import { usePathname } from "next/navigation";
 import AdminPageLogo from "./UI/AdminPageLogo";
 
-export default function MainNav() {
+export default function AdminNav() {
   const pathname = usePathname();
   const pathSegments = pathname.split("/").filter(Boolean);
 
