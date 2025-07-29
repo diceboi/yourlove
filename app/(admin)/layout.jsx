@@ -1,6 +1,6 @@
 import { Sora } from "next/font/google";
 import "../(site)/globals.css";
-import AdminNav from "../components/Adminnav";
+import AdminNav from "../components/AdminNav";
 import MenuContextProvider from "../MenuContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
