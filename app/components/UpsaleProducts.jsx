@@ -4,7 +4,7 @@ import H4 from "./UI/Texts/H4";
 import ProductList from "./UI/ProductList";
 import Paragraph from "./UI/Texts/Paragraph";
 
-export default function UpsaleProducts() {
+export default function UpsaleProducts({products}) {
   return (
     <div id="upsale" className="flex flex-col gap-4 w-full">
       <div className="flex flex-nowrap items-center gap-4">
@@ -13,7 +13,14 @@ export default function UpsaleProducts() {
           <H3>Dobj még valamit a kosárba!</H3>
         </div>
       </div>
-      <ProductList slidesPerView640={1.5} slidesPerView768={2.5} slidesPerView1024={3} slidesPerView1280={3} />
+      <ProductList
+        products={products}
+        slidesPerView640={1.5}
+        slidesPerView768={2.5}
+        slidesPerView1024={2.5}
+        slidesPerView1280={3.5}
+        slidesPerView1440={3.5}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
-import { MenuContext } from "@/app/MenuContext";
+import { MenuContext } from "./../../MenuContext";
 import Image from "next/image";
 import MenuText from "./Texts/MenuText";
 

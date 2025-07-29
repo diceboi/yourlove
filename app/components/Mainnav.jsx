@@ -16,10 +16,10 @@ import MainMenu from "./UI/MainMenu";
 import Submenu from "./UI/Submenu";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useContext } from "react";
-import { MenuContext } from "@/app/MenuContext";
+import { MenuContext } from "../MenuContext";
 import { usePathname } from "next/navigation";
 
-export default function Mainnav() {
+export default function MainNav() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [scrolledEnough, setScrolledEnough] = useState(false);
@@ -58,7 +58,7 @@ export default function Mainnav() {
   }, [lastScrollY]);
 
   return (
-    <motion.nav
+    <motion.div
       className={`z-40 sticky top-0 left-0 bg-white xl:h-[84px] h-[54px] w-full`}
       initial={{ y: 0 }}
       animate={{
@@ -115,6 +115,6 @@ export default function Mainnav() {
           <SearchBarDesktop />
         </div>
       </motion.div>
-    </motion.nav>
+    </motion.div>
   );
 }

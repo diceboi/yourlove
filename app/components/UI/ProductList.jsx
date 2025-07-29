@@ -15,7 +15,8 @@ import "swiper/css/scrollbar";
 import { AnimatePresence, motion } from "framer-motion";
 import ProductListItem from "./ProductListItem";
 
-export default function ProductList({slidesPerView640, slidesPerView768, slidesPerView1024, slidesPerView1280}) {
+export default function ProductList({products = [], slidesPerView640, slidesPerView768, slidesPerView1024, slidesPerView1280, slidesPerView1440}) {
+
   return (
     <Swiper
       modules={[Navigation, Pagination, Scrollbar, A11y, Autoplay]}
@@ -47,24 +48,26 @@ export default function ProductList({slidesPerView640, slidesPerView768, slidesP
           slidesPerView: slidesPerView1280,
           spaceBetween: 0,
         },
+        1440: {
+          slidesPerView: slidesPerView1440,
+          spaceBetween: 0,
+        },
       }}
       className="w-full border-l border-t border-[var(--border)]"
     >
-      <SwiperSlide>
-        <ProductListItem />
-      </SwiperSlide>
-      <SwiperSlide>
-        <ProductListItem />
-      </SwiperSlide>
-      <SwiperSlide>
-        <ProductListItem />
-      </SwiperSlide>
-      <SwiperSlide>
-        <ProductListItem />
-      </SwiperSlide>
-      <SwiperSlide>
-        <ProductListItem />
-      </SwiperSlide>
+      {products.map((product) => (
+        <SwiperSlide key={product.id || product.cikkszam}>
+          <ProductListItem
+            image={product.termekkep}
+            focim={product.fo_cim}
+            price={product.eladasi_ar_brutto}
+            stock={product.keszlet}
+            slug={product.seo_slug}
+            category={product.kategoria}
+            // Add other props if needed
+          />
+        </SwiperSlide>
+      ))}
     </Swiper>
   );
 }

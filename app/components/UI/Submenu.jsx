@@ -2,7 +2,7 @@
 
 import SubmenuItem from "./SubmenuItem";
 import { useContext } from "react";
-import { MenuContext } from "@/app/MenuContext";
+import { MenuContext } from "../../MenuContext";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 import "swiper/css";

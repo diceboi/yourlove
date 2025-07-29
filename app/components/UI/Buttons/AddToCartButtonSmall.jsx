@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react";
 import ButtonText from "../Texts/ButtonText";
 import { TbShoppingCart, TbHeart } from "react-icons/tb";

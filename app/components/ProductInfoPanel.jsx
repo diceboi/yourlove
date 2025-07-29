@@ -16,8 +16,9 @@ import ProductUpsale from "@/app/components/UI/ProductUpsale";
 import AddToCartButton from "@/app/components/UI/Buttons/AddToCartButtonMain";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import UpsaleProducts from "@/app/components/UpsaleProducts";
+import ProductNameTextSmall from "./UI/Texts/ProductNameTextSmall";
 
-export default function ProductInfoPanel() {
+export default function ProductInfoPanel({product}) {
   const sale = true;
 
   return (
@@ -49,12 +50,13 @@ export default function ProductInfoPanel() {
         />
       </div>
       <div className="flex flex-col gap-4 py-2">
-        <ManufacturerText>Gyártó</ManufacturerText>
-        <ProductNameTextBig>Termék neve</ProductNameTextBig>
+        <ManufacturerText>{""}</ManufacturerText>
+        <ProductNameTextBig>{product.fo_cim}</ProductNameTextBig>
+        <ProductNameTextSmall>{product.alcim}</ProductNameTextSmall>
       </div>
       <div className="flex flex-row gap-2 items-baseline">
-        <ProductPriceText sale={sale}>12 900 Ft</ProductPriceText>
-        {sale && <OldPriceText>12 900 Ft</OldPriceText>}
+        <ProductPriceText sale={sale}>{product.eladasi_ar_brutto} Ft</ProductPriceText>
+        {sale && <OldPriceText>{product.akcios_ar_brutto} Ft</OldPriceText>}
       </div>
       <div className="flex flex-col gap-4">
         <Rating ratings={{ value: 3.5, count: 10 }} />

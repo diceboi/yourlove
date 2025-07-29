@@ -1,6 +1,6 @@
-import BlogHero from "../components/BlogHero";
-import BlogList from "../components/BlogList";
-import Breadcrumbs from "../components/UI/Breadcrumbs";
+import BlogHero from "../../components/BlogHero";
+import BlogList from "../../components/BlogList";
+import Breadcrumbs from "../../components/UI/Breadcrumbs";
 
 export default function Blog() {
   return (

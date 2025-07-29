@@ -1,15 +1,30 @@
 import { TbSpeakerphone } from "react-icons/tb";
 import H3 from "./UI/Texts/H3";
 import ProductList from "./UI/ProductList";
+import { createClient } from "@/utils/supabase/server";
 
-export default function NewProducts() {
+export default async function NewProducts() {
+  const supabase = await createClient();
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("letrehozva", { ascending: false })
+    .limit(8);
+
   return (
     <div className="flex flex-col gap-4 w-full py-16 px-4 xl:px-12">
       <div className="flex flex-nowrap gap-4">
         <TbSpeakerphone className="text-[var(--pink)] w-10 h-10" />
         <H3>Újdonságok</H3>
       </div>
-      <ProductList slidesPerView640={1.5} slidesPerView768={2.5} slidesPerView1024={3} slidesPerView1280={4}/>
+      <ProductList
+        products={products}
+        slidesPerView640={1.5}
+        slidesPerView768={2.5}
+        slidesPerView1024={3}
+        slidesPerView1280={4}
+        slidesPerView1440={5}
+      />
     </div>
   );
 }
