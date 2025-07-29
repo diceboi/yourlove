@@ -4,7 +4,7 @@ import MenuContextProvider from "../MenuContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
-import MainNav from "../components/MainNav";
+import MainNav from "../components/Mainnav";
 
 const sora = Sora({ subsets: ["latin"] });
 
