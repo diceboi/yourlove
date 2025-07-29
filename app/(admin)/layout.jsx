@@ -1,7 +1,7 @@
 import { Sora } from "next/font/google";
 import "../(site)/globals.css";
-import AdminNav from "../components/AdminNav";
-import MenuContextProvider from "../MenuContext";
+import AdminNav from "../components/Adminnav";
+import AdminMenuContextProvider from "../AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
@@ -14,9 +14,9 @@ export const metadata = {
 };
 
 export default function SiteLayout({ children }) {
-  
   return (
     <html lang="en">
+      <AdminMenuContextProvider>
       <body className={`${sora.className}`}>
         <ToastContainer
           position="bottom-right"
@@ -30,11 +30,12 @@ export default function SiteLayout({ children }) {
           theme="light"
           transition={Bounce}
         />
-        <MenuContextProvider>
+        
           <AdminNav />
-        </MenuContextProvider>
+        
         {children}
       </body>
+      </AdminMenuContextProvider>
     </html>
   );
 }
