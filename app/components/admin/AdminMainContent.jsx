@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { AdminMenuContext } from "@/app/AdminContext";
-import AdminTermekekPage from "@/app/components/admin/AdminTermekekPage";
+import AdminTermekekPage from "@/app/components/admin/AdminProductPage";
 
 export default function AdminMainContent({ products }) {
   const { activeMenu, setActiveMenu } = useContext(AdminMenuContext);
@@ -51,7 +51,7 @@ export default function AdminMainContent({ products }) {
           </div>
 
           {/* Content */}
-          {activeMenu === "products" && <TermekekPage products={products} />}
+          {activeMenu === "products" && <AdminTermekekPage products={products} />}
         </div>
       </main>
     </div>

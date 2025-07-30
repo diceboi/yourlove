@@ -23,7 +23,7 @@ export default function AdminNav() {
               className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start"
             >
               <AdminPageLogo />
-              <SearchBarAdmin />
+             {/* <SearchBarAdmin />*/}
             </div>
             <div
               id="mobile-logo"
