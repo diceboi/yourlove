@@ -20,7 +20,7 @@ export default function Adminnav() {
           <div className="flex flex-row w-full justify-between gap-8 z-50 xl:pt-4 pt-2 bg-white">
             <div
               id="desktop-search-logo"
-              className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start "
+              className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start"
             >
               <AdminPageLogo />
               <SearchBarAdmin />
