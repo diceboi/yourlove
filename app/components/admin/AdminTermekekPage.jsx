@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
 
-export default function TermekekPage({ products }) {
+export default function AdminTermekekPage({ products }) {
   return (
     <div className="flex flex-col gap-2">
       {products.map((product, index) => (

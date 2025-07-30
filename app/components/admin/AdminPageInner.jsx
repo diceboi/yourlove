@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import TermekekPage from "@/app/components/admin/TermekekPage";
+import TermekekPage from "@/app/components/admin/AdminTermekekPage";
 import AdminSideMenu from "@/app/components/admin/AdminSideMenu";
 import AdminMainContent from "@/app/components/admin/AdminMainContent";
 import { useContext } from "react";

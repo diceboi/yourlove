@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { AdminMenuContext } from "@/app/AdminContext";
-import TermekekPage from "@/app/components/admin/TermekekPage";
+import AdminTermekekPage from "@/app/components/admin/AdminTermekekPage";
 
 export default function AdminMainContent({ products }) {
   const { activeMenu, setActiveMenu } = useContext(AdminMenuContext);

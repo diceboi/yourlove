@@ -6,7 +6,7 @@ import MobileToggle from "./MobileToggle";
 import { usePathname } from "next/navigation";
 import AdminPageLogo from "./UI/AdminPageLogo";
 
-export default function AdminNav() {
+export default function Adminnav() {
   const pathname = usePathname();
 
   return (
