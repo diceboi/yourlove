@@ -30,17 +30,20 @@ import {
   LogOut,
   HelpCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AdminSideMenu() {
   const { activeMenu, setActiveMenu } = useContext(AdminMenuContext);
 
+  const router = useRouter();
+
   const sidebarItems = [
-    { id: "dashboard", label: "Vezérlőpult", icon: Home },
-    { id: "products", label: "Termékek", icon: Package, badge: "124" },
-    { id: "orders", label: "Rendelések", icon: ShoppingCart, badge: "8" },
-    { id: "customers", label: "Vásárlók", icon: Users },
-    { id: "payments", label: "Fizetések", icon: CreditCard },
-    { id: "discounts", label: "Akciók", icon: Tag },
+    { id: "vezerlopult", label: "Vezérlőpult", icon: Home },
+    { id: "termekek", label: "Termékek", icon: Package, badge: "124" },
+    { id: "rendelesek", label: "Rendelések", icon: ShoppingCart, badge: "8" },
+    { id: "vasarlok", label: "Vásárlók", icon: Users },
+    { id: "fizetesek", label: "Fizetések", icon: CreditCard },
+    { id: "akciok", label: "Akciók", icon: Tag },
   ];
 
   return (
@@ -54,8 +57,8 @@ export default function AdminSideMenu() {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveMenu(item.id)}
-                className={`w-54 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
+                onClick={() => {router.push(`/admin/${item.id}`); setActiveMenu(item.id)}}
+                className={`w-54 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
                   isActive
                     ? "bg-[var(--border)] text-gray-900 font-medium"
                     : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
@@ -91,7 +94,7 @@ export default function AdminSideMenu() {
                 <SwiperSlide>
                   <button
                     key={item.id}
-                    onClick={() => setActiveMenu(item.id)}
+                    onClick={() => {router.push(`/admin/${item.id}`); setActiveMenu(item.id)}}
                     className={`w-44 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
                       isActive
                         ? "bg-[var(--border)] text-gray-900 font-medium"

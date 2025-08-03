@@ -1,3 +1,5 @@
+"use client"
+
 import AdminProductSearch from "./AdminProductSearch";
 import AddProductButton from "../UI/Buttons/AddProductButton";
 import Label from "../UI/Texts/Label";

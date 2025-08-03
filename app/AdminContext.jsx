@@ -7,11 +7,19 @@ export const AdminMenuContext = createContext({
   setActiveMenu: () => {},
   searchTerm: "",
   setSearchTerm: () => {},
+  togglePopup: () => {},
+  openPopup: null,
 });
 
 export default function AdminMenuContextProvider({ children }) {
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
+  const [openPopup, setOpenPopup] = useState(null);
+
+  /* Modal */
+  const togglePopup = (popupName) => {
+    setOpenPopup((prevPopup) => (prevPopup === popupName ? null : popupName));
+  };
 
   return (
     <AdminMenuContext.Provider
@@ -20,6 +28,8 @@ export default function AdminMenuContextProvider({ children }) {
         setActiveMenu,
         searchTerm,
         setSearchTerm,
+        togglePopup,
+        openPopup,
       }}
     >
       {children}

@@ -1,15 +1,14 @@
-import AdminPageInner from "@/app/components/admin/AdminPageInner";
-import { createClient } from "@/utils/supabase/server";
+"use client"
 
-export default async function AdminPage() {
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-  const supabase = await createClient();
+export default function AdminPage() {
+  const router = useRouter();
 
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*")
+  useEffect(() => {
+    router.replace("/admin/vezerlopult");
+  }, [router]);
 
-  return (
-    <AdminPageInner products={product} />
-  )
+  return null; // vagy egy töltő animációt is berakhatsz ide
 }
