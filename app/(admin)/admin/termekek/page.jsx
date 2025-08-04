@@ -4,6 +4,8 @@ import AdminProductListSettings from "@/app/components/admin/AdminProductListSet
 import AdminProductList from "@/app/components/admin/AdminProductList";
 import { createClient } from "@/utils/supabase/server";
 
+export const revalidate = 0
+
 export default async function AdminTermekPage() {
   const supabase = await createClient();
 

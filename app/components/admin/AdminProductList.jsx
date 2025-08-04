@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
 import { useContext, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AdminMenuContext } from "@/app/AdminContext";
 import {
   TbExternalLink,
@@ -14,10 +15,10 @@ import {
 import MediaLibraryModal from "./MediaLibraryModal";
 
 export default function AdminProductList({ products }) {
-  const [openProductId, setOpenProductId] = useState(null);
+
+  const router = useRouter();
+
   const { searchTerm } = useContext(AdminMenuContext);
-  const [showMediaModal, setShowMediaModal] = useState(null);
-  const [selectedImages, setSelectedImages] = useState({});
 
   // Szűrt termékek keresés alapján
   const filteredProducts = useMemo(() => {
@@ -49,7 +50,6 @@ export default function AdminProductList({ products }) {
   return (
     <div className="flex flex-col gap-2">
       {filteredProducts.map((product) => (
-        <React.Fragment key={product.id}>
           <div
             key={product.id}
             className="relative flex flex-row justify-between border border-[var(--border)] bg-white rounded-2xl"
@@ -109,9 +109,7 @@ export default function AdminProductList({ products }) {
               </button>
               <button
                 onClick={() =>
-                  setOpenProductId(
-                    product.id === openProductId ? null : product.id
-                  )
+                  router.push(`/admin/termekek/${product.seo_slug}`)
                 }
                 className="cursor-pointer"
               >
@@ -119,51 +117,6 @@ export default function AdminProductList({ products }) {
               </button>
             </div>
           </div>
-
-          {openProductId === product.id && (
-            <div
-              key={`${product.id}-details`}
-              className="-mt-19 relative rounded-2xl w-full bg-white border border-[var(--border)] p-4 z-10 min-h-[30vh]"
-            >
-              <button
-                onClick={() => setOpenProductId(null)}
-                className="cursor-pointer absolute top-6 right-8"
-              >
-                <TbChevronUp />
-              </button>
-              <div className="flex flex-col gap-2">
-                <div
-                  onClick={() => setShowMediaModal(product.id)}
-                  className="w-[150px] h-[150px] relative group cursor-pointer"
-                >
-                  <Image
-                    src={selectedImages[product.id] || product.termekkep || "/default.png"}
-                    fill
-                    style={{ objectFit: "cover", objectPosition: "center" }}
-                    alt={product.seo_slug || "termek-kep"}
-                    className="rounded-lg border border-[var(--border)] group-hover:opacity-50"
-                  />
-                  <TbEdit className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--pink)] opacity-50 group-hover:opacity-100 w-6 h-auto" />
-                </div>
-
-                <MediaLibraryModal
-                  isOpen={showMediaModal === product.id}
-                  onClose={() => setShowMediaModal(null)}
-                  onSelect={(img) => {
-                    setSelectedImages((prev) => ({
-                      ...prev,
-                      [product.id]: img,
-                    }));
-                    setShowMediaModal(null);
-
-                    // 🟡 opcionálisan mentheted Supabase-be is:
-                    // await supabase.from('products').update({ termekkep: img }).eq('id', product.id)
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </React.Fragment>
       ))}
     </div>
   );

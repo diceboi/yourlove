@@ -17,7 +17,7 @@ export default function Modal({ children, openstate, onClose, classname, type })
 
   return (
     <motion.section
-      className={`fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-10 z-[999]`}
+      className={`fixed top-0 left-0 w-full h-full flex items-center justify-center backdrop-blur-md bg-amber-200 z-[999]`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -25,7 +25,7 @@ export default function Modal({ children, openstate, onClose, classname, type })
       onClick={handleBackgroundClick}
     >
       <motion.div
-        className={`relative flex flex-col items-center bg-white bg-opacity-75 backdrop-blur-md rounded-2xl shadow-2xl w-[90%] max-w-lg lg:p-8 p-4 ${classname} max-h-[90%] overflow-y-scroll`}
+        className={`relative flex flex-col items-center bg-white bg-opacity-75 backdrop-blur-md rounded-2xl shadow-2xl w-[90%] lg:p-8 p-4 ${classname} max-h-[90%] overflow-y-scroll`}
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -50, opacity: 0 }}

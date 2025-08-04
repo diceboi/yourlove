@@ -10,7 +10,7 @@ import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import { Suspense } from "react";
 
 export default async function Page({ params }) {
-  const slugSegments = params.slug;
+  const { slugSegments } = await params
   const productSlug = slugSegments[slugSegments.length - 1];
 
   const supabase = await createClient();
