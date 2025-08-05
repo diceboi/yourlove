@@ -7,7 +7,7 @@ export default function AdminHero({ products }) {
   const { activeMenu, setActiveMenu } = useContext(AdminMenuContext);
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto p-6">
       {/* Breadcrumb */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-500">

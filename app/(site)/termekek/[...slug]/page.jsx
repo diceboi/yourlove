@@ -10,8 +10,8 @@ import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import { Suspense } from "react";
 
 export default async function Page({ params }) {
-  const { slugSegments } = await params
-  const productSlug = slugSegments[slugSegments.length - 1];
+  const { slug } = params;
+  const productSlug = slug[slug.length - 1];
 
   const supabase = await createClient();
 
@@ -40,7 +40,9 @@ export default async function Page({ params }) {
     return (
       <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
-          <Breadcrumbs />
+          <Suspense fallback={null}>
+            <Breadcrumbs />
+          </Suspense>
           <div className=" flex lg:flex-row flex-col lg:gap-8 gap-4 ">
             <div className="flex lg:flex-row flex-col lg:gap-32 gap-8 w-full">
               <div className="flex flex-col lg:gap-16 gap-8 lg:w-2/3 w-full">
@@ -131,7 +133,7 @@ export default async function Page({ params }) {
     );
   } else {
     // 🔵 KATEGÓRIAOLDAL nézet
-    const categoryQuery = slugSegments.join(">");
+    const categoryQuery = slug.join(">");
     const { data: products } = await supabase
       .from("products")
       .select("*")
@@ -140,7 +142,9 @@ export default async function Page({ params }) {
     return (
       <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
-          <Breadcrumbs />
+          <Suspense fallback={null}>
+            <Breadcrumbs />
+          </Suspense>
           <CategoryPageTexts category={categoryQuery} />
 
           {/* Szűrő rész Suspense-ben */}

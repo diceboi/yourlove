@@ -18,7 +18,9 @@ export default async function Page() {
   return (
     <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="flex flex-col lg:gap-8 gap-4">
-        <Breadcrumbs />
+        <Suspense fallback={null}>
+          <Breadcrumbs />
+        </Suspense>
         <CategoryPageTexts category={"Termékek"} />
 
         {/* Szűrő rész Suspense-ben */}
