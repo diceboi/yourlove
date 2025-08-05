@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
 import { useContext, useMemo, useState } from "react";
@@ -107,14 +108,9 @@ export default function AdminProductList({ products }) {
               <button>
                 <TbExternalLink className="text-[var(--pink)]" />
               </button>
-              <button
-                onClick={() =>
-                  router.push(`/admin/termekek/${product.seo_slug}`)
-                }
-                className="cursor-pointer"
-              >
+              <Link href={`/admin/termekek/${product.seo_slug}`}>
                 <TbChevronDown />
-              </button>
+              </Link>
             </div>
           </div>
       ))}

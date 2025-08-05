@@ -29,8 +29,6 @@ export default async function Page({ params }) {
 
   const freeShippingLimit = freeshippingRows?.[0]?.ertek;
 
-  console.log("FREE SHIPPING LIMIT:", freeShippingLimit);
-
   // Lekérdezzük azokat a termékeket, amelyek az ingyenes szállítás határa alatt vannak
   const { data: productsUnderFreeShipping, error: underError } = await supabase
     .from("products")

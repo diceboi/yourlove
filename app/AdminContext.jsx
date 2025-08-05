@@ -9,6 +9,7 @@ export const AdminMenuContext = createContext({
   setSearchTerm: () => {},
   togglePopup: () => {},
   openPopup: null,
+  setOpenPopup: () => {},
 });
 
 export default function AdminMenuContextProvider({ children }) {
@@ -30,6 +31,7 @@ export default function AdminMenuContextProvider({ children }) {
         setSearchTerm,
         togglePopup,
         openPopup,
+        setOpenPopup
       }}
     >
       {children}

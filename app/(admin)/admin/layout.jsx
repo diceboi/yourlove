@@ -1,7 +1,7 @@
 import { Sora } from "next/font/google";
-import "../(site)/globals.css";
-import AdminNav from "../components/AdminNav";
-import AdminMenuContextProvider from "../AdminContext";
+import "@/app/(site)/globals.css"
+import AdminNav from "../../components/AdminNav";
+import AdminMenuContextProvider from "../../AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
@@ -32,9 +32,8 @@ export default function SiteLayout({ children, modals }) {
         />
         
           <AdminNav />
-        
-        {children}
         {modals}
+        {children}
       </body>
       </AdminMenuContextProvider>
     </html>
