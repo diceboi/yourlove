@@ -2,18 +2,21 @@
 
 import H2 from "@/app/components/UI/Texts/H2";
 import H3 from "@/app/components/UI/Texts/H3";
+import H4 from "@/app/components/UI/Texts/H4";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
-import Input from "@/app/components/UI/Inputfield/Input";
+import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
+import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import Image from "next/image";
-import { TbClick } from "react-icons/tb";
+import { TbClick, TbBarcode, TbIdBadge2, TbShoppingBag, TbAlignJustified } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
+import Label from "@/app/components/UI/Texts/Label";
 
 export default function AdminProductEdit({ product }) {
   const router = useRouter();
 
-  const [published, setPublished] = useState(false)
+  const [published, setPublished] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,10 +25,26 @@ export default function AdminProductEdit({ product }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="sticky top-0 bg-[#f5f5f5] flex flex-col justify-between md:flex-row gap-4 p-6 z-1 border-b border-[var(--border)]">
-        <H2 className="text-xl font-bold mb-2 w-full md:w-1/2">
-          {product.seo_title || ""}
-        </H2>
+      <div className="sticky top-0 bg-[#f5f5f5] flex flex-col justify-between items-start md:flex-row gap-4 p-6 z-1 border-b border-[var(--border)]">
+        <div className="flex md:flex-col flex-row w-full gap-2">
+          <H2 className="text-xl font-bold mb-2 w-full md:w-1/2">
+            {product.seo_title || ""}
+          </H2>
+          <div className="flex flex-col gap-1 w-full">
+            <div className="flex flex-nowrap gap-1 items-start">
+              <TbBarcode className="min-w-5 h-auto" />
+              <Label classname={"mt-0.75"}>{product.vonalkod}</Label>
+            </div>
+            <div className="flex flex-nowrap gap-1 items-start">
+              <TbIdBadge2 className="min-w-5 h-auto" />
+              <Label classname={"mt-0.75"}>{product.id}</Label>
+            </div>
+            <div className="flex flex-nowrap gap-1 items-start">
+              <TbIdBadge2 className="min-w-5 h-auto" />
+              <Label classname={"mt-0.75"}>{product.cikkszam}</Label>
+            </div>
+          </div>
+        </div>
         <div className="flex flex-row justify-end items-center gap-4 w-full md:w-1/2">
           <div className="flex flex-nowrap items-center gap-2 border border-[var(--border)] p-2 rounded-lg h-fit">
             <TbClick className="text-[var(--pink)]" />
@@ -34,13 +53,10 @@ export default function AdminProductEdit({ product }) {
               {product.kattintasok || ""}
             </Paragraph>
           </div>
-          <ToggleSwitch
-            checked={published}
-            onChange={setPublished}
-          />
+          <ToggleSwitch checked={published} onChange={setPublished} />
         </div>
       </div>
-      <div className="flex flex-col gap-4 p-6">
+      <div className="flex flex-col gap-16 p-6">
         <div className="flex flex-col md:flex-row gap-8 ">
           <div className="relative md:w-1/2 overflow-hidden rounded-lg">
             <Image
@@ -52,9 +68,13 @@ export default function AdminProductEdit({ product }) {
             />
           </div>
 
+          {/* ÁLTALÁNOS */}
           <div className="space-y-2 w-full md:w-1/2">
-            <H3>Általános</H3>
-            <Input
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbAlignJustified className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-sm text-white"/>
+              <H3>Általános</H3>
+            </div>
+            <SmallTextInput
               legend={"Főcím"}
               handleChange={handleChange}
               name="fo_cim"
@@ -62,7 +82,7 @@ export default function AdminProductEdit({ product }) {
               placeholder="Főcím"
               classname={""}
             />
-            <Input
+            <SmallTextInput
               legend={"Alcím"}
               handleChange={handleChange}
               name="alcim"
@@ -70,7 +90,7 @@ export default function AdminProductEdit({ product }) {
               placeholder="Alcím"
               classname={""}
             />
-            <Input
+            <SmallTextInput
               legend={"Cikkszám"}
               handleChange={handleChange}
               name="id"
@@ -78,7 +98,7 @@ export default function AdminProductEdit({ product }) {
               placeholder="Cikkszám"
               classname={""}
             />
-            <Input
+            <SmallTextInput
               legend={"Azonosító"}
               handleChange={handleChange}
               name="id"
@@ -86,7 +106,7 @@ export default function AdminProductEdit({ product }) {
               placeholder="Azonosító"
               classname={""}
             />
-            <Input
+            <SmallTextInput
               legend={"Vonalkód"}
               handleChange={handleChange}
               name="vonalkod"
@@ -94,7 +114,23 @@ export default function AdminProductEdit({ product }) {
               placeholder="Vonalkód"
               classname={""}
             />
-            <Input
+            <SmallTextInput
+              legend={"Gyártó"}
+              handleChange={handleChange}
+              name="gyarto"
+              value={product.gyarto || ""}
+              placeholder="Gyártó"
+              classname={""}
+            />
+            <SmallTextInput
+              legend={"Brand logó"}
+              handleChange={handleChange}
+              name="brand_logo"
+              value={product.brand_logo || ""}
+              placeholder="Brand logó"
+              classname={""}
+            />
+            <SmallTextInput
               legend={"Címkék"}
               handleChange={handleChange}
               name="cimkek"
@@ -102,7 +138,7 @@ export default function AdminProductEdit({ product }) {
               placeholder="Címkék"
               classname={""}
             />
-            <Input
+            <SmallTextInput
               legend={"Kategóriák"}
               handleChange={handleChange}
               name="kategoria"
@@ -113,72 +149,228 @@ export default function AdminProductEdit({ product }) {
           </div>
         </div>
 
-        <div className="flex lg:flex-row flex-col gap-8">
+        <Textarea
+          legend={"Termékleírás"}
+          handleChange={handleChange}
+          name="id"
+          value={product.termekleiras || ""}
+          placeholder="Cikkszám"
+          classname={""}
+          rows={10}
+        />
+
+        {/* SZÁLLÍTÁS */}
+        <div className="flex lg:flex-row flex-col lg:gap-8 gap-2">
           <div className="space-y-2 w-full">
-            <Input
-              legend={" "}
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbShoppingBag className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-sm text-white"/>
+              <H3>Szállítás és rendelés</H3>
+            </div>
+            <SmallTextInput
+              legend={"Beszerzési ár nettó"}
               handleChange={handleChange}
-              name="id"
-              value={product.cikkszam || ""}
-              placeholder="Cikkszám"
+              name="beszerzesi_ar_netto"
+              value={product.beszerzesi_ar_netto || ""}
+              placeholder=""
+              classname={""}
+              after={"Ft"}
+            />
+            <SmallTextInput
+              legend={"Beszerzési ár bruttó"}
+              handleChange={handleChange}
+              name="beszerzesi_ar_brutto"
+              value={product.beszerzesi_ar_brutto || ""}
+              placeholder=""
+              classname={""}
+              after={"Ft"}
+            />
+            <SmallTextInput
+              legend={"Akció mértéke (%)"}
+              handleChange={handleChange}
+              name="akcio_szazalek"
+              value={product.akcio_szazalek || ""}
+              placeholder=""
+              classname={""}
+              after={"%"}
+            />
+            <SmallTextInput
+              legend={"Akció mértéke (Ft)"}
+              handleChange={handleChange}
+              name="akcio_ar"
+              value={product.akcio_ar || ""}
+              placeholder=""
+              classname={""}
+              after={"Ft"}
+            />
+            <SmallTextInput
+              legend={"Bruttó eladási ár"}
+              handleChange={handleChange}
+              name="eladasi_ar_brutto"
+              value={product.eladasi_ar_brutto || ""}
+              placeholder=""
+              classname={""}
+              after={"Ft"}
+            />
+            <SmallTextInput
+              legend={"Akciós eladási ár"}
+              handleChange={handleChange}
+              name="akcios_ar_brutto"
+              value={product.akcios_ar_brutto || ""}
+              placeholder=""
+              classname={""}
+              after={"Ft"}
+            />
+            <SmallTextInput
+              legend={"Súly"}
+              handleChange={handleChange}
+              name="suly"
+              value={product.suly || ""}
+              placeholder=""
+              classname={""}
+              after={"gr"}
+            />
+          </div>
+          <div className="space-y-2 w-full mt-0 lg:mt-12">
+            <Textarea
+              legend={"Csomag tartalma"}
+              handleChange={handleChange}
+              name="csomag_tartalma"
+              value={product.csomag_tartalma || ""}
+              placeholder=""
+              classname={""}
+              rows={3}
+            />
+            <SmallTextInput
+              legend={"Csomagolás"}
+              handleChange={handleChange}
+              name="csomagolas"
+              value={product.csomagolas || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Azonosító"}
+            <SmallTextInput
+              legend={"Szállító név"}
               handleChange={handleChange}
-              name="id"
-              value={product.id || ""}
-              placeholder="Azonosító"
+              name="szallito_nev"
+              value={product.szallito_nev || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Vonalkód"}
+            <SmallTextInput
+              legend={"Garancia"}
               handleChange={handleChange}
-              name="vonalkod"
-              value={product.vonalkod || ""}
-              placeholder="Vonalkód"
+              name="garancia"
+              value={product.garancia || ""}
+              placeholder=""
+              classname={""}
+              after={"év"}
+            />
+            <SmallTextInput
+              legend={"Min. rendelés"}
+              handleChange={handleChange}
+              name="minimalis_rendeles"
+              value={product.minimalis_rendeles || ""}
+              placeholder=""
+              classname={""}
+              after={"db"}
+            />
+            <SmallTextInput
+              legend={"Szállítási idő"}
+              handleChange={handleChange}
+              name="szallitasi_ido"
+              value={product.szallitasi_ido || ""}
+              placeholder=""
               classname={""}
             />
           </div>
+        </div>
+
+        {/* RAKTÁRKEZELÉS */}
+        <div className="flex lg:flex-row flex-col lg:gap-8 gap-2">
           <div className="space-y-2 w-full">
-            <Input
-              legend={"Főcím"}
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbShoppingBag className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-sm text-white"/>
+              <H3>Raktárkezelés</H3>
+            </div>
+            <SmallTextInput
+              legend={"Készlet"}
               handleChange={handleChange}
-              name="fo_cim"
-              value={product.fo_cim || ""}
-              placeholder="Főcím"
+              name="keszlet"
+              value={product.keszlet || ""}
+              placeholder=""
+              classname={""}
+              after={"db"}
+            />
+          </div>
+          <div className="space-y-2 w-full mt-0 lg:mt-12">
+            <SmallTextInput
+              legend={"Polc"}
+              handleChange={handleChange}
+              name="polc"
+              value={product.polc || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Alcím"}
+          </div>
+        </div>
+
+        {/* RÉSZLETES TERMÉKADATOK */}
+        <div className="flex lg:flex-row flex-col lg:gap-8 gap-2">
+          <div className="space-y-2 w-full">
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbShoppingBag className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-sm text-white"/>
+              <H3>Részletes termékadatok</H3>
+            </div>
+            <Paragraph classname={"text-[var(--pink)] font-bold"}>Szín</Paragraph>
+            <SmallTextInput
+              legend={"Szín"}
               handleChange={handleChange}
-              name="alcim"
-              value={product.alcim || ""}
-              placeholder="Alcím"
+              name="szin"
+              value={product.szin || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Cikkszám"}
+            <SmallTextInput
+              legend={"Tok szín"}
               handleChange={handleChange}
-              name="id"
-              value={product.cikkszam || ""}
-              placeholder="Cikkszám"
+              name="tok_szin"
+              value={product.tok_szin || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Azonosító"}
+            <SmallTextInput
+              legend={"Betét szín"}
               handleChange={handleChange}
-              name="id"
-              value={product.id || ""}
-              placeholder="Azonosító"
+              name="betet_szin"
+              value={product.betet_szin || ""}
+              placeholder=""
               classname={""}
             />
-            <Input
-              legend={"Vonalkód"}
+          </div>
+          <div className="space-y-2 w-full mt-0 lg:mt-12">
+            <Paragraph classname={"text-[var(--pink)] font-bold"}>Anyag</Paragraph>
+            <SmallTextInput
+              legend={"Anyag"}
               handleChange={handleChange}
-              name="vonalkod"
-              value={product.vonalkod || ""}
-              placeholder="Vonalkód"
+              name="anyag"
+              value={product.anyag || ""}
+              placeholder=""
+              classname={""}
+            />
+            <SmallTextInput
+              legend={"Külső anyag"}
+              handleChange={handleChange}
+              name="kulso_anyag"
+              value={product.kulso_anyag || ""}
+              placeholder=""
+              classname={""}
+            />
+            <SmallTextInput
+              legend={"Belső anyag"}
+              handleChange={handleChange}
+              name="belso_anyag"
+              value={product.belso_anyag || ""}
+              placeholder=""
               classname={""}
             />
           </div>
