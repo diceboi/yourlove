@@ -16,7 +16,7 @@ export default function Modal({
     <AnimatePresence>
       {openstate && (
         <motion.section
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/10 backdrop-blur-sm"
+          className="fixed inset-0 z-[998] flex justify-end bg-black/10 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -24,11 +24,11 @@ export default function Modal({
           onClick={onClose} // háttérre kattintás zárja
         >
           <motion.div
-            className={`relative bg-[#f5f5f5] rounded-2xl shadow-xl w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto ${className}`}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`relative bg-[#f5f5f5] shadow-xl w-[90%] max-h-[100vh] overflow-y-auto ${className}`}
+            initial={{ x: 2000, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 2000, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()} // belsőre kattintás ne zárja be
           >
             {closeButton && (

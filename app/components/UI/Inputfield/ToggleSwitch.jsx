@@ -16,18 +16,18 @@ export default function ToggleSwitch({
           {legend}
         </legend>
       )}
-      <div className="flex items-center justify-between border border-[var(--border)] rounded-lg p-2 text-sm font-semibold gap-2">
-        <Paragraph>Vázlat</Paragraph>
+      <div className="flex items-center justify-between rounded-lg p-1 text-sm font-semibold gap-2">
+        <p className='text-xs'>Vázlat</p>
         
         <div
-          className={`w-12 h-[25px] rounded-full cursor-pointer relative shadow-inner ${checked ? 'bg-[#99fe3480]' : 'bg-[#3499fe81]'}`}
+          className={`w-12 h-[22px] rounded-full cursor-pointer relative shadow-inner ${checked ? 'bg-[#99fe3480]' : 'bg-[#3499fe81]'}`}
           onClick={() => onChange(!checked)}
         >
           <motion.div
             layout
-            className="w-5 h-5 rounded-full shadow-md absolute top-[2.75px]"
+            className="w-4 h-4 rounded-full shadow-md absolute top-[2.75px]"
             style={{
-              marginLeft: checked ? "24px" : "3px"
+              marginLeft: checked ? "28px" : "3px"
             }}
             animate={{
                 backgroundColor: checked ? '#9ec775' : '#3499fe'
@@ -36,7 +36,7 @@ export default function ToggleSwitch({
           />
         </div>
 
-        <Paragraph>Közzétéve</Paragraph>
+        <p className='text-xs'>Közzétéve</p>
       </div>
     </fieldset>
   )

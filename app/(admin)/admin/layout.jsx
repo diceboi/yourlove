@@ -30,7 +30,6 @@ export default function SiteLayout({ children, modals }) {
           theme="light"
           transition={Bounce}
         />
-        
           <AdminNav />
         {modals}
         {children}

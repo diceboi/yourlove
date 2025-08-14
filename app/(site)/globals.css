@@ -18,6 +18,7 @@ html {
     --tertiary-text: #767676;
     --success: #99fe34;
     --error: #d80028;
+    --error-hover: #92001b;
     --message: #3499fe;
     --warning: #fec834;
 }
