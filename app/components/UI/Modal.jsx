@@ -16,7 +16,7 @@ export default function Modal({
     <AnimatePresence>
       {openstate && (
         <motion.section
-          className="fixed inset-0 z-[998] flex justify-end bg-black/10 backdrop-blur-sm"
+          className="fixed inset-0 z-[998] flex justify-end bg-black/20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

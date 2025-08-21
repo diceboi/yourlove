@@ -3,8 +3,6 @@
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Modal from "@/app/components/UI/Modal";
-import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
-import H2 from "@/app/components/UI/Texts/H2";
 import { createClient } from "@/utils/supabase/client";
 import AdminProductEdit from "@/app/components/admin/AdminProductEdit";
 
@@ -13,12 +11,14 @@ export default function ProductModal() {
   const router = useRouter();
 
   const [product, setProduct] = useState(null);
-  const [mediaModalOpen, setMediaModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
       const supabase = createClient();
-      const slug = params.slug;
+      const slugParam = params.slug;
+
+      // Ha dinamikus route tömböt ad vissza, normalizáljuk stringgé
+      const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
 
       const { data, error } = await supabase
         .from("products")
@@ -33,9 +33,7 @@ export default function ProductModal() {
       }
     };
 
-    if (params.slug?.length) {
-      fetchProduct();
-    }
+    if (params.slug) fetchProduct();
   }, [params.slug]);
 
   if (!product) {
@@ -47,18 +45,8 @@ export default function ProductModal() {
   }
 
   return (
-    <>
-      <Modal openstate={true} onClose={() => router.back()} closeButton={false}>
-        <AdminProductEdit product={product} />
-      </Modal>
-      <MediaLibraryModal
-        isOpen={mediaModalOpen}
-        onClose={() => setMediaModalOpen(false)}
-        onSelect={(img) => {
-          setSelectedImage(img);
-          setProduct((prev) => ({ ...prev, termekkep: img }));
-        }}
-      />
-    </>
+    <Modal openstate={true} onClose={() => router.back()} closeButton={false}>
+      <AdminProductEdit product={product} />
+    </Modal>
   );
 }

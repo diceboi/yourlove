@@ -35,6 +35,8 @@ export default function AdminProductEdit({ product }) {
   const [published, setPublished] = useState(product.kozzeteve === true);
   const [form, setForm] = useState(product);
   const [selectedImage, setSelectedImage] = useState(product.termekkep || "");
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(product);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +57,8 @@ export default function AdminProductEdit({ product }) {
       .from("products")
       .update({
         ...form,
-        kozzeteve: published, // kapcsoló állapot
+        kozzeteve: published,
+        termekkep: selectedImage,
       })
       .eq("id", form.id)
       .select();
@@ -67,7 +70,6 @@ export default function AdminProductEdit({ product }) {
       toast.success("Sikeres mentés!");
       router.back();
     }
-    window.location.reload();
   };
 
   const handleClose = () => {
@@ -75,6 +77,16 @@ export default function AdminProductEdit({ product }) {
   };
 
   return (
+    <>
+    <MediaLibraryModal
+        isOpen={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        onSelect={(img) => {
+          setSelectedImage(img);
+          setCurrentProduct((prev) => ({ ...prev, termekkep: img }));
+          setForm((prev) => ({ ...prev, termekkep: img })); // fontos!
+        }}
+      />
     <div className="flex flex-col gap-6">
       <div className="sticky top-0 bg-[#f5f5f5] flex flex-col justify-between items-start md:flex-row gap-4 z-1 border-b border-[var(--border)]">
         <div className="flex flex-col md:flex-row justify-between md:items-center items-start w-full gap-2">
@@ -151,7 +163,7 @@ export default function AdminProductEdit({ product }) {
             <SmallTextInput
               legend={"Cikkszám"}
               handleChange={handleChange}
-              name="id"
+              name="cikkszam"
               value={form.cikkszam || ""}
               placeholder="Cikkszám"
               classname={""}
@@ -210,9 +222,9 @@ export default function AdminProductEdit({ product }) {
         <Textarea
           legend={"Termékleírás"}
           handleChange={handleChange}
-          name="id"
+          name="termekleiras"
           value={form.termekleiras || ""}
-          placeholder="Cikkszám"
+          placeholder=""
           classname={""}
           rows={10}
         />
@@ -844,5 +856,6 @@ export default function AdminProductEdit({ product }) {
         </div>
       </div>
     </div>
+    </>
   );
 }

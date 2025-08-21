@@ -8,7 +8,7 @@ export default function GreenButton({ title, link, onclick, buttonicon }) {
     <Button
       title={title}
       link={link}
-      titlecolor={"text-white"}
+      titlecolor={"text-black"}
       hovertitlecolor={"group-hover:text-white"}
       bgcolor={"bg-[var(--green)]"}
       bordercolor={""}
@@ -16,7 +16,7 @@ export default function GreenButton({ title, link, onclick, buttonicon }) {
       onclick={onclick || (() => console.log("Clicked"))}
       beforeicon={
         IconComponent ? (
-          <IconComponent className="text-white w-5 h-5" />
+          <IconComponent className="text-black group-hover:text-white w-5 h-5" />
         ) : null
       }
       aftericon={null}
