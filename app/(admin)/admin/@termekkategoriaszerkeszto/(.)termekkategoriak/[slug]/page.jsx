@@ -4,13 +4,13 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Modal from "@/app/components/UI/Modal";
 import { createClient } from "@/utils/supabase/client";
-import AdminProductEdit from "@/app/components/admin/AdminProductEdit";
+import AdminProductCategoriesEdit from "@/app/components/admin/AdminProductCategoriesEdit";
 
 export default function ProductModal() {
   const params = useParams();
   const router = useRouter();
 
-  const [product, setProduct] = useState(null);
+  const [category, setCategory] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -21,22 +21,22 @@ export default function ProductModal() {
       const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
 
       const { data, error } = await supabase
-        .from("products")
+        .from("product-categories")
         .select("*")
-        .eq("seo_slug", slug)
+        .eq("id", slug)
         .single();
 
       if (error) {
         console.error("Hiba a termék lekérésekor:", error);
       } else {
-        setProduct(data);
+        setCategory(data);
       }
     };
 
     if (params.slug) fetchProduct();
   }, [params.slug]);
 
-  if (!product) {
+  if (!category) {
     return (
       <Modal openstate={true} onClose={() => router.back()}>
         <p>Betöltés...</p>
@@ -46,7 +46,7 @@ export default function ProductModal() {
 
   return (
     <Modal openstate={true} onClose={() => router.back()} closeButton={false}>
-      <AdminProductEdit product={product} />
+      <AdminProductCategoriesEdit category={category} />
     </Modal>
   );
 }
