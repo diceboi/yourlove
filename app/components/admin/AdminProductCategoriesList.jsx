@@ -1,27 +1,47 @@
 "use client";
 
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
-import { useRouter } from "next/navigation";
 import { AdminMenuContext } from "@/app/AdminContext";
 import { TbExternalLink, TbEdit } from "react-icons/tb";
+import { createClient } from "@/utils/supabase/client";
 
 export default function AdminProductCategoriesList({ categories }) {
-  const router = useRouter();
   const { searchTerm } = useContext(AdminMenuContext);
+  const supabase = useMemo(() => createClient(), []);
 
-  // id -> category map
-  const catById = useMemo(() => {
+  // saját state + prop szinkron
+  const [rows, setRows] = useState(categories || []);
+  useEffect(() => { setRows(categories || []); }, [categories]);
+
+  // refetch az adatbázisból
+  const refetch = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("product-categories")
+      .select("*")
+      .order("id", { ascending: true });
+    if (!error) setRows(data || []);
+  }, [supabase]);
+
+  // custom event figyelése
+  useEffect(() => {
+    const onChanged = () => refetch();
+    window.addEventListener("admin:categories:changed", onChanged);
+    return () => window.removeEventListener("admin:categories:changed", onChanged);
+  }, [refetch]);
+
+  // id -> kategória map (a breadcrumbs-hoz)
+  const byId = useMemo(() => {
     const m = new Map();
-    (categories || []).forEach((c) => m.set(String(c.id), c));
+    (rows || []).forEach((c) => m.set(String(c.id), c));
     return m;
-  }, [categories]);
+  }, [rows]);
 
-  // szülői láncból slug-öket épít (legfelsőtől az aktuálisig)
-  const buildSlugTrail = (cat) => {
-    if (!cat) return [];
+  // név alapú breadcrumb
+  const makeBreadcrumb = (cat) => {
+    if (!cat) return "";
     const parents = [];
     const seen = new Set();
     let pid = cat.szulo ?? null;
@@ -29,82 +49,62 @@ export default function AdminProductCategoriesList({ categories }) {
 
     while (pid != null && depth < 10) {
       const key = String(pid);
-      if (seen.has(key)) break; // ciklusvédelem
+      if (seen.has(key)) break;
       seen.add(key);
-      const parent = catById.get(key);
-      if (!parent) break; // ha nincs betöltve a szülő, megállunk
-      parents.push(parent.slug);
+      const parent = byId.get(key);
+      if (!parent) break;
+      parents.push(parent.nev || `#${parent.id}`);
       pid = parent.szulo ?? null;
       depth++;
     }
-
     parents.reverse();
-    return [...parents, cat.slug].filter(Boolean);
-  };
-
-  // helper: név-breadcrumb az aktuális kategóriához
-  const makeBreadcrumb = (cat) => {
-    if (!cat) return "";
-    const names = [];
-    const visited = new Set();
-    let currentParentId = cat.szulo ?? null;
-    let depth = 0;
-
-    // szülők nevei (nagy-szülőtől lefelé) + végén az aktuális
-    const parents = [];
-    while (currentParentId != null && depth < 10) {
-      const key = String(currentParentId);
-      if (visited.has(key)) {
-        // ciklusvédelem
-        parents.push("…");
-        break;
-      }
-      visited.add(key);
-      const parent = catById.get(key);
-      if (!parent) {
-        // ha nincs betöltve a szülő, mutassuk az id-t, hogy legyen jelzés
-        parents.push(`#${currentParentId}`);
-        break;
-      }
-      parents.push(parent.nev || `#${parent.id}`);
-      currentParentId = parent.szulo ?? null;
-      depth += 1;
-    }
-
-    // a szülők sorrendje legyen a legfelső -> közvetlen szülő
-    parents.reverse();
-
-    // végére az aktuális kategória neve
     parents.push(cat.nev || `#${cat.id}`);
-
     return parents.join(" > ");
   };
 
-  // kereső — a szulo szám lehet, ezért toString
-  const filteredCategories = useMemo(() => {
-    if (!searchTerm) return categories;
+  // slug útvonal felépítése a linkhez (felsőtől az aktuálisig)
+  const buildSlugTrail = (cat) => {
+    if (!cat) return [];
+    const parts = [];
+    const seen = new Set();
+    let pid = cat.szulo ?? null;
+    let depth = 0;
+
+    while (pid != null && depth < 10) {
+      const key = String(pid);
+      if (seen.has(key)) break;
+      seen.add(key);
+      const parent = byId.get(key);
+      if (!parent) break;
+      parts.push(parent.slug);
+      pid = parent.szulo ?? null;
+      depth++;
+    }
+    parts.reverse();
+    return [...parts, cat.slug].filter(Boolean);
+  };
+
+  // keresés
+  const filtered = useMemo(() => {
+    if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
-    return categories.filter((category) => {
+    return (rows || []).filter((c) => {
       return (
-        category.id?.toString().toLowerCase().includes(term) ||
-        category.nev?.toLowerCase().includes(term) ||
-        category.slug?.toLowerCase().includes(term) ||
-        category.leiras_fent?.toLowerCase().includes(term) ||
-        category.leiras_lent?.toLowerCase().includes(term) ||
-        (category.szulo != null &&
-          String(category.szulo).toLowerCase().includes(term))
+        c.id?.toString().toLowerCase().includes(term) ||
+        c.nev?.toLowerCase().includes(term) ||
+        c.slug?.toLowerCase().includes(term) ||
+        c.leiras_fent?.toLowerCase().includes(term) ||
+        c.leiras_lent?.toLowerCase().includes(term) ||
+        (c.szulo != null && String(c.szulo).toLowerCase().includes(term))
       );
     });
-  }, [categories, searchTerm]);
+  }, [rows, searchTerm]);
 
-  if (!categories || categories.length === 0) {
+  if (!rows || rows.length === 0) {
     return (
       <div className="flex flex-col gap-2 animate-pulse px-6">
-        {[...Array(5)].map((_, index) => (
-          <div
-            key={index}
-            className="h-16 bg-[var(--border)] rounded-2xl w-full"
-          />
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 bg-[var(--border)] rounded-2xl w-full" />
         ))}
       </div>
     );
@@ -112,66 +112,51 @@ export default function AdminProductCategoriesList({ categories }) {
 
   return (
     <div className="flex flex-col gap-2 px-6">
-      {filteredCategories.map((category) => {
-        const breadcrumb = makeBreadcrumb(category); // ← itt készül a "Parent > Child > Current"
+      {filtered.map((category) => {
+        const breadcrumb = makeBreadcrumb(category);
+        const parts = buildSlugTrail(category).map(encodeURIComponent);
+        const href = `/termekek${parts.length ? `/${parts.join("/")}` : ""}`;
+
         return (
           <div
             key={category.id}
             className="relative flex flex-row justify-between border border-[var(--border)] bg-white rounded-2xl cursor-pointer"
           >
-            <div className="flex flex-row w-full ">
+            <div className="flex flex-row w-full">
               <Image
                 src={category.kep || "/default.png"}
                 width={50}
                 height={50}
-                alt={category.slug || "termek-kep"}
+                alt={category.slug || "kategoria-kep"}
                 className="mr-4 rounded-md m-2"
               />
+
               <div className="flex flex-col gap-2 justify-center w-40 border-r border-[var(--border)]">
                 <Label classname="font-bold">{category.nev}</Label>
                 <Label>#{category.id}</Label>
               </div>
 
               <div className="flex flex-col gap-2 w-40 justify-center items-center border-r border-[var(--border)] px-2">
-                <Label classname={"font-bold text-center"}>
-                  {category.slug}
-                </Label>
+                <Label classname="font-bold text-center">{category.slug}</Label>
               </div>
 
-              {/* EDDIG: `${category.szulo}>${category.nev}` 
-                  MOST: szülők nevei + aktuális név breadcrumb */}
               <div className="flex flex-col gap-2 w-80 justify-center items-center border-r border-[var(--border)] px-2">
-                <Label classname={"font-bold text-center"}>{breadcrumb}</Label>
+                <Label classname="font-bold text-center">{breadcrumb || "—"}</Label>
               </div>
 
               <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                {category.kozzeteve === true && (
-                  <Label
-                    classname={"font-bold text-center text-[var(--green)]"}
-                  >
-                    Közzétéve
-                  </Label>
-                )}
-                {category.kozzeteve === false && (
-                  <Label
-                    classname={"font-bold text-center text-[var(--warning)]"}
-                  >
-                    Vázlat
-                  </Label>
+                {category.kozzeteve ? (
+                  <Label classname="font-bold text-center text-[var(--green)]">Közzétéve</Label>
+                ) : (
+                  <Label classname="font-bold text-center text-[var(--warning)]">Vázlat</Label>
                 )}
               </div>
             </div>
 
             <div className="flex flex-row items-center justify-end gap-8 px-8 w-full">
-              {(() => {
-                const parts = buildSlugTrail(category).map(encodeURIComponent);
-                const href = `/termekek${parts.length ? `/${parts.join("/")}` : ""}`;
-                return (
-                  <Link href={href} target="_blank" rel="noopener noreferrer">
-                    <TbExternalLink className="text-[var(--pink)]" />
-                  </Link>
-                );
-              })()}
+              <Link href={href} target="_blank" rel="noopener noreferrer">
+                <TbExternalLink className="text-[var(--pink)]" />
+              </Link>
               <Link href={`/admin/termekkategoriak/${category.id}`}>
                 <TbEdit />
               </Link>

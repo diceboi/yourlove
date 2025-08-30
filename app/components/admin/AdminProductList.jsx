@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
-import { useRouter } from "next/navigation";
 import { AdminMenuContext } from "@/app/AdminContext";
 import { TbExternalLink, TbEdit } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
-// ---- Segédek ----
+// --- segédek ---
 function parseCategoryPaths(kategoria) {
-  // elvárt formátum: [[1,2],[5,11]]
   if (!kategoria) return [];
   if (Array.isArray(kategoria)) return kategoria;
   if (typeof kategoria === "string") {
@@ -45,57 +43,36 @@ function slugFromBreadcrumb(bc) {
 
 export default function AdminProductList({ products }) {
   const { searchTerm } = useContext(AdminMenuContext);
-
-  // 2) Sorok állapota
-  const [rows, setRows] = useState(products || []);
-  useEffect(() => {
-    setRows(products || []);
-  }, [products]);
-  
   const supabase = useMemo(() => createClient(), []);
 
-  const refetch = async () => {
+  // adatsorok
+  const [rows, setRows] = useState(products || []);
+  useEffect(() => { setRows(products || []); }, [products]);
+
+  // újrahúzás
+  const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("letrehozva", { ascending: true });
     if (!error) setRows(data || []);
-  };
-
-  // 4) Realtime products-ra
-  useEffect(() => {
-    const channel = supabase
-      .channel("products-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "products" },
-        (_payload) => {
-          // legegyszerűbb: újrahúzzuk a listát
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [supabase]);
 
-  // 5) Kategóriák beolvasása egyszer, ugyanazzal a klienssel
+  // frissítés a custom eventre
+  useEffect(() => {
+    const onChanged = () => refetch();
+    window.addEventListener("admin:products:changed", onChanged);
+    return () => window.removeEventListener("admin:products:changed", onChanged);
+  }, [refetch]);
+
+  // kategóriák egyszer
   const [cats, setCats] = useState([]);
   useEffect(() => {
     supabase
       .from("product-categories")
       .select("id, nev, slug, szulo")
       .order("nev", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Kategóriák betöltési hiba:", error);
-          setCats([]);
-        } else {
-          setCats(data || []);
-        }
-      });
+      .then(({ data, error }) => setCats(error ? [] : (data || [])));
   }, [supabase]);
 
   const byId = useMemo(() => {
@@ -110,7 +87,7 @@ export default function AdminProductList({ products }) {
     return paths.map((p) => breadcrumbFromPath(p, byId)).filter(Boolean);
   };
 
-  // 6) Keresés a rows-on
+  // keresés a rows-on
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
@@ -134,18 +111,13 @@ export default function AdminProductList({ products }) {
         bcs.includes(term)
       );
     });
-  }, [rows, searchTerm]);
-
-  const list = filtered; // ez kerül renderre
+  }, [rows, searchTerm, byId]);
 
   if (!rows || rows.length === 0) {
     return (
       <div className="flex flex-col gap-2 animate-pulse px-6">
-        {[...Array(5)].map((_, index) => (
-          <div
-            key={index}
-            className="h-16 bg-[var(--border)] rounded-2xl w-full"
-          />
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 bg-[var(--border)] rounded-2xl w-full" />
         ))}
       </div>
     );
@@ -177,12 +149,9 @@ export default function AdminProductList({ products }) {
                 <Label>{product.cikkszam}</Label>
               </div>
 
-              {/* Kategória breadcrumb(ok) névvel */}
               <div className="flex flex-col gap-1 w-80 justify-center items-center border-r border-[var(--border)] px-2 text-center">
                 {bcs.length === 0 ? (
-                  <Label classname="font-bold text-center text-gray-500">
-                    —
-                  </Label>
+                  <Label classname="font-bold text-center text-gray-500">—</Label>
                 ) : (
                   bcs.map((bc, i) => (
                     <Label key={i} classname="font-bold text-center">
@@ -193,36 +162,24 @@ export default function AdminProductList({ products }) {
               </div>
 
               <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                <Label classname={"font-bold text-center"}>
-                  {product.cimkek}
-                </Label>
+                <Label classname="font-bold text-center">{product.cimkek}</Label>
               </div>
 
               <div className="flex flex-col gap-2 justify-center items-center w-30 border-r border-[var(--border)] px-2">
-                <Label classname={"text-[var(--green)] font-bold text-center"}>
+                <Label classname="text-[var(--green)] font-bold text-center">
                   {product.eladasi_ar_brutto || product.akcios_ar_brutto} Ft
                 </Label>
               </div>
 
               <div className="flex flex-col gap-2 justify-center items-center w-30 border-r border-[var(--border)] px-2">
-                <Label classname={"font-bold text-center"}>
-                  {product.keszlet} db
-                </Label>
+                <Label classname="font-bold text-center">{product.keszlet} db</Label>
               </div>
 
               <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
                 {product.kozzeteve ? (
-                  <Label
-                    classname={"font-bold text-center text-[var(--green)]"}
-                  >
-                    Közzétéve
-                  </Label>
+                  <Label classname="font-bold text-center text-[var(--green)]">Közzétéve</Label>
                 ) : (
-                  <Label
-                    classname={"font-bold text-center text-[var(--warning)]"}
-                  >
-                    Vázlat
-                  </Label>
+                  <Label classname="font-bold text-center text-[var(--warning)]">Vázlat</Label>
                 )}
               </div>
             </div>
@@ -240,7 +197,6 @@ export default function AdminProductList({ products }) {
                 <TbExternalLink className="text-[var(--pink)]" />
               </Link>
 
-              {/* EDIT: nálad nagy eséllyel ID-s az admin útvonal */}
               <Link href={`/admin/termekek/${product.seo_slug}`}>
                 <TbEdit />
               </Link>
