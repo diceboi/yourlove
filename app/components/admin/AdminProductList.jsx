@@ -41,6 +41,30 @@ function slugFromBreadcrumb(bc) {
     .replace(/^\/|\/$/g, "");
 }
 
+// cimkék mező (ID-k) normalizálása -> number[]
+function parseTagIds(cimkek) {
+  if (!cimkek) return [];
+  if (Array.isArray(cimkek)) {
+    return cimkek.map((n) => Number(n)).filter(Number.isFinite);
+  }
+  if (typeof cimkek === "string") {
+    const s = cimkek.trim();
+    if (!s) return [];
+    // 1) próbáljuk JSON-ként
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) {
+        return parsed.map((n) => Number(n)).filter(Number.isFinite);
+      }
+    } catch {
+      // 2) fallback: összes szám begyűjtése pl. "2,3" vagy "[2,3]" vagy "2; 3"
+      const nums = s.match(/\d+/g)?.map((x) => Number(x)) || [];
+      return nums.filter(Number.isFinite);
+    }
+  }
+  return [];
+}
+
 export default function AdminProductList({ products }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
@@ -75,7 +99,7 @@ export default function AdminProductList({ products }) {
       .then(({ data, error }) => setCats(error ? [] : (data || [])));
   }, [supabase]);
 
-  const byId = useMemo(() => {
+  const catById = useMemo(() => {
     const m = new Map();
     cats.forEach((c) => m.set(String(c.id), c));
     return m;
@@ -84,15 +108,38 @@ export default function AdminProductList({ products }) {
   const productBreadcrumbs = (product) => {
     const paths = parseCategoryPaths(product.kategoria);
     if (!paths.length) return [];
-    return paths.map((p) => breadcrumbFromPath(p, byId)).filter(Boolean);
+    return paths.map((p) => breadcrumbFromPath(p, catById)).filter(Boolean);
   };
 
-  // keresés a rows-on
+  // --- CÍMKÉK: táblából névleképezés ---
+  const [tags, setTags] = useState([]);
+  useEffect(() => {
+    supabase
+      .from("product-tags")
+      .select("id, nev, slug")
+      .order("nev", { ascending: true })
+      .then(({ data, error }) => setTags(error ? [] : (data || [])));
+  }, [supabase]);
+
+  const tagById = useMemo(() => {
+    const m = new Map();
+    tags.forEach((t) => m.set(String(t.id), t));
+    return m;
+  }, [tags]);
+
+  const productTagNames = (product) => {
+    const ids = parseTagIds(product.cimkek); // products.cimkek: TEXT "[2,3]"
+    if (!ids.length) return [];
+    return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
+  };
+
+  // keresés a rows-on (címkenevekben is)
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
     return (rows || []).filter((p) => {
       const bcs = productBreadcrumbs(p).join(" ; ").toLowerCase();
+      const tagText = productTagNames(p).join(" ; ").toLowerCase();
       return (
         p.id?.toString().toLowerCase().includes(term) ||
         p.cikkszam?.toLowerCase().includes(term) ||
@@ -100,7 +147,6 @@ export default function AdminProductList({ products }) {
         p.seo_slug?.toLowerCase().includes(term) ||
         p.szallito_nev?.toLowerCase().includes(term) ||
         p.gyarto?.toLowerCase().includes(term) ||
-        p.cimkek?.toLowerCase().includes(term) ||
         p.anyag?.toLowerCase().includes(term) ||
         p.kulso_anyag?.toLowerCase().includes(term) ||
         p.belso_anyag?.toLowerCase().includes(term) ||
@@ -108,10 +154,11 @@ export default function AdminProductList({ products }) {
         p.alcim?.toLowerCase().includes(term) ||
         p.meta_leiras?.toLowerCase().includes(term) ||
         p.termekleiras?.toLowerCase().includes(term) ||
-        bcs.includes(term)
+        bcs.includes(term) ||
+        tagText.includes(term)   // <-- címkenevekben is keresünk
       );
     });
-  }, [rows, searchTerm, byId]);
+  }, [rows, searchTerm, catById, tagById]);
 
   if (!rows || rows.length === 0) {
     return (
@@ -129,6 +176,7 @@ export default function AdminProductList({ products }) {
         const bcs = productBreadcrumbs(product);
         const primaryBc = bcs[0] || "";
         const categorySlugPath = primaryBc ? slugFromBreadcrumb(primaryBc) : "";
+        const tagNames = productTagNames(product); // ["Elegáns", "Bőr", ...]
 
         return (
           <div
@@ -161,8 +209,13 @@ export default function AdminProductList({ products }) {
                 )}
               </div>
 
+              {/* CÍMKÉK NÉVVEL */}
               <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                <Label classname="font-bold text-center">{product.cimkek}</Label>
+                {tagNames.length ? (
+                  <Label classname="font-bold text-center">{tagNames.join(", ")}</Label>
+                ) : (
+                  <Label classname="text-center text-gray-500">—</Label>
+                )}
               </div>
 
               <div className="flex flex-col gap-2 justify-center items-center w-30 border-r border-[var(--border)] px-2">

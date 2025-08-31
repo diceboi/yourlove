@@ -7,6 +7,7 @@ import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
+import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import {
@@ -34,6 +35,18 @@ export default function AdminProductEdit({ product }) {
   const router = useRouter();
 
   const [published, setPublished] = useState(product.kozzeteve === true);
+  
+  const toIdArray = (v) => {
+    try {
+      if (Array.isArray(v)) return v.map(Number).filter(Number.isFinite);
+      if (typeof v === "string" && v.trim()) {
+        const parsed = JSON.parse(v);
+        if (Array.isArray(parsed)) return parsed.map(Number).filter(Number.isFinite);
+      }
+    } catch {}
+    return [];
+  };
+
   const [form, setForm] = useState({
     ...product,
     kategoriak_paths: (() => {
@@ -45,6 +58,7 @@ export default function AdminProductEdit({ product }) {
       } catch {}
       return [];
     })(),
+    cimkek: toIdArray(product.cimkek),
   });
   const [selectedImage, setSelectedImage] = useState(product.termekkep || "");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
@@ -76,6 +90,10 @@ export default function AdminProductEdit({ product }) {
           .filter((p) => p.length > 0)
       : [];
 
+    const tagIds = Array.isArray(form.cimkek)
+    ? Array.from(new Set(form.cimkek.map(Number).filter(Number.isFinite)))
+    : [];  
+
     // payload – ne küldd fel a kliens-oldali state mezőket
     const {
       id, // <- ne rakjuk a payloadba
@@ -89,10 +107,10 @@ export default function AdminProductEdit({ product }) {
       ...rest,
       kozzeteve: !!published,
       termekkep: selectedImage || null,
-      kategoria: JSON.stringify(paths), // TEXT oszlopban tárolt JSON
+      kategoria: JSON.stringify(paths),
+      cimkek: JSON.stringify(tagIds),   // <<< TEXT eset
     };
 
-    // ----- ITT A LÉNYEG: UUID-t stringként használd! -----
     const idStr = String(form.id || "").trim();
     if (!/^[0-9a-fA-F-]{36}$/.test(idStr)) {
       console.error("Mentési hiba: érvénytelen ID", { id: form.id });
@@ -246,13 +264,9 @@ export default function AdminProductEdit({ product }) {
                 placeholder="Brand logó"
                 classname={""}
               />
-              <SmallTextInput
-                legend={"Címkék"}
-                handleChange={handleChange}
-                name="cimkek"
-                value={form.cimkek || ""}
-                placeholder="Címkék"
-                classname={""}
+              <TagsMultiSelect
+                value={form.cimkek || []}                 // ID-k tömbje
+                onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
               />
               <CategoryPathMultiSelect
                 label="Kategóriák"
