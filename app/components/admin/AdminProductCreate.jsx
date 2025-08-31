@@ -1,128 +1,122 @@
 "use client";
 
-import H2 from "@/app/components/UI/Texts/H2";
 import H3 from "@/app/components/UI/Texts/H3";
-import H4 from "@/app/components/UI/Texts/H4";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import {
-  TbClick,
-  TbBarcode,
-  TbIdBadge2,
-  TbShoppingBag,
-  TbAlignJustified,
-  TbPackage,
-  TbListSearch,
-  TbSeo,
-  TbChevronLeft,
-} from "react-icons/tb";
+import { TbAlignJustified, TbChevronLeft, TbSeo, TbClick, TbShoppingBag, TbPackage, TbListSearch } from "react-icons/tb";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
-import Label from "@/app/components/UI/Texts/Label";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
-import PinkButton from "../UI/Buttons/PinkButton";
 import { createClient } from "@/utils/supabase/client";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 
-export default function AdminProductEdit({ product }) {
+function slugify(s = "") {
+  return s
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export default function AdminProductCreate({ onClose }) {
   const router = useRouter();
 
-  const [published, setPublished] = useState(product.kozzeteve === true);
+  const [published, setPublished] = useState(false);
   const [form, setForm] = useState({
-    ...product,
-    kategoriak_paths: (() => {
-      try {
-        const v = product.kategoria;
-        if (typeof v === "string" && v.trim()) {
-          return JSON.parse(v); // elvárjuk: [[1,2],[3,7]]
-        }
-      } catch {}
-      return [];
-    })(),
+    fo_cim: "",
+    alcim: "",
+    cikkszam: "",
+    vonalkod: "",
+    gyarto: "",
+    brand_logo: "",
+    cimkek: "",
+    termekleiras: "",
+    seo_title: "",
+    seo_slug: "",
+    meta_leiras: "",
+    og_title: "",
+    og_image: "",
+    kategoriak_paths: [], // [[1,2],[3,7]]
   });
-  const [selectedImage, setSelectedImage] = useState(product.termekkep || "");
+  const [selectedImage, setSelectedImage] = useState("");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(product);
+
+  const handleClose = () => {
+    if (onClose) onClose();
+    else router.back();
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // egyszerű auto-kitöltés: ha seo_slug üres, a főcím alapján generáljuk
+    if (name === "fo_cim") {
+      setForm((prev) => {
+        const next = { ...prev, fo_cim: value };
+        if (!prev.seo_title) next.seo_title = value;
+        if (!prev.seo_slug) next.seo_slug = slugify(value);
+        return next;
+      });
+      return;
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
-
-  {
-    /*MENTÉS GOMB LOGIKA*/
-  }
 
   const handleSave = async () => {
     const supabase = createClient();
 
-    // kategória path-ok normalizálása
     const paths = Array.isArray(form.kategoriak_paths)
       ? form.kategoriak_paths
           .map((p) =>
-            Array.isArray(p)
-              ? p.map((n) => Number(n)).filter(Number.isFinite)
-              : []
+            Array.isArray(p) ? p.map((n) => Number(n)).filter(Number.isFinite) : []
           )
           .filter((p) => p.length > 0)
       : [];
 
-    // payload – ne küldd fel a kliens-oldali state mezőket
-    const {
-      id, // <- ne rakjuk a payloadba
-      created_at,
-      updated_at,
-      kategoriak_paths, // UI-only
-      ...rest
-    } = form || {};
-
     const payload = {
-      ...rest,
-      kozzeteve: !!published,
+      fo_cim: form.fo_cim || null,
+      alcim: form.alcim || null,
+      cikkszam: form.cikkszam || null,
+      vonalkod: form.vonalkod || null,
+      gyarto: form.gyarto || null,
+      brand_logo: form.brand_logo || null,
+      cimkek: form.cimkek || null,
+      termekleiras: form.termekleiras || null,
+      seo_title: form.seo_title || form.fo_cim || null,
+      seo_slug: form.seo_slug || slugify(form.fo_cim || ""),
+      meta_leiras: form.meta_leiras || null,
+      og_title: form.og_title || null,
+      og_image: form.og_image || null,
       termekkep: selectedImage || null,
+      kozzeteve: !!published,
       kategoria: JSON.stringify(paths), // TEXT oszlopban tárolt JSON
     };
 
-    // ----- ITT A LÉNYEG: UUID-t stringként használd! -----
-    const idStr = String(form.id || "").trim();
-    if (!/^[0-9a-fA-F-]{36}$/.test(idStr)) {
-      console.error("Mentési hiba: érvénytelen ID", { id: form.id });
-      toast("Hiba: érvénytelen termék ID.");
+    if (!payload.seo_slug) {
+      toast("Adj meg SEO slugot vagy Főcímet!");
       return;
     }
 
-    const { data, error } = await supabase
-      .from("products")
-      .update(payload)
-      .eq("id", idStr) // <-- NEM Number(), sima string UUID
-      .select()
-      .single();
+    const { error } = await supabase.from("products").insert([payload]).select().single();
 
     if (error) {
-      console.error("Mentési hiba:", error);
       toast("Hiba történt a mentés során.");
       return;
     }
 
-    // jelzés a listának + SSR frissítés, ha kell
-    console.log('Dispatching admin:products:changed event');
     window.dispatchEvent(new CustomEvent("admin:products:changed"));
     toast.success("Sikeres mentés!");
-    router.back();
+    handleClose();
     router.refresh();
-  };
-
-  const handleClose = () => {
-    router.back();
   };
 
   return (
@@ -132,8 +126,7 @@ export default function AdminProductEdit({ product }) {
         onClose={() => setMediaModalOpen(false)}
         onSelect={(img) => {
           setSelectedImage(img);
-          setCurrentProduct((prev) => ({ ...prev, termekkep: img }));
-          setForm((prev) => ({ ...prev, termekkep: img })); // fontos!
+          setForm((prev) => ({ ...prev, termekkep: img }));
         }}
       />
       <div className="flex flex-col gap-6">
@@ -183,7 +176,7 @@ export default function AdminProductEdit({ product }) {
                   src={selectedImage || "/default.png"}
                   width={500}
                   height={500}
-                  alt={product.seo_slug || "termek-kep"}
+                  alt={form.seo_slug || "termek-kep"}
                   className="rounded-lg w-full h-auto group-hover:opacity-70"
                 />
                 <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">

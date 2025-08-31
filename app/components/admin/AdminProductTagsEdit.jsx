@@ -13,16 +13,15 @@ import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
-import CategorySelectInput from "@/app/components/UI/Inputfield/CategorySelectInput";
 import { createClient } from "@/utils/supabase/client";
 
-export default function AdminProductCategoriesEdit({ category }) {
+export default function AdminProductTagsEdit({ tags }) {
   const router = useRouter();
-  if (!category) return <div className="p-6">Betöltés...</div>;
+  if (!tags) return <div className="p-6">Betöltés...</div>;
 
-  const [published, setPublished] = useState(!!category.kozzeteve);
-  const [form, setForm] = useState({ ...category });
-  const [selectedImage, setSelectedImage] = useState(category.kep || "");
+  const [published, setPublished] = useState(!!tags.kozzeteve);
+  const [form, setForm] = useState({ ...tags });
+  const [selectedImage, setSelectedImage] = useState(tags.kep || "");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
 
   const handleChange = (e) => {
@@ -36,10 +35,9 @@ export default function AdminProductCategoriesEdit({ category }) {
     const payload = {
       ...form,
       kozzeteve: !!published,
-      kep: selectedImage || null,
     };
 
-    let q = supabase.from("product-categories").update(payload);
+    let q = supabase.from("product-tags").update(payload);
     if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
     else q = q.eq("slug", form.slug);
 
@@ -51,7 +49,7 @@ export default function AdminProductCategoriesEdit({ category }) {
     }
 
     // értesítsük a listát
-    window.dispatchEvent(new CustomEvent("admin:categories:changed"));
+    window.dispatchEvent(new CustomEvent("admin:tags:changed"));
     toast.success("Sikeres mentés!");
     router.back();
     router.refresh();
@@ -86,27 +84,10 @@ export default function AdminProductCategoriesEdit({ category }) {
           </div>
         </div>
 
-        <div className="flex flex-col lg:p-6 p-3">
+        <div className="flex flex-col lg:p-6 p-3 min-h-[80vh]">
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Kép */}
-            <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
-              <div className="relative cursor-pointer group" onClick={() => setMediaModalOpen(true)}>
-                <Image
-                  src={selectedImage || "/default.png"}
-                  width={500}
-                  height={500}
-                  alt={form.kep_alt || "kategoria-kep"}
-                  className="rounded-lg w-full h-auto group-hover:opacity-70"
-                />
-                <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
-                  Kép módosítása
-                </span>
-              </div>
-              <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
-            </div>
-
             {/* Alapadatok */}
-            <div className="space-y-2 w-full md:w-1/2">
+            <div className="space-y-2 w-full">
               <div className="flex gap-2 items-start mb-2">
                 <TbAlignJustified className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
                 <H3>Alapadatok</H3>
@@ -115,14 +96,7 @@ export default function AdminProductCategoriesEdit({ category }) {
               <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
               <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
 
-              <CategorySelectInput
-                label="Szülőkategória"
-                value={form.szulo ?? null}
-                onChange={(parentId) => setForm((prev) => ({ ...prev, szulo: parentId }))}
-              />
-
-              <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent || ""} rows={4} handleChange={handleChange} />
-              <Textarea legend="Alsó leírás" name="leiras_lent" value={form.leiras_lent || ""} rows={8} handleChange={handleChange} />
+              <Textarea legend="Leírás" name="leiras" value={form.leiras || ""} rows={4} handleChange={handleChange} />
             </div>
           </div>
         </div>

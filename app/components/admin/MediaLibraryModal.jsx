@@ -5,7 +5,7 @@ import Image from "next/image";
 import { TbX, TbChevronLeft, TbSearch } from "react-icons/tb";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
-import AddProductButton from "@/app/components/UI/Buttons/AddProductButton";
+import UploadImageButton from "../UI/Buttons/UploadImageButton";
 
 const BUCKET = "yourlove";
 
@@ -145,9 +145,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
             </div>
 
             <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-center items-center gap-2 w-full">
-              <AddProductButton
-                title={"Kép feltöltése"}
-                buttonicon={"TbPhotoUp"}
+              <UploadImageButton
                 onclick={handleUploadClick}
               />
               <input

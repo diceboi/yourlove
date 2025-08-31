@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import AdminProductSearch from "./AdminProductSearch";
-import AddProductButton from "../UI/Buttons/AddProductButton";
+import AddProductTagButton from "@/app/components/UI/Buttons/AddProductTagButton";
 import Label from "../UI/Texts/Label";
 import { TbChevronDown } from "react-icons/tb";
 import Modal from "@/app/components/UI/Modal";
-import AdminProductCreate from "@/app/components/admin/AdminProductCreate"; // ⬅️ új komponens
+import AdminProductTagsCreate from "@/app/components/admin/AdminProductTagsCreate";
 
-export default function AdminProductListSettings() {
+export default function AdminProductTagsSettings() {
   const [openCreate, setOpenCreate] = useState(false);
 
   return (
@@ -16,19 +16,12 @@ export default function AdminProductListSettings() {
       <div className="flex flex-col gap-2 sticky top-0 bg-[var(--grey-bg)] py-2 z-20 px-6">
         <div className="flex flex-row gap-2 items-center justify-between">
           <AdminProductSearch />
-          <AddProductButton onclick={() => setOpenCreate(true)} />
+          <AddProductTagButton onclick={() => setOpenCreate(true)} />
         </div>
 
         <div className="flex flex-row w-full items-center">
           <div className="w-56 px-2"><Label>Név</Label></div>
-          <div className="w-76 px-2"><Label>Kategória</Label></div>
-          <div className="w-28 px-2"><Label>Cimkék</Label></div>
-          <div className="flex flex-row gap-2 w-28 px-2">
-            <Label>Ár</Label><button><TbChevronDown /></button>
-          </div>
-          <div className="flex flex-row gap-2 w-28 px-2">
-            <Label>Készlet</Label><button><TbChevronDown /></button>
-          </div>
+          <div className="w-76 px-2"><Label>Slug</Label></div>
           <div className="flex flex-row gap-2 w-28 px-2">
             <Label>Állapot</Label><button><TbChevronDown /></button>
           </div>
@@ -38,7 +31,7 @@ export default function AdminProductListSettings() {
       {/* Új termék modal */}
       {openCreate && (
         <Modal openstate={true} onClose={() => setOpenCreate(false)} closeButton={false}>
-          <AdminProductCreate onClose={() => setOpenCreate(false)} />
+          <AdminProductTagsCreate onClose={() => setOpenCreate(false)} />
         </Modal>
       )}
     </>
