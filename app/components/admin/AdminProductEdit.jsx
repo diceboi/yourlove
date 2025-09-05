@@ -5,6 +5,7 @@ import H3 from "@/app/components/UI/Texts/H3";
 import H4 from "@/app/components/UI/Texts/H4";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
+import SeoTitleBuilder from "@/app/components/UI/Inputfield/SeoTitleBuilder";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
 import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
@@ -853,14 +854,21 @@ export default function AdminProductEdit({ product }) {
               <div className="relative overflow-hidden rounded-lg">
                 <Image
                   src={form.og_image || "/default.png"}
-                  width={300}
-                  height={300}
+                  width={500}
+                  height={500}
                   alt={form.seo_slug || "termek-kep"}
                   className="rounded-lg w-full h-auto"
                 />
               </div>
             </div>
             <div className="space-y-2 w-full mt-0 lg:mt-12">
+              {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+              <SeoTitleBuilder
+                form={form}
+                siteName="Yourlove.hu"
+                value={form.seo_title || ""}
+                onChange={(t) => setForm((p) => ({ ...p, seo_title: t }))}
+              />
               <SmallTextInput
                 legend={"SEO Cím"}
                 handleChange={handleChange}

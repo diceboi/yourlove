@@ -18,6 +18,7 @@ import {
   Tag,
   FolderKanban,
   Bookmark,
+  NotebookPen,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -51,6 +52,7 @@ export default function AdminSideMenu() {
     { id: "termekek", label: "Termékek", icon: Package, badge: productCount ?? "…" },
     { id: "termekkategoriak", label: "Termék kategóriák", icon: FolderKanban },
     { id: "termekcimkek", label: "Termék cimkék", icon: Bookmark },
+    { id: "blogok", label: "Blogok", icon: NotebookPen },
     { id: "rendelesek", label: "Rendelések", icon: ShoppingCart },
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
