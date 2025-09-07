@@ -84,7 +84,7 @@ export default function AdminProductTagsEdit({ tags }) {
           </div>
         </div>
 
-        <div className="flex flex-col lg:p-6 p-3 min-h-[80vh]">
+        <div className="flex flex-col lg:p-6 p-3 min-h-[100vh]">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Alapadatok */}
             <div className="space-y-2 w-full">

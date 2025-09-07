@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import Image from "next/image";
-import { TbChevronLeft, TbSeo, TbAlignJustified } from "react-icons/tb";
-import H3 from "@/app/components/UI/Texts/H3";
-import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
+import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
 import { createClient } from "@/utils/supabase/client";
 
 export default function AdminBlogEdit({ blog }) {
@@ -20,9 +17,30 @@ export default function AdminBlogEdit({ blog }) {
   if (!blog) return <div className="p-6">Betöltés...</div>;
 
   const [published, setPublished] = useState(!!blog.kozzeteve);
-  const [form, setForm] = useState({ ...blog });
-  const [selectedImage, setSelectedImage] = useState(blog.kep || "");
-  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [form, setForm] = useState({
+    ...blog,
+    // biztos ami biztos: ha nincs, legyen üres string
+    bevezeto: blog.bevezeto || "",
+    tartalom: blog.tartalom || "",
+  });
+
+  // --- MediaLibraryModal mint image picker a szerkesztőhöz ---
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const resolverRef = useRef(null); // ide tesszük a Promise.resolve-ot
+
+  const pickImageFromLibrary = () =>
+    new Promise((resolve) => {
+      resolverRef.current = resolve;
+      setMediaOpen(true);
+    });
+
+  const handlePick = (url) => {
+    if (resolverRef.current) {
+      resolverRef.current(url || null);
+      resolverRef.current = null;
+    }
+    setMediaOpen(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +66,6 @@ export default function AdminBlogEdit({ blog }) {
       return;
     }
 
-    // értesítsük a listát
     window.dispatchEvent(new CustomEvent("admin:blogs:changed"));
     toast.success("Sikeres mentés!");
     router.back();
@@ -59,45 +76,40 @@ export default function AdminBlogEdit({ blog }) {
 
   return (
     <>
-      <MediaLibraryModal
-        isOpen={mediaModalOpen}
-        onClose={() => setMediaModalOpen(false)}
-        onSelect={(img) => {
-          setSelectedImage(img);
-          setForm((prev) => ({ ...prev, kep: img }));
-        }}
-      />
+      {/* Media modal a képválasztáshoz (szövegbe illesztés) */}
+      {mediaOpen && (
+        <MediaLibraryModal
+          isOpen={mediaOpen}
+          onClose={() => handlePick(null)}
+          onSelect={(imgUrl) => handlePick(imgUrl)}
+        />
+      )}
 
       <div className="flex flex-col gap-6">
         <div className="sticky top-0 bg-[#f5f5f5] flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[var(--border)] z-10">
-          <div className="flex flex-nowrap gap-2">
-            <button
-              className="flex justify-center items-start w-12 border-r border-[var(--border)] p-2 hover:bg-[var(--border)]"
-              onClick={handleClose}
-            >
-              <TbChevronLeft className="text-[var(--pink)] w-8 h-auto" />
-            </button>
-            <div className="flex lg:flex-row flex-col gap-1 items-center">
-              <h1 className="text-xl font-bold p-2">{form.cim || ""}</h1>
-              <Paragraph classname="min-w-fit">ID: {form.id}</Paragraph>
-            </div>
+          <div className="flex flex-nowrap gap-2 items-center p-2">
+            <h1 className="text-xl font-bold">{form.cim || ""}</h1>
+            <span className="text-sm text-gray-500">ID: {form.id}</span>
           </div>
         </div>
 
-        <div className="flex flex-col lg:p-6 p-3 min-h-[80vh]">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Alapadatok */}
-            <div className="space-y-2 w-full">
-              <div className="flex gap-2 items-start mb-2">
-                <TbAlignJustified className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
-                <H3>Alapadatok</H3>
-              </div>
+        <div className="flex flex-col lg:p-6 p-3 min-h-[100vh] gap-8">
+          {/* Alapadatok */}
+          <div className="space-y-2 w-full">
+            <SmallTextInput legend="Cím" name="cim" value={form.cim || ""} handleChange={handleChange} />
+            <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
+            <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto || ""} rows={4} handleChange={handleChange} />
+          </div>
 
-              <SmallTextInput legend="Név" name="nev" value={form.cim || ""} handleChange={handleChange} />
-              <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
-
-              <Textarea legend="Leírás" name="leiras" value={form.leiras || ""} rows={4} handleChange={handleChange} />
-            </div>
+          {/* Tartalom (TipTap) */}
+          {/* Tartalom (TipTap) – zöld keret + cím, mint a többi mezőnél */}
+          <div className="space-y-2">
+            <BlogTextEditor
+              titleLabel="Tartalom (blog)"
+              value={form.tartalom || ""}
+              onChange={(html) => setForm((prev) => ({ ...prev, tartalom: html }))}
+              onPickImage={pickImageFromLibrary}  // MediaLibraryModal integráció
+            />
           </div>
         </div>
 
