@@ -1,17 +1,17 @@
 import * as React from "react";
 import AdminSideMenu from "@/app/components/admin/AdminSideMenu";
 import AdminHero from "@/app/components/admin/AdminHero";
-import AdminProductTagsEdit from "@/app/components/admin/AdminProductTagsEdit";
+import AdminBlogTagsEdit from "@/app/components/admin/AdminBlogTagsEdit";
 import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 0
 
-export default async function ProductTagsPage({ params }) {
+export default async function BlogTagsPage({ params }) {
 
   const { slug } = await params
   const supabase = await createClient();
   const { data: tags, error } = await supabase
-    .from("product-tags")
+    .from("blog-tags")
     .select("*")
     .eq("id", slug)
     .single();
@@ -22,7 +22,7 @@ export default async function ProductTagsPage({ params }) {
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
           <AdminHero />
-          <AdminProductTagsEdit tags={tags} />
+          <AdminBlogTagsEdit tags={tags} />
         </div>
       </div>
     </div>

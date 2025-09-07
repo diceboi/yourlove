@@ -3,12 +3,11 @@
 import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Label from "../UI/Texts/Label";
 import { AdminMenuContext } from "@/app/AdminContext";
 import { TbExternalLink, TbEdit } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
-export default function AdminProductCategoriesList({ categories }) {
+export default function AdminBlogCategoriesList({ categories }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
 
@@ -19,7 +18,7 @@ export default function AdminProductCategoriesList({ categories }) {
   // refetch az adatbázisból
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
-      .from("product-categories")
+      .from("blog-categories")
       .select("*")
       .order("id", { ascending: true });
     if (!error) setRows(data || []);
@@ -39,7 +38,7 @@ export default function AdminProductCategoriesList({ categories }) {
     return m;
   }, [rows]);
 
-  // név alapú breadcrumb (szülők -> aktuális)
+  // név alapú breadcrumb
   const makeBreadcrumb = (cat) => {
     if (!cat) return "";
     const parents = [];
@@ -62,7 +61,7 @@ export default function AdminProductCategoriesList({ categories }) {
     return parents.join(" > ");
   };
 
-  // slug útvonal felépítése linkhez
+  // slug útvonal felépítése a linkhez (felsőtől az aktuálisig)
   const buildSlugTrail = (cat) => {
     if (!cat) return [];
     const parts = [];
@@ -122,7 +121,8 @@ export default function AdminProductCategoriesList({ categories }) {
               <tr>
                 <th className="text-left font-semibold px-3 py-3 min-w-[240px]">Név</th>
                 <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[420px]">Elérés</th>
+                {/* dinamikus szélesség: nincs min-w */}
+                <th className="text-left font-semibold px-3 py-3">Elérés</th>
                 <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
                 <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
               </tr>
@@ -131,7 +131,7 @@ export default function AdminProductCategoriesList({ categories }) {
               {filtered.map((category) => {
                 const breadcrumb = makeBreadcrumb(category);
                 const parts = buildSlugTrail(category).map(encodeURIComponent);
-                const href = `/termekek${parts.length ? `/${parts.join("/")}` : ""}`;
+                const href = `/blog${parts.length ? `/${parts.join("/")}` : ""}`;
 
                 return (
                   <tr
@@ -146,7 +146,7 @@ export default function AdminProductCategoriesList({ categories }) {
                           width={48}
                           height={48}
                           alt={category.slug || "kategoria-kep"}
-                          className="rounded-md flex-none"
+                          className="rounded-md flex-none object-cover"
                         />
                         <div className="min-w-0">
                           <div className="font-semibold truncate">{category.nev}</div>
@@ -164,10 +164,10 @@ export default function AdminProductCategoriesList({ categories }) {
                       )}
                     </td>
 
-                    {/* Elérés (breadcrumb) */}
+                    {/* Elérés (breadcrumb) – clamp, nincs min-w */}
                     <td className="px-3 py-3 align-middle">
                       {breadcrumb ? (
-                        <span className="font-medium">{breadcrumb}</span>
+                        <span className="font-medium line-clamp-2">{breadcrumb}</span>
                       ) : (
                         <span className="text-gray-500">—</span>
                       )}
@@ -195,7 +195,7 @@ export default function AdminProductCategoriesList({ categories }) {
                           <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
                         </Link>
                         <Link
-                          href={`/admin/termekkategoriak/${category.id}`}
+                          href={`/admin/blogkategoriak/${category.id}`}
                           aria-label="Szerkesztés"
                           className="flex items-center justify-center hover:bg-white w-1/2 h-full"
                         >
@@ -216,7 +216,7 @@ export default function AdminProductCategoriesList({ categories }) {
         {filtered.map((category) => {
           const breadcrumb = makeBreadcrumb(category);
           const parts = buildSlugTrail(category).map(encodeURIComponent);
-          const href = `/termekek${parts.length ? `/${parts.join("/")}` : ""}`;
+          const href = `/blog${parts.length ? `/${parts.join("/")}` : ""}`;
 
           return (
             <div
@@ -229,7 +229,7 @@ export default function AdminProductCategoriesList({ categories }) {
                   width={56}
                   height={56}
                   alt={category.slug || "kategoria-kep"}
-                  className="rounded-md flex-none"
+                  className="rounded-md flex-none object-cover"
                 />
                 <div className="min-w-0">
                   <div className="font-semibold">{category.nev}</div>
@@ -245,7 +245,7 @@ export default function AdminProductCategoriesList({ categories }) {
                     <TbExternalLink className="text-[var(--pink)]" />
                   </Link>
                   <Link
-                    href={`/admin/termekkategoriak/${category.id}`}
+                    href={`/admin/blogkategoriak/${category.id}`}
                     aria-label="Szerkesztés"
                   >
                     <TbEdit />
@@ -261,7 +261,11 @@ export default function AdminProductCategoriesList({ categories }) {
 
                 <div className="text-gray-500">Elérés</div>
                 <div className="font-medium">
-                  {breadcrumb || <span className="text-gray-500">—</span>}
+                  {breadcrumb ? (
+                    <span className="line-clamp-2">{breadcrumb}</span>
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  )}
                 </div>
 
                 <div className="text-gray-500">Állapot</div>

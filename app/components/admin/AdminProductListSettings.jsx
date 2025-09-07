@@ -18,21 +18,6 @@ export default function AdminProductListSettings() {
           <AdminProductSearch />
           <AddProductButton onclick={() => setOpenCreate(true)} />
         </div>
-
-        <div className="flex flex-row w-full items-center">
-          <div className="w-56 px-2"><Label>Név</Label></div>
-          <div className="w-76 px-2"><Label>Kategória</Label></div>
-          <div className="w-28 px-2"><Label>Cimkék</Label></div>
-          <div className="flex flex-row gap-2 w-28 px-2">
-            <Label>Ár</Label><button><TbChevronDown /></button>
-          </div>
-          <div className="flex flex-row gap-2 w-28 px-2">
-            <Label>Készlet</Label><button><TbChevronDown /></button>
-          </div>
-          <div className="flex flex-row gap-2 w-28 px-2">
-            <Label>Állapot</Label><button><TbChevronDown /></button>
-          </div>
-        </div>
       </div>
 
       {/* Új termék modal */}

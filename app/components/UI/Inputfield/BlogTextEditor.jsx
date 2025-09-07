@@ -80,10 +80,10 @@ export default function BlogTextEditor({
   return (
     <fieldset className="flex flex-col items-start rounded-md group bg-white shadow-sm">
       {legend && (
-        <Label className="px-2 py-2.5 text-xs font-bold group-focus-within:bg-[var(--green)] outline outline-white group-focus-within:outline-[var(--green)] group-focus-within:text-white bg-white rounded-t-md w-full border-b-2 border-[var(--border)] group-focus-within:border-[var(--green)]">
-          {legend}
-        </Label>
-      )}
+              <Label classname="px-2 py-2.5 text-xs font-bold group-focus-within:bg-[var(--green)] outline outline-white group-focus-within:outline-[var(--green)] group-focus-within:text-white bg-white rounded-t-md w-full border-b-2 border-[var(--border)] group-focus-within:border-[var(--green)]">
+                {legend || null}
+              </Label>
+            )}
 
       {/* Toolbar – a Textarea stílusához igazítva (zöld hover) */}
       <div className="w-full px-2 py-2 border-b border-[var(--border)] bg-white">

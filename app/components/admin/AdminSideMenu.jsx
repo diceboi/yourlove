@@ -19,6 +19,7 @@ import {
   FolderKanban,
   Bookmark,
   NotebookPen,
+  Minus
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -50,9 +51,11 @@ export default function AdminSideMenu() {
   const sidebarItems = [
     { id: "vezerlopult", label: "Vezérlőpult", icon: Home },
     { id: "termekek", label: "Termékek", icon: Package, badge: productCount ?? "…" },
-    { id: "termekkategoriak", label: "Termék kategóriák", icon: FolderKanban },
-    { id: "termekcimkek", label: "Termék cimkék", icon: Bookmark },
+    { id: "termekkategoriak", label: "Termék kategóriák", icon: Minus },
+    { id: "termekcimkek", label: "Termék cimkék", icon: Minus },
     { id: "blogok", label: "Blogok", icon: NotebookPen },
+    { id: "blogkategoriak", label: "Blog kategóriák", icon: Minus },
+    { id: "blogcimkek", label: "Blog cimkék", icon: Minus },
     { id: "rendelesek", label: "Rendelések", icon: ShoppingCart },
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },

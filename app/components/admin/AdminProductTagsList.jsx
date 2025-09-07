@@ -2,11 +2,23 @@
 
 import React, { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import Label from "../UI/Texts/Label";
 import { AdminMenuContext } from "@/app/AdminContext";
 import { TbExternalLink, TbEdit } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
+
+const MAX_DESC = 80; // állítsd, amennyit szeretnél
+
+function truncateText(s, max = MAX_DESC) {
+  if (!s) return "";
+  const text = String(s).trim().replace(/\s+/g, " ");
+  if (text.length <= max) return text;
+
+  // próbáljuk szóhatárnál vágni
+  const boundary = text.lastIndexOf(" ", max - 1);
+  const cut = boundary >= Math.floor(max * 0.6) ? boundary : max;
+
+  return text.slice(0, cut).replace(/[.,;:!?-]+$/,"").trimEnd() + "…";
+}
 
 export default function AdminProductTagsList({ tags }) {
   const { searchTerm } = useContext(AdminMenuContext);
@@ -31,13 +43,6 @@ export default function AdminProductTagsList({ tags }) {
     window.addEventListener("admin:tags:changed", onChanged);
     return () => window.removeEventListener("admin:tags:changed", onChanged);
   }, [refetch]);
-
-  // id -> kategória map (a breadcrumbs-hoz)
-  const byId = useMemo(() => {
-    const m = new Map();
-    (rows || []).forEach((c) => m.set(String(c.id), c));
-    return m;
-  }, [rows]);
 
   // keresés
   const filtered = useMemo(() => {
@@ -64,46 +69,150 @@ export default function AdminProductTagsList({ tags }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 px-6">
-      {filtered.map((tag) => {
-        const href = `/termekek/cimkek/${tag.slug}`;
+    <>
+      {/* ====== Táblázat (md és fölötte) ====== */}
+      <div className="hidden md:block px-6">
+        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="w-full table-auto text-sm">
+            <thead className="bg-[#f5f5f5] sticky top-0 z-10">
+              <tr>
+                <th className="text-left font-semibold px-3 py-3 min-w-[260px]">Név</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[420px]">Leírás</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
+                <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {filtered.map((tag) => {
+                const href = `/termekek/cimkek/${encodeURIComponent(tag.slug || "")}`;
 
-        return (
-          <div
-            key={tag.id}
-            className="relative flex flex-row justify-between border border-[var(--border)] bg-white rounded-2xl cursor-pointer"
-          >
-            <div className="flex flex-row w-full">
+                return (
+                  <tr
+                    key={tag.id}
+                    className="border-t border-[var(--border)] hover:bg-gray-50"
+                  >
+                    {/* Név + ID */}
+                    <td className="px-3 py-3 align-middle">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{tag.nev}</div>
+                        <div className="text-xs text-gray-500 truncate">#{tag.id}</div>
+                      </div>
+                    </td>
 
-              <div className="flex flex-col gap-2 justify-center w-40 border-r border-[var(--border)] p-2">
-                <Label classname="font-bold">{tag.nev}</Label>
-                <Label>#{tag.id}</Label>
+                    {/* Slug */}
+                    <td className="px-3 py-3 align-middle">
+                      {tag.slug ? (
+                        <span className="font-medium">{tag.slug}</span>
+                      ) : (
+                        <span className="text-gray-500">—</span>
+                      )}
+                    </td>
+
+                    {/* Leírás */}
+                    <td className="px-3 py-3 align-middle">
+                      {tag.leiras ? (
+                        <span title={tag.leiras}>{truncateText(tag.leiras)}</span>
+                      ) : (
+                        <span className="text-gray-500">—</span>
+                      )}
+                    </td>
+
+                    {/* Állapot */}
+                    <td className="px-3 py-3 align-middle">
+                      {tag.kozzeteve ? (
+                        <span className="font-bold text-[var(--green)]">Közzétéve</span>
+                      ) : (
+                        <span className="font-bold text-[var(--warning)]">Vázlat</span>
+                      )}
+                    </td>
+
+                    {/* Műveletek – fél-fél kattintható terület */}
+                    <td className="pl-3 align-middle">
+                      <div className="flex items-center justify-end gap-0 h-[72px]">
+                        <Link
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Megnyitás új lapon"
+                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                        >
+                          <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
+                        </Link>
+                        <Link
+                          href={`/admin/termekcimkek/${tag.id}`}
+                          aria-label="Szerkesztés"
+                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                        >
+                          <TbEdit className="w-5 h-auto" />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ====== Kártyás nézet (mobil, md alatt) ====== */}
+      <div className="md:hidden px-3 space-y-2">
+        {filtered.map((tag) => {
+          const href = `/termekek/cimkek/${encodeURIComponent(tag.slug || "")}`;
+
+          return (
+            <div
+              key={tag.id}
+              className="border border-[var(--border)] bg-white rounded-2xl p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold">{tag.nev}</div>
+                  <div className="text-xs text-gray-500">#{tag.id}</div>
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <Link
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Megnyitás új lapon"
+                  >
+                    <TbExternalLink className="text-[var(--pink)]" />
+                  </Link>
+                  <Link
+                    href={`/admin/termekcimkek/${tag.id}`}
+                    aria-label="Szerkesztés"
+                  >
+                    <TbEdit />
+                  </Link>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2 w-40 justify-center items-center border-r border-[var(--border)] px-2">
-                <Label classname="font-bold text-center">{tag.slug}</Label>
-              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div className="text-gray-500">Slug</div>
+                <div className="font-medium">
+                  {tag.slug || <span className="text-gray-500">—</span>}
+                </div>
 
-              <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                {tag.kozzeteve ? (
-                  <Label classname="font-bold text-center text-[var(--green)]">Közzétéve</Label>
-                ) : (
-                  <Label classname="font-bold text-center text-[var(--warning)]">Vázlat</Label>
-                )}
+                <div className="text-gray-500">Leírás</div>
+                <div className="font-medium" title={tag.leiras || ""}>
+                  {tag.leiras ? truncateText(tag.leiras) : <span className="text-gray-500">—</span>}
+                </div>
+
+                <div className="text-gray-500">Állapot</div>
+                <div className="font-bold">
+                  {tag.kozzeteve ? (
+                    <span className="text-[var(--green)]">Közzétéve</span>
+                  ) : (
+                    <span className="text-[var(--warning)]">Vázlat</span>
+                  )}
+                </div>
               </div>
             </div>
-
-            <div className="flex flex-row items-center justify-end gap-8 px-8 w-full">
-              <Link href={href} target="_blank" rel="noopener noreferrer">
-                <TbExternalLink className="text-[var(--pink)]" />
-              </Link>
-              <Link href={`/admin/termekcimkek/${tag.id}`}>
-                <TbEdit />
-              </Link>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

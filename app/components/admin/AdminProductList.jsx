@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Label from "../UI/Texts/Label";
 import { AdminMenuContext } from "@/app/AdminContext";
-import { TbExternalLink, TbEdit } from "react-icons/tb";
+import { TbExternalLink, TbEdit, TbChevronDown } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
 // --- segédek ---
@@ -65,15 +65,15 @@ function parseTagIds(cimkek) {
   return [];
 }
 
+// ... importok változatlanok
+
 export default function AdminProductList({ products }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
 
-  // adatsorok
+  // --- állapotok + fetch (változatlan) ---
   const [rows, setRows] = useState(products || []);
   useEffect(() => { setRows(products || []); }, [products]);
-
-  // újrahúzás
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("products")
@@ -82,14 +82,13 @@ export default function AdminProductList({ products }) {
     if (!error) setRows(data || []);
   }, [supabase]);
 
-  // frissítés a custom eventre
   useEffect(() => {
     const onChanged = () => refetch();
     window.addEventListener("admin:products:changed", onChanged);
     return () => window.removeEventListener("admin:products:changed", onChanged);
   }, [refetch]);
 
-  // kategóriák egyszer
+  // --- kategóriák és címkék (változatlan) ---
   const [cats, setCats] = useState([]);
   useEffect(() => {
     supabase
@@ -111,7 +110,6 @@ export default function AdminProductList({ products }) {
     return paths.map((p) => breadcrumbFromPath(p, catById)).filter(Boolean);
   };
 
-  // --- CÍMKÉK: táblából névleképezés ---
   const [tags, setTags] = useState([]);
   useEffect(() => {
     supabase
@@ -128,12 +126,12 @@ export default function AdminProductList({ products }) {
   }, [tags]);
 
   const productTagNames = (product) => {
-    const ids = parseTagIds(product.cimkek); // products.cimkek: TEXT "[2,3]"
+    const ids = parseTagIds(product.cimkek);
     if (!ids.length) return [];
     return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
   };
 
-  // keresés a rows-on (címkenevekben is)
+  // --- szűrt sorok (változatlan) ---
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
@@ -155,7 +153,7 @@ export default function AdminProductList({ products }) {
         p.meta_leiras?.toLowerCase().includes(term) ||
         p.termekleiras?.toLowerCase().includes(term) ||
         bcs.includes(term) ||
-        tagText.includes(term)   // <-- címkenevekben is keresünk
+        tagText.includes(term)
       );
     });
   }, [rows, searchTerm, catById, tagById]);
@@ -170,93 +168,204 @@ export default function AdminProductList({ products }) {
     );
   }
 
+  // Közös segédfüggvények a megjelenítéshez
+  const renderBreadcrumbs = (p) => {
+    const bcs = productBreadcrumbs(p);
+    if (!bcs.length) return "—";
+    return bcs.join(" | ");
+  };
+  const price = (p) => p.akcios_ar_brutto ?? p.eladasi_ar_brutto;
+
   return (
-    <div className="flex flex-col gap-2 px-6">
-      {filtered.map((product) => {
-        const bcs = productBreadcrumbs(product);
-        const primaryBc = bcs[0] || "";
-        const categorySlugPath = primaryBc ? slugFromBreadcrumb(primaryBc) : "";
-        const tagNames = productTagNames(product); // ["Elegáns", "Bőr", ...]
+    <>
+      {/* ====== 1) Táblázat (md és fölötte) ====== */}
+      <div className="hidden md:block px-6">
+        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="w-full table-auto text-sm">
+            <thead className="bg-[#f5f5f5] sticky top-0 z-10">
+              <tr>
+                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Név</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[320px]">Kategória</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[200px]">Címkék</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Ár</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[120px]">Készlet</th>
+                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
+                <th className="text-right font-semibold px-3 py-3 min-w-[120px]">Műveletek</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {filtered.map((product) => {
+                const bcs = productBreadcrumbs(product);
+                const primaryBc = bcs[0] || "";
+                const categorySlugPath = primaryBc ? slugFromBreadcrumb(primaryBc) : "";
+                const tagNames = productTagNames(product);
 
-        return (
-          <div
-            key={product.id}
-            className="relative flex flex-row justify-between border border-[var(--border)] bg-white rounded-2xl cursor-pointer"
-          >
-            <div className="flex flex-row w-full ">
-              <Image
-                src={product.termekkep || "/default.png"}
-                width={50}
-                height={50}
-                alt={product.seo_slug || "termek-kep"}
-                className="mr-4 rounded-md m-2"
-              />
+                return (
+                  <tr
+                    key={product.id}
+                    className="border-t border-[var(--border)] hover:bg-gray-50"
+                  >
+                    <td className="px-3 py-3 align-middle">
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={product.termekkep || "/default.png"}
+                          width={48}
+                          height={48}
+                          alt={product.seo_slug || "termek-kep"}
+                          className="rounded-md flex-none"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">{product.fo_cim}</div>
+                          <div className="text-xs text-gray-500 truncate">{product.cikkszam}</div>
+                        </div>
+                      </div>
+                    </td>
 
-              <div className="flex flex-col gap-2 justify-center w-40 border-r border-[var(--border)]">
-                <Label classname="font-bold">{product.fo_cim}</Label>
-                <Label>{product.cikkszam}</Label>
+                    <td className="px-3 py-3 align-middle">
+                      {bcs.length ? (
+                        <div className="flex flex-col">
+                          {bcs.map((bc, i) => (
+                            <div key={i} className="font-medium">{bc}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">—</span>
+                      )}
+                    </td>
+
+                    <td className="px-3 py-3 align-middle">
+                      {tagNames.length ? (
+                        <span className="font-medium">{tagNames.join(", ")}</span>
+                      ) : (
+                        <span className="text-gray-500">—</span>
+                      )}
+                    </td>
+
+                    <td className="px-3 py-3 align-middle">
+                      <span className="text-[var(--green)] font-bold">
+                        {price(product)} Ft
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-3 align-middle">
+                      <span className="font-semibold">{product.keszlet} db</span>
+                    </td>
+
+                    <td className="px-3 py-3 align-middle">
+                      {product.kozzeteve ? (
+                        <span className="font-bold text-[var(--green)]">Közzétéve</span>
+                      ) : (
+                        <span className="font-bold text-[var(--warning)]">Vázlat</span>
+                      )}
+                    </td>
+
+                    <td className="pl-3 align-middle">
+                      <div className="flex items-center justify-end gap-0 h-[72px]">
+                        <Link
+                          href={
+                            categorySlugPath
+                              ? `/termekek/${categorySlugPath}/${product.seo_slug}`
+                              : `/termekek/${product.seo_slug}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Megnyitás új lapon"
+                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                        >
+                          <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
+                        </Link>
+                        <Link
+                          href={`/admin/termekek/${product.seo_slug}`}
+                          aria-label="Szerkesztés"
+                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                        >
+                          <TbEdit className="w-5 h-auto"/>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ====== 2) Kártyás nézet (mobil, md alatt) ====== */}
+      <div className="md:hidden px-3 space-y-2">
+        {filtered.map((product) => {
+          const bcs = productBreadcrumbs(product);
+          const primaryBc = bcs[0] || "";
+          const categorySlugPath = primaryBc ? slugFromBreadcrumb(primaryBc) : "";
+          const tagNames = productTagNames(product);
+
+          return (
+            <div
+              key={product.id}
+              className="border border-[var(--border)] bg-white rounded-2xl p-3"
+            >
+              <div className="flex items-center gap-3">
+                <Image
+                  src={product.termekkep || "/default.png"}
+                  width={56}
+                  height={56}
+                  alt={product.seo_slug || "termek-kep"}
+                  className="rounded-md flex-none"
+                />
+                <div className="min-w-0">
+                  <div className="font-semibold">{product.fo_cim}</div>
+                  <div className="text-xs text-gray-500">{product.cikkszam}</div>
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <Link
+                    href={
+                      categorySlugPath
+                        ? `/termekek/${categorySlugPath}/${product.seo_slug}`
+                        : `/termekek/${product.seo_slug}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Megnyitás új lapon"
+                  >
+                    <TbExternalLink className="text-[var(--pink)]" />
+                  </Link>
+                  <Link href={`/admin/termekek/${product.seo_slug}`} aria-label="Szerkesztés">
+                    <TbEdit />
+                  </Link>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1 w-80 justify-center items-center border-r border-[var(--border)] px-2 text-center">
-                {bcs.length === 0 ? (
-                  <Label classname="font-bold text-center text-gray-500">—</Label>
-                ) : (
-                  bcs.map((bc, i) => (
-                    <Label key={i} classname="font-bold text-center">
-                      {bc}
-                    </Label>
-                  ))
-                )}
-              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div className="text-gray-500">Kategória</div>
+                <div className="font-medium">
+                  {bcs.length ? bcs.join(" | ") : <span className="text-gray-500">—</span>}
+                </div>
 
-              {/* CÍMKÉK NÉVVEL */}
-              <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                {tagNames.length ? (
-                  <Label classname="font-bold text-center">{tagNames.join(", ")}</Label>
-                ) : (
-                  <Label classname="text-center text-gray-500">—</Label>
-                )}
-              </div>
+                <div className="text-gray-500">Címkék</div>
+                <div className="font-medium">
+                  {tagNames.length ? tagNames.join(", ") : <span className="text-gray-500">—</span>}
+                </div>
 
-              <div className="flex flex-col gap-2 justify-center items-center w-30 border-r border-[var(--border)] px-2">
-                <Label classname="text-[var(--green)] font-bold text-center">
-                  {product.eladasi_ar_brutto || product.akcios_ar_brutto} Ft
-                </Label>
-              </div>
+                <div className="text-gray-500">Ár</div>
+                <div className="text-[var(--green)] font-bold">{price(product)} Ft</div>
 
-              <div className="flex flex-col gap-2 justify-center items-center w-30 border-r border-[var(--border)] px-2">
-                <Label classname="font-bold text-center">{product.keszlet} db</Label>
-              </div>
+                <div className="text-gray-500">Készlet</div>
+                <div className="font-semibold">{product.keszlet} db</div>
 
-              <div className="flex flex-col gap-2 w-30 justify-center items-center border-r border-[var(--border)] px-2">
-                {product.kozzeteve ? (
-                  <Label classname="font-bold text-center text-[var(--green)]">Közzétéve</Label>
-                ) : (
-                  <Label classname="font-bold text-center text-[var(--warning)]">Vázlat</Label>
-                )}
+                <div className="text-gray-500">Állapot</div>
+                <div className="font-bold">
+                  {product.kozzeteve ? (
+                    <span className="text-[var(--green)]">Közzétéve</span>
+                  ) : (
+                    <span className="text-[var(--warning)]">Vázlat</span>
+                  )}
+                </div>
               </div>
             </div>
-
-            <div className="flex flex-row items-center justify-end gap-8 px-8 w-full">
-              <Link
-                href={
-                  categorySlugPath
-                    ? `/termekek/${categorySlugPath}/${product.seo_slug}`
-                    : `/termekek/${product.seo_slug}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <TbExternalLink className="text-[var(--pink)]" />
-              </Link>
-
-              <Link href={`/admin/termekek/${product.seo_slug}`}>
-                <TbEdit />
-              </Link>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
+

@@ -7,7 +7,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/admin/vezerlopult");
+    router.replace("/admin/termekek");
   }, [router]);
 
   return null; // vagy egy töltő animációt is berakhatsz ide

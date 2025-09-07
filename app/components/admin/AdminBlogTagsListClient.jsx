@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import AdminProductTagsList from '@/app/components/admin/AdminProductTagsList'
+import AdminBlogTagsList from '@/app/components/admin/AdminBlogTagsList'
 import { createClient } from '@/utils/supabase/client'
 
-export default function AdminProductTagsListClient() {
+export default function AdminBlogTagsListClient() {
   const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -12,7 +12,7 @@ export default function AdminProductTagsListClient() {
 
   useEffect(() => {
     async function fetchProducts() {
-      const { data, error } = await supabase.from('product-tags').select('*')
+      const { data, error } = await supabase.from('blog-tags').select('*')
       if (data) setTags(data)
       setLoading(false)
     }
@@ -20,5 +20,5 @@ export default function AdminProductTagsListClient() {
     fetchProducts()
   }, [])
 
-  return <AdminProductTagsList tags={tags} loading={loading} />
+  return <AdminBlogTagsList tags={tags} loading={loading} />
 }
