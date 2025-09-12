@@ -13,18 +13,18 @@ export default function AdminCancelButton({
     <AdminButton
       title={title}
       link={link}
-      titlecolor={"text-white"}
-      hovertitlecolor={"group-hover:text-white"}
-      bgcolor={"bg-[var(--error)]"}
-      bordercolor={""}
-      hoverbgcolor={"hover:bg-[var(--error-hover)]"}
+      titlecolor={"text-[var(--error)]"}
+      hovertitlecolor={""}
+      bgcolor={"bg-transparent"}
+      bordercolor={"border-[var(--error)]"}
+      hoverbgcolor={"hover:bg-[var(--border)]"}
       onclick={onclick || (() => console.log("Clicked"))}
-      beforeicon={null}
-      aftericon={
+      beforeicon={
         IconComponent ? (
-          <IconComponent className="text-[var(--black)] w-5 h-5" />
+          <IconComponent className="text-[var(--error)] w-5 h-5" />
         ) : null
       }
+      aftericon={null}
     />
   );
 }

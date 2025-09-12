@@ -12,6 +12,7 @@ import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
+import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton"; // ⬅️ új
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import { createClient } from "@/utils/supabase/client";
 
@@ -48,9 +49,34 @@ export default function AdminProductTagsEdit({ tags }) {
       return;
     }
 
-    // értesítsük a listát
     window.dispatchEvent(new CustomEvent("admin:tags:changed"));
     toast.success("Sikeres mentés!");
+    router.back();
+    router.refresh();
+  };
+
+  // ⬇️ törlés
+  const handleDelete = async () => {
+    const supabase = createClient();
+
+    let q = supabase.from("product-tags").delete();
+    if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
+    else if (form.slug) q = q.eq("slug", form.slug);
+    else {
+      toast("Hiba: nincs megadva törölhető azonosító.");
+      return;
+    }
+
+    const { error } = await q;
+
+    if (error) {
+      console.error("Törlési hiba:", error);
+      toast("Hiba történt a törlés során.");
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("admin:tags:changed"));
+    toast.success("Címke törölve.");
     router.back();
     router.refresh();
   };
@@ -95,7 +121,6 @@ export default function AdminProductTagsEdit({ tags }) {
 
               <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
               <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
-
               <Textarea legend="Leírás" name="leiras" value={form.leiras || ""} rows={4} handleChange={handleChange} />
             </div>
           </div>
@@ -104,8 +129,9 @@ export default function AdminProductTagsEdit({ tags }) {
         <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-between items-center gap-2 w-full">
           <ToggleSwitch checked={published} onChange={setPublished} />
           <div className="flex gap-2">
-            <AdminCancelButton title="Mégse" onclick={handleClose} />
-            <AdminSaveButton title="Mentés" onclick={handleSave} />
+            <AdminCancelButton title="Mégse" onclick={handleClose} buttonicon="TbX" />
+            <AdminDeleteButton title="Törlés" onconfirm={handleDelete} buttonicon="TbTrash" />
+            <AdminSaveButton title="Mentés" onclick={handleSave} buttonicon="TbDeviceFloppy" />
           </div>
         </div>
       </div>

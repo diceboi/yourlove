@@ -28,6 +28,7 @@ import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import Label from "@/app/components/UI/Texts/Label";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
+import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton";
 import PinkButton from "../UI/Buttons/PinkButton";
 import { createClient } from "@/utils/supabase/client";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
@@ -139,6 +140,35 @@ export default function AdminProductEdit({ product }) {
     router.back();
     router.refresh();
   };
+
+  const handleDelete = async () => {
+    const supabase = createClient();
+    const idStr = String(form.id || "").trim();
+
+    // UUID ellenőrzés ugyanúgy, mint mentésnél
+    if (!/^[0-9a-fA-F-]{36}$/.test(idStr)) {
+      console.error("Törlési hiba: érvénytelen ID", { id: form.id });
+      toast("Hiba: érvénytelen termék ID.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", idStr);
+
+    if (error) {
+      console.error("Törlési hiba:", error);
+      toast("Hiba történt a törlés során.");
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("admin:products:changed"));
+    toast.success("Termék törölve.");
+    router.back();
+    router.refresh();
+  };
+
 
   const handleClose = () => {
     router.back();
@@ -912,13 +942,18 @@ export default function AdminProductEdit({ product }) {
               title={"Mégse"}
               link={""}
               onclick={handleClose}
-              buttonicon={""}
+              buttonicon={"TbX"}
+            />
+            <AdminDeleteButton
+              title="Törlés"
+              onconfirm={handleDelete}
+              buttonicon="TbTrash"
             />
             <AdminSaveButton
               title={"Mentés"}
               link={""}
               onclick={handleSave}
-              buttonicon={""}
+              buttonicon={"TbDeviceFloppy"}
             />
           </div>
         </div>

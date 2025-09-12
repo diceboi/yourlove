@@ -12,6 +12,7 @@ import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
+import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import CategorySelectInput from "@/app/components/UI/Inputfield/CategorySelectInput";
 import { createClient } from "@/utils/supabase/client";
@@ -56,6 +57,33 @@ export default function AdminProductCategoriesEdit({ category }) {
     router.back();
     router.refresh();
   };
+
+  const handleDelete = async () => {
+    const supabase = createClient();
+
+    // azonosító kiválasztása: ha van id, az alapján; különben slug
+    let q = supabase.from("product-categories").delete();
+    if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
+    else if (form.slug) q = q.eq("slug", form.slug);
+    else {
+      toast("Hiba: nincs megadva törölhető azonosító.");
+      return;
+    }
+
+    const { error } = await q;
+
+    if (error) {
+      console.error("Törlési hiba:", error);
+      toast("Hiba történt a törlés során.");
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("admin:categories:changed"));
+    toast.success("Kategória törölve.");
+    router.back();
+    router.refresh();
+  };
+
 
   const handleClose = () => router.back();
 
@@ -130,8 +158,9 @@ export default function AdminProductCategoriesEdit({ category }) {
         <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-between items-center gap-2 w-full">
           <ToggleSwitch checked={published} onChange={setPublished} />
           <div className="flex gap-2">
-            <AdminCancelButton title="Mégse" onclick={handleClose} />
-            <AdminSaveButton title="Mentés" onclick={handleSave} />
+            <AdminCancelButton title="Mégse" onclick={handleClose} buttonicon={"TbX"} />
+            <AdminDeleteButton title="Törlés" onconfirm={handleDelete} buttonicon="TbTrash" />
+            <AdminSaveButton title="Mentés" onclick={handleSave} buttonicon={"TbDeviceFloppy"}/>
           </div>
         </div>
       </div>

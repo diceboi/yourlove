@@ -9,30 +9,58 @@ import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
-import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton"; // ⬅️ új
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
+import { TbChevronLeft } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
-export default function AdminBlogEdit({ blog }) {
-  const router = useRouter();
-  if (!blog) return <div className="p-6">Betöltés...</div>;
+function slugify(s = "") {
+  return s
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
-  const [published, setPublished] = useState(!!blog.kozzeteve);
+export default function AdminBlogCreate() {
+  const router = useRouter();
+
+  const [published, setPublished] = useState(false);
   const [form, setForm] = useState({
-    ...blog,
-    bevezeto: blog.bevezeto || "",
-    tartalom: blog.tartalom || "",
-    kep_alt: blog.kep_alt || "",
+    cim: "",
+    slug: "",
+    bevezeto: "",
+    tartalom: "",
+    kep: "",
+    kep_alt: "",
   });
 
-  // fő kép kijelölve
-  const [selectedImage, setSelectedImage] = useState(blog.kep || "");
+  // borítókép
+  const [selectedImage, setSelectedImage] = useState("");
 
-  // egy közös Media modal mindkét esetre (főkép / inline)
+  // közös Media modal (cover + inline)
   const [mediaOpen, setMediaOpen] = useState(false);
-  const pickerModeRef = useRef(null); // 'cover' | 'inline' | null
-  const resolverRef = useRef(null);   // Promise.resolve az inline-hoz
+  const pickerModeRef = useRef(null);
+  const resolverRef = useRef(null);
+
+  const handleClose = () => router.back();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "cim") {
+      setForm((prev) => {
+        const next = { ...prev, cim: value };
+        if (!prev.slug) next.slug = slugify(value);
+        return next;
+      });
+      return;
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const openCoverPicker = () => {
     pickerModeRef.current = "cover";
@@ -40,7 +68,7 @@ export default function AdminBlogEdit({ blog }) {
   };
 
   const pickImageFromLibrary = () =>
-    new Promise((resolve) => {
+    new Promise<string | null>((resolve) => {
       pickerModeRef.current = "inline";
       resolverRef.current = resolve;
       setMediaOpen(true);
@@ -71,64 +99,45 @@ export default function AdminBlogEdit({ blog }) {
     setMediaOpen(false);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSave = async () => {
     const supabase = createClient();
 
     const payload = {
-      ...form,
-      kozzeteve: !!published,
+      cim: form.cim || null,
+      slug: form.slug || slugify(form.cim || ""),
+      bevezeto: form.bevezeto || null,
+      tartalom: form.tartalom || null,
       kep: selectedImage || null,
+      kep_alt: form.kep_alt || null,
+      kozzeteve: !!published,
     };
 
-    let q = supabase.from("blogs").update(payload);
-    if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
-    else q = q.eq("slug", form.slug);
+    if (!payload.cim || !payload.slug) {
+      toast("Adj meg címet (és slugot)!");
+      return;
+    }
 
-    const { error } = await q.select().maybeSingle();
+    const { error } = await supabase
+      .from("blogs")
+      .insert([payload])
+      .select()
+      .single();
+
     if (error) {
-      console.error("Mentési hiba:", error);
-      toast("Hiba történt a mentés során.");
+      console.error("Létrehozási hiba:", error);
+      if ((error).code === "23505") {
+        toast("Már létezik ilyen egyedi érték (pl. slug).");
+      } else {
+        toast("Hiba történt a mentés során.");
+      }
       return;
     }
 
     window.dispatchEvent(new CustomEvent("admin:blogs:changed"));
-    toast.success("Sikeres mentés!");
-    router.back();
-    router.refresh();
+    toast.success("Bejegyzés létrehozva!");
+    handleClose();
+    router.replace("/admin/blogok");
   };
-
-  // ⬇️ törlés
-  const handleDelete = async () => {
-    const supabase = createClient();
-
-    let q = supabase.from("blogs").delete();
-    if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
-    else if (form.slug) q = q.eq("slug", form.slug);
-    else {
-      toast("Hiba: nincs megadva törölhető azonosító.");
-      return;
-    }
-
-    const { error } = await q;
-
-    if (error) {
-      console.error("Törlési hiba:", error);
-      toast("Hiba történt a törlés során.");
-      return;
-    }
-
-    window.dispatchEvent(new CustomEvent("admin:blogs:changed"));
-    toast.success("Bejegyzés törölve.");
-    router.back();
-    router.refresh();
-  };
-
-  const handleClose = () => router.back();
 
   return (
     <>
@@ -143,12 +152,20 @@ export default function AdminBlogEdit({ blog }) {
       <div className="flex flex-col gap-6">
         {/* Fejléc */}
         <div className="sticky top-0 bg-[#f5f5f5] flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[var(--border)] z-10">
-          <div className="flex flex-nowrap gap-2 items-center p-2">
-            <h1 className="text-xl font-bold">{form.cim || ""}</h1>
-            <span className="text-sm text-gray-500">ID: {form.id}</span>
+          <div className="flex flex-nowrap gap-2">
+            <button
+              className="flex justify-center items-start w-12 border-r border-[var(--border)] p-2 hover:bg-[var(--border)]"
+              onClick={handleClose}
+            >
+              <TbChevronLeft className="text-[var(--pink)] w-8 h-auto" />
+            </button>
+            <div className="flex lg:flex-row flex-col gap-1 items-center">
+              <h1 className="text-xl font-bold p-2">Új blogbejegyzés</h1>
+            </div>
           </div>
         </div>
 
+        {/* Törzs */}
         <div className="flex flex-col lg:p-6 p-3 min-h-[100vh] gap-8">
           {/* Főkép */}
           <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
@@ -161,29 +178,29 @@ export default function AdminBlogEdit({ blog }) {
                 className="rounded-lg w-full h-auto group-hover:opacity-70"
               />
               <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
-                Kép módosítása
+                Kép kiválasztása
               </span>
             </div>
             <SmallTextInput
               legend="Kép alt"
               name="kep_alt"
-              value={form.kep_alt || ""}
+              value={form.kep_alt}
               handleChange={handleChange}
             />
           </div>
 
           {/* Alapadatok */}
           <div className="space-y-2 w-full">
-            <SmallTextInput legend="Cím" name="cim" value={form.cim || ""} handleChange={handleChange} />
-            <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
-            <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto || ""} rows={4} handleChange={handleChange} />
+            <SmallTextInput legend="Cím" name="cim" value={form.cim} handleChange={handleChange} />
+            <SmallTextInput legend="Slug" name="slug" value={form.slug} handleChange={handleChange} />
+            <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto} rows={4} handleChange={handleChange} />
           </div>
 
           {/* Tartalom (TipTap) */}
           <div className="space-y-2">
             <BlogTextEditor
               legend="Tartalom (blog)"
-              value={form.tartalom || ""}
+              value={form.tartalom}
               onChange={(html) => setForm((prev) => ({ ...prev, tartalom: html }))}
               onPickImage={pickImageFromLibrary}
             />
@@ -195,7 +212,6 @@ export default function AdminBlogEdit({ blog }) {
           <ToggleSwitch checked={published} onChange={setPublished} />
           <div className="flex gap-2">
             <AdminCancelButton title="Mégse" onclick={handleClose} buttonicon="TbX" />
-            <AdminDeleteButton title="Törlés" onconfirm={handleDelete} buttonicon="TbTrash" />
             <AdminSaveButton title="Mentés" onclick={handleSave} buttonicon="TbDeviceFloppy" />
           </div>
         </div>

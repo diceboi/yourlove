@@ -6,7 +6,7 @@ import AddBlogButton from "@/app/components/UI/Buttons/AddBlogButton";
 import Label from "../UI/Texts/Label";
 import { TbChevronDown } from "react-icons/tb";
 import Modal from "@/app/components/UI/Modal";
-import AdminProductTagsCreate from "@/app/components/admin/AdminProductTagsCreate";
+import AdminBlogCreate from "./AdminBlogCreate";
 
 export default function AdminBlogListSettings() {
   const [openCreate, setOpenCreate] = useState(false);
@@ -23,7 +23,7 @@ export default function AdminBlogListSettings() {
       {/* Új termék modal */}
       {openCreate && (
         <Modal openstate={true} onClose={() => setOpenCreate(false)} closeButton={false}>
-          <AdminProductTagsCreate onClose={() => setOpenCreate(false)} />
+          <AdminBlogCreate onClose={() => setOpenCreate(false)} />
         </Modal>
       )}
     </>

@@ -19,12 +19,10 @@ export default function AdminSaveButton({
       bordercolor={""}
       hoverbgcolor={"hover:bg-[var(--green-hover)]"}
       onclick={onclick || (() => console.log("Clicked"))}
-      beforeicon={null}
-      aftericon={
-        IconComponent ? (
+      beforeicon={IconComponent ? (
           <IconComponent className="text-[var(--black)] w-5 h-5" />
-        ) : null
-      }
+        ) : null}
+      aftericon={null}
     />
   );
 }
