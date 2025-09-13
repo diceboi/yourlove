@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { TbChevronLeft, TbSeo, TbAlignJustified } from "react-icons/tb";
+import { TbChevronLeft, TbAlignJustified } from "react-icons/tb";
 import H3 from "@/app/components/UI/Texts/H3";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
@@ -15,6 +15,7 @@ import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import CategorySelectInput from "@/app/components/UI/Inputfield/CategorySelectInput";
+import IconsModalLibrary from "@/app/components/admin/IconsModalLibrary"; // ⬅️ ikon picker
 import { createClient } from "@/utils/supabase/client";
 
 export default function AdminProductCategoriesEdit({ category }) {
@@ -24,7 +25,9 @@ export default function AdminProductCategoriesEdit({ category }) {
   const [published, setPublished] = useState(!!category.kozzeteve);
   const [form, setForm] = useState({ ...category });
   const [selectedImage, setSelectedImage] = useState(category.kep || "");
+  const [selectedIcon, setSelectedIcon] = useState(category.icon || ""); // ⬅️ ÚJ
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [iconModalOpen, setIconModalOpen] = useState(false);            // ⬅️ ÚJ
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,6 +41,7 @@ export default function AdminProductCategoriesEdit({ category }) {
       ...form,
       kozzeteve: !!published,
       kep: selectedImage || null,
+      icon: selectedIcon || form.icon || null, // ⬅️ ikon külön oszlopba
     };
 
     let q = supabase.from("product-categories").update(payload);
@@ -45,13 +49,12 @@ export default function AdminProductCategoriesEdit({ category }) {
     else q = q.eq("slug", form.slug);
 
     const { error } = await q.select().maybeSingle();
-
     if (error) {
+      console.error(error);
       toast("Hiba történt a mentés során.");
       return;
     }
 
-    // értesítsük a listát
     window.dispatchEvent(new CustomEvent("admin:categories:changed"));
     toast.success("Sikeres mentés!");
     router.back();
@@ -60,8 +63,6 @@ export default function AdminProductCategoriesEdit({ category }) {
 
   const handleDelete = async () => {
     const supabase = createClient();
-
-    // azonosító kiválasztása: ha van id, az alapján; különben slug
     let q = supabase.from("product-categories").delete();
     if (form.id != null && form.id !== "") q = q.eq("id", Number(form.id));
     else if (form.slug) q = q.eq("slug", form.slug);
@@ -69,26 +70,23 @@ export default function AdminProductCategoriesEdit({ category }) {
       toast("Hiba: nincs megadva törölhető azonosító.");
       return;
     }
-
     const { error } = await q;
-
     if (error) {
       console.error("Törlési hiba:", error);
       toast("Hiba történt a törlés során.");
       return;
     }
-
     window.dispatchEvent(new CustomEvent("admin:categories:changed"));
     toast.success("Kategória törölve.");
     router.back();
     router.refresh();
   };
 
-
   const handleClose = () => router.back();
 
   return (
     <>
+      {/* Képek a storage-ból (termékkategória borító) */}
       <MediaLibraryModal
         isOpen={mediaModalOpen}
         onClose={() => setMediaModalOpen(false)}
@@ -96,6 +94,17 @@ export default function AdminProductCategoriesEdit({ category }) {
           setSelectedImage(img);
           setForm((prev) => ({ ...prev, kep: img }));
         }}
+      />
+
+      {/* Ikonok a storage icons/ könyvtárából */}
+      <IconsModalLibrary
+        isOpen={iconModalOpen}
+        onClose={() => setIconModalOpen(false)}
+        onSelect={(iconUrl) => {
+          setSelectedIcon(iconUrl);
+          setForm((prev) => ({ ...prev, icon: iconUrl }));
+        }}
+        allowUpload={true}
       />
 
       <div className="flex flex-col gap-6">
@@ -116,7 +125,7 @@ export default function AdminProductCategoriesEdit({ category }) {
 
         <div className="flex flex-col lg:p-6 p-3">
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Kép */}
+            {/* Kép blokk */}
             <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
               <div className="relative cursor-pointer group" onClick={() => setMediaModalOpen(true)}>
                 <Image
@@ -131,6 +140,28 @@ export default function AdminProductCategoriesEdit({ category }) {
                 </span>
               </div>
               <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
+
+              {/* Ikon blokk – külön a képtől */}
+                <div className="mb-2 font-semibold">Ikon</div>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-16 h-16 border border-[var(--border)] rounded-md bg-white">
+                    {selectedIcon ? (
+                      <Image src={selectedIcon} alt="ikon" fill className="object-contain p-2" />
+                    ) : (
+                      <div className="w-full h-full grid place-items-center text-xs text-gray-400">
+                        Nincs ikon
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIconModalOpen(true)}
+                    className="border border-[var(--border)] rounded-lg px-3 py-2 hover:bg-gray-50 text-sm"
+                  >
+                    Ikon kiválasztása (Storage /icons)
+                  </button>
+                </div>
+                {/* manuális szerkesztés, ha akarod kézzel beírni az URL-t */}
             </div>
 
             {/* Alapadatok */}
@@ -160,7 +191,7 @@ export default function AdminProductCategoriesEdit({ category }) {
           <div className="flex gap-2">
             <AdminCancelButton title="Mégse" onclick={handleClose} buttonicon={"TbX"} />
             <AdminDeleteButton title="Törlés" onconfirm={handleDelete} buttonicon="TbTrash" />
-            <AdminSaveButton title="Mentés" onclick={handleSave} buttonicon={"TbDeviceFloppy"}/>
+            <AdminSaveButton title="Mentés" onclick={handleSave} buttonicon={"TbDeviceFloppy"} />
           </div>
         </div>
       </div>

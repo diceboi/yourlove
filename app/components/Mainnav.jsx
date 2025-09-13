@@ -22,7 +22,7 @@ export default function MainNav() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [scrolledEnough, setScrolledEnough] = useState(false);
-  const { subMenu } = useContext(MenuContext);
+  const { subMenu, cancelCloseSubmenu, scheduleCloseSubmenu } = useContext(MenuContext);
 
   const pathname = usePathname();
   const pathSegments = pathname.split("/").filter(Boolean);
@@ -96,8 +96,11 @@ export default function MainNav() {
       <motion.div
         id="desktop-menu"
         className="hidden xl:flex flex-col gap-2 bg-white"
+        onMouseEnter={cancelCloseSubmenu}
+        onMouseLeave={() => scheduleCloseSubmenu()}
         initial={{ y: 0 }}
         animate={{ y: isVisible ? 0 : -84 }}
+        exit={{ y: 0 }}
         transition={{ duration: 0.3 }}
       >
         <MainMenu />

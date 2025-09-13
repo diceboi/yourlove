@@ -108,7 +108,7 @@ export default function UserMenu() {
       </button>
 
       {dropdownOpen && user && (
-        <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full rounded-3xl bg-white border border-[var(--border)] overflow-hidden">
+        <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full min-w-fit rounded-3xl bg-white border border-[var(--border)] overflow-hidden">
           <button
             onClick={() => router.push("/admin")}
             className="px-6 py-2 hover:bg-[var(--grey-bg)] group"
