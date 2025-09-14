@@ -12,6 +12,7 @@ import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
+import IconsModalLibrary from "@/app/components/admin/IconsModalLibrary";
 import CategorySelectInput from "@/app/components/UI/Inputfield/CategorySelectInput";
 import { createClient } from "@/utils/supabase/client";
 
@@ -38,8 +39,10 @@ export default function AdminProductCategoryCreate({ onClose }) {
     leiras_lent: "",
     kep_alt: "",
     og_image: "",
+    icon: "",
   });
   const [selectedImage, setSelectedImage] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
 
   const handleClose = () => {
@@ -71,6 +74,7 @@ export default function AdminProductCategoryCreate({ onClose }) {
       leiras_lent: form.leiras_lent || null,
       kep: selectedImage || null,
       kep_alt: form.kep_alt || null,
+      icon: form.icon || null,
       kozzeteve: !!published,
     };
 
@@ -105,6 +109,16 @@ export default function AdminProductCategoryCreate({ onClose }) {
           setSelectedImage(img);
           setForm((prev) => ({ ...prev, kep: img }));
         }}
+      />
+
+      <IconsModalLibrary
+        isOpen={iconModalOpen}
+        onClose={() => setIconModalOpen(false)}
+        onSelect={(iconUrl) => {
+          setSelectedIcon(iconUrl);
+          setForm((prev) => ({ ...prev, icon: iconUrl }));
+        }}
+        allowUpload={true}
       />
 
       <div className="flex flex-col gap-6">
@@ -149,6 +163,28 @@ export default function AdminProductCategoryCreate({ onClose }) {
                 handleChange={handleChange}
               />
             </div>
+
+            {/* Ikon blokk – külön a képtől */}
+                <div className="mb-2 font-semibold">Ikon</div>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-16 h-16 border border-[var(--border)] rounded-md bg-white">
+                    {selectedIcon ? (
+                      <Image src={selectedIcon} alt="ikon" fill className="object-contain p-2" />
+                    ) : (
+                      <div className="w-full h-full grid place-items-center text-xs text-gray-400">
+                        Nincs ikon
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIconModalOpen(true)}
+                    className="border border-[var(--border)] rounded-lg px-3 py-2 hover:bg-gray-50 text-sm"
+                  >
+                    Ikon kiválasztása (Storage /icons)
+                  </button>
+                </div>
+                {/* manuális szerkesztés, ha akarod kézzel beírni az URL-t */}
 
             {/* Alapadatok */}
             <div className="space-y-2 w-full md:w-1/2">

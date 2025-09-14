@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useMemo, useState, useCallback } from "react";
+import Link from "next/link";
 import SubmenuItem from "./SubmenuItem";
 import { MenuContext } from "../../MenuContext";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -15,36 +16,67 @@ import { createClient } from "@/utils/supabase/client";
 export default function Submenu() {
   const { subMenu, cancelCloseSubmenu, scheduleCloseSubmenu } = useContext(MenuContext);
   const supabase = useMemo(() => createClient(), []);
-  const [cats, setCats] = useState([]);
+  const [parentCat, setParentCat] = useState(null);
+  const [childrenCats, setChildrenCats] = useState([]);
+  const [fallbackProducts, setFallbackProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchSecondaryCats = useCallback(async (parentSlug) => {
-    if (!parentSlug) { setCats([]); return; }
+    setParentCat(null);
+    setChildrenCats([]);
+    setFallbackProducts([]);
+
+    if (!parentSlug) return;
 
     setLoading(true);
 
-    // 1) szülő lekérése slug alapján
+    // 1) parent lekérés slug alapján
     const { data: parent, error: pErr } = await supabase
       .from("product-categories")
-      .select("id, slug")
+      .select("id, slug, nev, kep, icon, kozzeteve")
       .eq("slug", String(parentSlug).toLowerCase())
       .maybeSingle();
 
     if (pErr || !parent) {
-      setCats([]);
       setLoading(false);
       return;
     }
+    setParentCat(parent);
 
-    // 2) gyerekek, ahol szulo = parent.id és közzétéve = true
-    const { data, error } = await supabase
+    // 2) gyerekek
+    const { data: kids, error: kErr } = await supabase
       .from("product-categories")
-      .select("id, nev, slug, szulo, kep, kozzeteve, icon")
+      .select("id, nev, slug, szulo, kep, icon, kozzeteve")
       .eq("szulo", parent.id)
       .eq("kozzeteve", true)
       .order("nev", { ascending: true });
 
-    setCats(error ? [] : (data || []));
+    if (!kErr && kids?.length) {
+      setChildrenCats(kids);
+      setLoading(false);
+      return;
+    }
+
+    // 3) fallback termékek, ha nincs gyerek
+    const { data: prods, error: prodErr } = await supabase
+      .from("products")
+      .select("id, fo_cim, seo_slug, termekkep, kategoria, kozzeteve")
+      .eq("kozzeteve", true)
+      .order("kattintasok", { ascending: false })
+      .limit(24);
+
+    if (!prodErr && prods?.length) {
+      const filtered = prods.filter((p) => {
+        try {
+          const paths = JSON.parse(p.kategoria);
+          return Array.isArray(paths) && paths.some((path) => Array.isArray(path) && path.includes(parent.id));
+        } catch {
+          return false;
+        }
+      });
+      setFallbackProducts(filtered);
+    }
+
     setLoading(false);
   }, [supabase]);
 
@@ -58,8 +90,43 @@ export default function Submenu() {
     1024: { slidesPerView: 11, spaceBetween: 16 },
   };
 
-  // jelenjen meg a sáv, ha van aktív szülő slug
-  const shouldShow = Boolean(subMenu);
+  // csak akkor nyíljon le, ha VAN tartalom (és ne is villanjon loading közben)
+  const hasContent = childrenCats.length > 0 || fallbackProducts.length > 0;
+  const shouldShow = Boolean(subMenu) && hasContent;
+
+  // slides csak akkor épül, ha van tartalom
+  const slides = [];
+  if (shouldShow && parentCat) {
+    slides.push({
+      type: "parent",
+      id: `parent-${parentCat.id}`,
+      title: `${parentCat.nev} kategória`,
+      image: parentCat.kep || parentCat.icon || "/default.png",
+      href: `/termekek/${encodeURIComponent(parentCat.slug)}`,
+    });
+  }
+
+  if (shouldShow && childrenCats.length) {
+    slides.push(
+      ...childrenCats.map((c) => ({
+        type: "category",
+        id: `cat-${c.id}`,
+        title: c.nev,
+        image: c.kep || c.icon || "/default.png",
+        href: `/termekek/${encodeURIComponent(parentCat?.slug || "")}/${encodeURIComponent(c.slug)}`,
+      }))
+    );
+  } else if (shouldShow && fallbackProducts.length) {
+    slides.push(
+      ...fallbackProducts.map((p) => ({
+        type: "product",
+        id: `prod-${p.id}`,
+        title: `${p.fo_cim}`,
+        image: p.termekkep || "/default.png",
+        href: `/termekek/${encodeURIComponent(parentCat?.slug || "")}/${encodeURIComponent(p.seo_slug)}`,
+      }))
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -79,31 +146,14 @@ export default function Submenu() {
             className="w-full my-4"
             breakpoints={breakpoints}
           >
-            {(loading ? Array.from({ length: 8 }).map((_, i) => ({ id: `sk-${i}` })) : cats).map((cat, idx) => (
-              <SwiperSlide key={loading ? `sk-${idx}` : cat.id}>
-                {loading ? (
-                  <div className="w-full aspect-square rounded-xl bg-[var(--border)] animate-pulse" />
-                ) : cats.length ? (
-                  <SubmenuItem
-                    title={cat.nev}
-                    image={cat.kep || cat.icon || "/default.png"}
-                    // ha kattintható legyen:
-                    href={`/termekek/${encodeURIComponent(String(subMenu))}/${encodeURIComponent(cat.slug)}`}
-                  />
-                ) : (
-                  <div className="w-full aspect-square rounded-xl border border-[var(--border)] flex items-center justify-center text-sm text-gray-500">
-                    Nincs alkategória
-                  </div>
-                )}
+            {slides.map((item, idx) => (
+              <SwiperSlide
+                key={item.id}
+                className="first:border-r first:border-[var(--border)] first:pr-4"
+              >
+                <SubmenuItem title={item.title} image={item.image} href={item.href} />
               </SwiperSlide>
             ))}
-            {!loading && cats.length === 0 && (
-              <SwiperSlide key="empty">
-                <div className="w-full aspect-square rounded-xl border border-[var(--border)] flex items-center justify-center text-sm text-gray-500">
-                  Nincs alkategória
-                </div>
-              </SwiperSlide>
-            )}
           </Swiper>
         </motion.div>
       )}
