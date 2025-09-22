@@ -24,7 +24,7 @@ export default async function Page() {
         <CategoryPageTexts category={"Termékek"} />
 
         {/* Szűrő rész Suspense-ben */}
-        <div className="flex flex-col sticky top-0 left-0 z-40 bg-white border-b border-[var(--border)] py-0 2xl:py-4">
+        <div className="flex flex-col sticky top-0 left-0 z-10 bg-white border-b border-[var(--border)] py-0 2xl:py-4">
           <Suspense fallback={<div>Betöltés...</div>}>
             <FilterSection />
           </Suspense>

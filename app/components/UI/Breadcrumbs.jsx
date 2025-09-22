@@ -31,8 +31,8 @@ const Breadcrumbs = () => {
   });
 
   return (
-    <nav aria-label="Breadcrumb" className="text-sm text-[var(--tertiary-text)]">
-      <ol className="flex space-x-2 lg:text-lg text-sm">
+    <nav aria-label="Breadcrumb" className="text-sm text-[var(--tertiary-text)] lg:border-0 border-b border-[var(--border)] pb-1">
+      <ol className="flex flex-wrap  space-x-2 lg:text-lg text-sm">
         <li>
           <Link href="/" className="hover:underline hover:text-[var(--black)]">Kezdőlap</Link>
         </li>

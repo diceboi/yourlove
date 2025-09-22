@@ -149,7 +149,7 @@ export default function Submenu() {
             {slides.map((item, idx) => (
               <SwiperSlide
                 key={item.id}
-                className="first:border-r first:border-[var(--border)] first:pr-4"
+                className="first:border-r first:border-[var(--border)] first:pr-4 first:font-bold"
               >
                 <SubmenuItem title={item.title} image={item.image} href={item.href} />
               </SwiperSlide>

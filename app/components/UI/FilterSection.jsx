@@ -6,10 +6,10 @@ import FilterArrange from "@/app/components/UI/FilterArrange";
 import FilterColor from "@/app/components/UI/FilterColor";
 import FilterChipButton from "@/app/components/UI/Buttons/FilterChipButton";
 
-export default function FilterSection() {
+export default function FilterSection({slug}) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ ide kell
+  const searchParams = useSearchParams();
 
   const selectedColor = searchParams.get("color") || "";
   const selectedSort = searchParams.get("arrange") || "";

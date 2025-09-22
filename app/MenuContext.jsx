@@ -1,35 +1,71 @@
+// MenuContext.js
 'use client';
 
-import { createContext, useRef, useState } from "react";
+import { createContext, useRef, useState, useCallback, useEffect } from "react";
 
 export const MenuContext = createContext({
-  subMenu: false,
+  // desktop submenu
+  subMenu: null,
   setSubMenu: () => {},
   cancelCloseSubmenu: () => {},
   scheduleCloseSubmenu: () => {},
+
+  // mobile drawer
+  isMobileOpen: false,
+  openMobileMenu: () => {},
+  closeMobileMenu: () => {},
 });
 
 export default function MenuContextProvider({ children }) {
-  const [subMenu, setSubMenu] = useState(false);
+  // --- desktop submenu ---
+  const [subMenu, setSubMenuState] = useState(null);
   const closeTimeoutRef = useRef(null);
 
-  const openSubMenu = (value) => {
-    clearTimeout(closeTimeoutRef.current); // töröljük a korábbi bezárást
-    setSubMenu(value);
-  };
+  const setSubMenu = useCallback((slug) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setSubMenuState(slug ?? null);
+  }, []);
 
-  const scheduleCloseSubmenu = () => {
+  const scheduleCloseSubmenu = useCallback((delayMs = 300) => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     closeTimeoutRef.current = setTimeout(() => {
-      setSubMenu(false);
-    }, 300);
-  };
+      setSubMenuState(null);
+      closeTimeoutRef.current = null;
+    }, delayMs);
+  }, []);
 
-  const cancelCloseSubmenu = () => {
-    clearTimeout(closeTimeoutRef.current);
-  };
+  const cancelCloseSubmenu = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }, []);
+
+  // --- mobile drawer ---
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const openMobileMenu = useCallback(() => setIsMobileOpen(true), []);
+  const closeMobileMenu = useCallback(() => setIsMobileOpen(false), []);
+
+  // body scroll lock mobil menü alatt
+  useEffect(() => {
+    if (isMobileOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [isMobileOpen]);
 
   return (
-    <MenuContext.Provider value={{ subMenu, setSubMenu: openSubMenu, scheduleCloseSubmenu, cancelCloseSubmenu }}>
+    <MenuContext.Provider
+      value={{
+        subMenu, setSubMenu, scheduleCloseSubmenu, cancelCloseSubmenu,
+        isMobileOpen, openMobileMenu, closeMobileMenu
+      }}
+    >
       {children}
     </MenuContext.Provider>
   );

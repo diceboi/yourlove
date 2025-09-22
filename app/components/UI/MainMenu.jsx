@@ -27,7 +27,7 @@ export default function MainMenu() {
   }, [fetchTopCats]);
 
   return (
-      <div className="flex flex-row items-end justify-start gap-4 border-b border-[var(--border)] w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white z-10">
+      <div className="flex flex-row items-end justify-start gap-4 border-b border-[var(--border)] w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white z-10 -mt-1">
         {/* Dinamikus fő kategóriák */}
         {cats.map((c) => (
           <MainMenuItem

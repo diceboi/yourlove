@@ -13,6 +13,7 @@ import SubmenuItem from "./UI/SubmenuItem";
 import Paragraph from "./UI/Texts/MenuText";
 import MainMenu from "./UI/MainMenu";
 import Submenu from "./UI/Submenu";
+import MobileMenuDrawer from "./UI/MobileMenuDrawer";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useContext } from "react";
 import { MenuContext } from "../MenuContext";
@@ -95,7 +96,7 @@ export default function MainNav() {
       </div>
       <motion.div
         id="desktop-menu"
-        className="hidden xl:flex flex-col gap-2 bg-white"
+        className="hidden xl:flex flex-col bg-white"
         onMouseEnter={cancelCloseSubmenu}
         onMouseLeave={() => scheduleCloseSubmenu()}
         initial={{ y: 0 }}
@@ -116,6 +117,7 @@ export default function MainNav() {
         <div className="w-[calc(100%-32px)] mx-auto py-2">
           <SearchBarDesktop />
         </div>
+        <MobileMenuDrawer />
       </motion.div>
     </motion.div>
   );
