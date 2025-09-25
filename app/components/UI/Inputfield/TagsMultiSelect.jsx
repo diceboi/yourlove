@@ -20,7 +20,7 @@ export default function TagsMultiSelect({
   useEffect(() => {
     const supabase = createClient();
     supabase
-      .from("product-tags")
+      .from("blog-tags")
       .select("id, nev, slug")
       .order("nev", { ascending: true })
       .then(({ data, error }) => {

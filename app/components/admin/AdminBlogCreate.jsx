@@ -1,3 +1,4 @@
+// app/components/admin/AdminBlogCreate.jsx
 "use client";
 
 import { useRef, useState } from "react";
@@ -11,6 +12,8 @@ import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
+import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
+import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
 import { TbChevronLeft } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
@@ -26,6 +29,21 @@ function slugify(s = "") {
     .replace(/^-|-$/g, "");
 }
 
+// normalizálók mentéshez
+const normalizePaths = (paths) =>
+  Array.isArray(paths)
+    ? paths
+        .map((p) =>
+          Array.isArray(p) ? p.map((n) => Number(n)).filter(Number.isFinite) : []
+        )
+        .filter((p) => p.length > 0)
+    : [];
+
+const normalizeIds = (ids) =>
+  Array.isArray(ids)
+    ? Array.from(new Set(ids.map(Number).filter(Number.isFinite)))
+    : [];
+
 export default function AdminBlogCreate() {
   const router = useRouter();
 
@@ -37,6 +55,9 @@ export default function AdminBlogCreate() {
     tartalom: "",
     kep: "",
     kep_alt: "",
+    // UI-only mezők a szelektorokhoz:
+    kategoriak_paths: [],  // number[][]
+    cimkek: [],            // number[]
   });
 
   // borítókép
@@ -68,7 +89,7 @@ export default function AdminBlogCreate() {
   };
 
   const pickImageFromLibrary = () =>
-    new Promise<string | null>((resolve) => {
+    new Promise((resolve) => {
       pickerModeRef.current = "inline";
       resolverRef.current = resolve;
       setMediaOpen(true);
@@ -102,6 +123,9 @@ export default function AdminBlogCreate() {
   const handleSave = async () => {
     const supabase = createClient();
 
+    const normalizedPaths = normalizePaths(form.kategoriak_paths);
+    const tagIds = normalizeIds(form.cimkek);
+
     const payload = {
       cim: form.cim || null,
       slug: form.slug || slugify(form.cim || ""),
@@ -110,6 +134,9 @@ export default function AdminBlogCreate() {
       kep: selectedImage || null,
       kep_alt: form.kep_alt || null,
       kozzeteve: !!published,
+      // DB oszlopok:
+      kategoria: JSON.stringify(normalizedPaths), // TEXT/JSON
+      cimke: JSON.stringify(tagIds),              // TEXT/JSON
     };
 
     if (!payload.cim || !payload.slug) {
@@ -125,7 +152,7 @@ export default function AdminBlogCreate() {
 
     if (error) {
       console.error("Létrehozási hiba:", error);
-      if ((error).code === "23505") {
+      if (error.code === "23505") {
         toast("Már létezik ilyen egyedi érték (pl. slug).");
       } else {
         toast("Hiba történt a mentés során.");
@@ -194,6 +221,20 @@ export default function AdminBlogCreate() {
             <SmallTextInput legend="Cím" name="cim" value={form.cim} handleChange={handleChange} />
             <SmallTextInput legend="Slug" name="slug" value={form.slug} handleChange={handleChange} />
             <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto} rows={4} handleChange={handleChange} />
+          </div>
+
+          {/* Választók */}
+          <div className="space-y-4 w-full">
+            <TagsMultiSelect
+              label="Címkék"
+              value={form.cimkek}
+              onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+            />
+            <CategoryPathMultiSelect
+              label="Kategóriák"
+              value={form.kategoriak_paths}
+              onChange={(paths) => setForm((p) => ({ ...p, kategoriak_paths: paths }))}
+            />
           </div>
 
           {/* Tartalom (TipTap) */}

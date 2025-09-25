@@ -27,6 +27,49 @@ function parseIds(value) {
   return [];
 }
 
+const parseJsonSafe = (v) => {
+  try { return JSON.parse(v); } catch { return null; }
+};
+const toNum = (n) => {
+  const x = Number(n);
+  return Number.isFinite(x) ? x : null;
+};
+const parseIdArray = (v) => {
+  if (v == null) return [];
+  const data = typeof v === "string" ? parseJsonSafe(v) ?? v : v;
+
+  if (Array.isArray(data)) return data.map(toNum).filter(Boolean);
+  if (typeof data === "number") return [data];
+
+  // fallback: "1,2,3" vagy vegyes string
+  if (typeof data === "string") {
+    const ids = data.match(/\d+/g)?.map(Number) || [];
+    return ids.filter(Number.isFinite);
+  }
+  return [];
+};
+
+const parseCategoryPaths = (v, getPathIds) => {
+  if (v == null) return [];
+  const data = typeof v === "string" ? parseJsonSafe(v) ?? v : v;
+
+  if (Array.isArray(data)) {
+    // path-mátrix
+    if (data.every((it) => Array.isArray(it))) {
+      return data
+        .map((path) => path.map(toNum).filter(Boolean))
+        .filter((p) => p.length);
+    }
+    // lapos id-tömb -> alakítsd path-á
+    const ids = parseIdArray(data);
+    return ids.map((leafId) => getPathIds(leafId)).filter((p) => p.length);
+  }
+
+  // fallback: bármilyen más -> próbáld id-listává és path-á
+  const ids = parseIdArray(v);
+  return ids.map((leafId) => getPathIds(leafId)).filter((p) => p.length);
+};
+
 export default function AdminBlogList({ blogs }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
@@ -67,6 +110,26 @@ export default function AdminBlogList({ blogs }) {
     return m;
   }, [cats]);
 
+  // id -> név (ha nincs, fallback)
+const nameOf = (id) => catById.get(String(id))?.nev || `#${id}`;
+
+// leafId -> [root,...,leaf] path
+const getPathIds = (leafId) => {
+  const path = [];
+  let cur = catById.get(String(leafId));
+  let depth = 0;
+  while (cur && depth < 32) {
+    path.push(cur.id);
+    cur = cur.szulo == null ? null : catById.get(String(cur.szulo));
+    depth++;
+  }
+  return path.reverse();
+};
+
+// path -> "A > B > C"
+const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
+
+
   const makeCatBreadcrumb = (catId) => {
     if (catId == null) return "";
     const parts = [];
@@ -104,18 +167,17 @@ export default function AdminBlogList({ blogs }) {
   }, [blogTags]);
 
   const blogCategoryTexts = (blog) => {
-    // elfogad: blog.kategoria vagy blog.kategoriak
-    const ids = parseIds(blog.kategoriak ?? blog.kategoria);
-    if (!ids.length) return [];
-    return ids.map((id) => makeCatBreadcrumb(id)).filter(Boolean);
-  };
+  // 'kategoria' oszlop: lehet [[...],[...]] vagy lapos id-lista/JSON
+  const paths = parseCategoryPaths(blog.kategoria ?? blog.kategoriak, getPathIds);
+  return paths.map((p) => breadcrumbFromPath(p));
+};
+
 
   const blogTagNames = (blog) => {
-    // elfogad: blog.cimkek vagy blog.tags
-    const ids = parseIds(blog.cimkek ?? blog.tags);
-    if (!ids.length) return [];
-    return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
-  };
+  const ids = parseIdArray(blog.cimke ?? blog.cimkek ?? blog.tags);
+  return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
+};
+
 
   // keresés
   const filtered = useMemo(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
@@ -9,14 +9,63 @@ import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
-import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton"; // ⬅️ új
+import AdminDeleteButton from "@/app/components/UI/Buttons/AdminDeleteButton";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
+import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
+import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
 import { createClient } from "@/utils/supabase/client";
+
+function toIdArray(v) {
+  try {
+    if (Array.isArray(v)) return v.map(Number).filter(Number.isFinite);
+    if (typeof v === "string" && v.trim()) {
+      const parsed = JSON.parse(v);
+      if (Array.isArray(parsed)) return parsed.map(Number).filter(Number.isFinite);
+    }
+  } catch {}
+  return [];
+}
+
+/**
+ * A CategoryPathMultiSelect a termékeknél path-tömböket vár (pl. [[1,2],[3,9]]).
+ * Blognál is ezt adjuk neki (DB-ben: TEXT/JSON a 'kategoriak' oszlopban).
+ */
+function toPathArray(v) {
+  try {
+    if (Array.isArray(v)) {
+      // már path-tömb
+      return v
+        .map(p => Array.isArray(p) ? p.map(n => Number(n)).filter(Number.isFinite) : [])
+        .filter(p => p.length > 0);
+    }
+    if (typeof v === "string" && v.trim()) {
+      const parsed = JSON.parse(v);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map(p => Array.isArray(p) ? p.map(n => Number(n)).filter(Number.isFinite) : [])
+          .filter(p => p.length > 0);
+      }
+    }
+  } catch {}
+  return [];
+}
 
 export default function AdminBlogEdit({ blog }) {
   const router = useRouter();
   if (!blog) return <div className="p-6">Betöltés...</div>;
+
+  // ---- Kezdeti state normalizálás
+  const initialPaths = useMemo(() => {
+    // ha a blogs táblában 'kategoriak' TEXT/JSON oszlop van:
+    // (ha nálad a neve más – pl. 'kategoriak_paths' vagy 'blog_kategoriak' – itt írd át)
+    return toPathArray(blog.kategoria || blog.kategoriak_paths || []);
+  }, [blog]);
+
+  const initialTags = useMemo(() => {
+    // ha a blogs táblában a cimkék TEXT/JSON oszlop (pl. "[1,2,3]"):
+    return toIdArray(blog.cimke);
+  }, [blog]);
 
   const [published, setPublished] = useState(!!blog.kozzeteve);
   const [form, setForm] = useState({
@@ -24,15 +73,15 @@ export default function AdminBlogEdit({ blog }) {
     bevezeto: blog.bevezeto || "",
     tartalom: blog.tartalom || "",
     kep_alt: blog.kep_alt || "",
+    // UI-only mezők a komponensekhez:
+    kategoriak_paths: initialPaths,  // [[...], [...]]
+    cimkek: initialTags,             // [id, id, ...]
   });
 
-  // fő kép kijelölve
   const [selectedImage, setSelectedImage] = useState(blog.kep || "");
-
-  // egy közös Media modal mindkét esetre (főkép / inline)
   const [mediaOpen, setMediaOpen] = useState(false);
-  const pickerModeRef = useRef(null); // 'cover' | 'inline' | null
-  const resolverRef = useRef(null);   // Promise.resolve az inline-hoz
+  const pickerModeRef = useRef(null);
+  const resolverRef = useRef(null);
 
   const openCoverPicker = () => {
     pickerModeRef.current = "cover";
@@ -79,10 +128,38 @@ export default function AdminBlogEdit({ blog }) {
   const handleSave = async () => {
     const supabase = createClient();
 
+    // 1) Path-ok normalizálása → JSON string a DB-nek
+    const normalizedPaths = Array.isArray(form.kategoriak_paths)
+      ? form.kategoriak_paths
+          .map((p) =>
+            Array.isArray(p)
+              ? p.map((n) => Number(n)).filter(Number.isFinite)
+              : []
+          )
+          .filter((p) => p.length > 0)
+      : [];
+
+    // 2) Cimkék normalizálása (egyszerű id tömb) → JSON string
+    const tagIds = Array.isArray(form.cimkek)
+      ? Array.from(new Set(form.cimkek.map(Number).filter(Number.isFinite)))
+      : [];
+
+    // 3) payload: UI-only mezőket NE küldjük fel
+    const {
+      id,
+      created_at,
+      updated_at,
+      kategoriak_paths, // UI-only
+      cimkek: _uiTags,  // UI-only
+      ...rest
+    } = form || {};
+
     const payload = {
-      ...form,
+      ...rest,
       kozzeteve: !!published,
       kep: selectedImage || null,
+      kategoria: JSON.stringify(normalizedPaths),
+      cimke: JSON.stringify(tagIds),
     };
 
     let q = supabase.from("blogs").update(payload);
@@ -96,13 +173,18 @@ export default function AdminBlogEdit({ blog }) {
       return;
     }
 
+    setForm(prev => ({
+      ...prev,
+      kategoriak_paths: normalizedPaths,
+      cimkek: tagIds,
+    }));
+    
     window.dispatchEvent(new CustomEvent("admin:blogs:changed"));
     toast.success("Sikeres mentés!");
     router.back();
     router.refresh();
   };
 
-  // ⬇️ törlés
   const handleDelete = async () => {
     const supabase = createClient();
 
@@ -115,7 +197,6 @@ export default function AdminBlogEdit({ blog }) {
     }
 
     const { error } = await q;
-
     if (error) {
       console.error("Törlési hiba:", error);
       toast("Hiba történt a törlés során.");
@@ -177,6 +258,23 @@ export default function AdminBlogEdit({ blog }) {
             <SmallTextInput legend="Cím" name="cim" value={form.cim || ""} handleChange={handleChange} />
             <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
             <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto || ""} rows={4} handleChange={handleChange} />
+
+            {/* BLOG cimkék */}
+            <TagsMultiSelect
+              value={form.cimkek || []}                 // [id, id, ...]
+              onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+              // ha a komponens tud forrást váltani: source="blog"
+            />
+
+            {/* BLOG kategóriák (path-alapú kiválasztó) */}
+            <CategoryPathMultiSelect
+              label="Kategóriák (blog)"
+              value={form.kategoriak_paths || []}
+              onChange={(paths) =>
+                setForm((prev) => ({ ...prev, kategoriak_paths: paths }))
+              }
+              // ha a komponens tud forrást váltani: table="blog-categories"
+            />
           </div>
 
           {/* Tartalom (TipTap) */}

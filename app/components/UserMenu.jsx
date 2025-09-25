@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "react-toastify";
+import Label from "./UI/Texts/Label";
 
 export default function UserMenu() {
   const router = useRouter();
@@ -108,27 +109,27 @@ export default function UserMenu() {
       </button>
 
       {dropdownOpen && user && (
-        <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full min-w-fit rounded-3xl bg-white border border-[var(--border)] overflow-hidden">
+        <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full min-w-fit rounded-xl bg-white border border-[var(--border)] overflow-hidden p-2">
           <button
             onClick={() => router.push("/admin")}
-            className="px-6 py-2 hover:bg-[var(--grey-bg)] group"
+            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg"
           >
-            <MenuText>Admin felület</MenuText>
+            <Label>Admin felület</Label>
           </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group">
-            <MenuText>Profil</MenuText>
+          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
+            <Label>Profil</Label>
           </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group">
-            <MenuText>Rendelések</MenuText>
+          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
+            <Label>Rendelések</Label>
           </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group">
-            <MenuText>Kedvencek</MenuText>
+          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
+            <Label>Kedvencek</Label>
           </button>
           <button
             onClick={doLogout}
-            className="px-6 py-2 hover:bg-[var(--grey-bg)] group"
+            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg"
           >
-            <MenuText>Kijelentkezés</MenuText>
+            <Label>Kijelentkezés</Label>
           </button>
         </div>
       )}

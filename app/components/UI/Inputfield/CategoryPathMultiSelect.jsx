@@ -19,7 +19,7 @@ export default function CategoryPathMultiSelect({
   useEffect(() => {
     const supabase = createClient();
     supabase
-      .from("product-categories")
+      .from("blog-categories")
       .select("id, nev, slug, szulo")
       .order("nev", { ascending: true })
       .then(({ data, error }) => {
