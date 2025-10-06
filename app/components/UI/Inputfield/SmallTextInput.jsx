@@ -8,14 +8,14 @@ export default function SmallTextInput({
   name,
   placeholder,
   classname,
-  after
+  after,
 }) {
   return (
     <fieldset className="flex flex-nowrap items-center rounded-md group bg-white shadow-sm relative">
       {legend && (
-        <Label classname={"px-2 py-2.5 text-xs font-bold group-focus-within:bg-[var(--green)] outline outline-white group-focus-within:outline-[var(--green)] group-focus-within:text-white bg-white rounded-l-md min-w-fit"}>
-          {legend || null}
-        </Label>
+          <Label classname={"flex flex-nowrap gap-1 px-2 py-2.5 text-xs font-bold group-focus-within:bg-[var(--green)] outline outline-white group-focus-within:outline-[var(--green)] group-focus-within:text-white bg-white rounded-l-md min-w-fit"}>
+            {legend || null}
+          </Label>
       )}
       <input
         name={name || null}

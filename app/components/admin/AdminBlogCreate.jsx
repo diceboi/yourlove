@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import Image from "next/image";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
+import Label from "@/app/components/UI/Texts/Label";
+import H3 from "@/app/components/UI/Texts/H3";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
@@ -14,7 +16,7 @@ import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
 import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
 import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
-import { TbChevronLeft } from "react-icons/tb";
+import { TbChevronLeft, TbSeo, TbAlignJustified } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
 function slugify(s = "") {
@@ -55,6 +57,7 @@ export default function AdminBlogCreate() {
     tartalom: "",
     kep: "",
     kep_alt: "",
+    meta_title: "",
     // UI-only mezők a szelektorokhoz:
     kategoriak_paths: [],  // number[][]
     cimkek: [],            // number[]
@@ -134,6 +137,7 @@ export default function AdminBlogCreate() {
       kep: selectedImage || null,
       kep_alt: form.kep_alt || null,
       kozzeteve: !!published,
+      meta_title: form.meta_title || null,
       // DB oszlopok:
       kategoria: JSON.stringify(normalizedPaths), // TEXT/JSON
       cimke: JSON.stringify(tagIds),              // TEXT/JSON
@@ -187,13 +191,13 @@ export default function AdminBlogCreate() {
               <TbChevronLeft className="text-[var(--pink)] w-8 h-auto" />
             </button>
             <div className="flex lg:flex-row flex-col gap-1 items-center">
-              <h1 className="text-xl font-bold p-2">Új blogbejegyzés</h1>
+              <h1 className="text-xl font-bold">{form.cim || ""}</h1>
+              <span className="text-sm text-gray-500">ID: {form.id}</span>
             </div>
           </div>
         </div>
 
-        {/* Törzs */}
-        <div className="flex flex-col lg:p-6 p-3 min-h-[100vh] gap-8">
+        <div className="flex flex-col md:flex-row lg:p-6 p-3 gap-8">
           {/* Főkép */}
           <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
             <div className="relative cursor-pointer group" onClick={openCoverPicker}>
@@ -205,47 +209,83 @@ export default function AdminBlogCreate() {
                 className="rounded-lg w-full h-auto group-hover:opacity-70"
               />
               <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
-                Kép kiválasztása
+                Kép módosítása
               </span>
             </div>
-            <SmallTextInput
-              legend="Kép alt"
-              name="kep_alt"
-              value={form.kep_alt}
-              handleChange={handleChange}
-            />
           </div>
 
           {/* Alapadatok */}
-          <div className="space-y-2 w-full">
-            <SmallTextInput legend="Cím" name="cim" value={form.cim} handleChange={handleChange} />
-            <SmallTextInput legend="Slug" name="slug" value={form.slug} handleChange={handleChange} />
-            <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto} rows={4} handleChange={handleChange} />
-          </div>
+          <div className="space-y-2 md:w-1/2">
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbAlignJustified className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+              <H3>Általános</H3>
+            </div>
+            <SmallTextInput legend="Cím" name="cim" value={form.cim || ""} handleChange={handleChange} />
+            <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto || ""} rows={4} handleChange={handleChange} />
 
-          {/* Választók */}
-          <div className="space-y-4 w-full">
+            {/* BLOG cimkék */}
             <TagsMultiSelect
-              label="Címkék"
-              value={form.cimkek}
+              value={form.cimkek || []}                 // [id, id, ...]
               onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+              from={"blog-tags"}
+              // ha a komponens tud forrást váltani: source="blog"
             />
+
+            {/* BLOG kategóriák (path-alapú kiválasztó) */}
             <CategoryPathMultiSelect
-              label="Kategóriák"
-              value={form.kategoriak_paths}
-              onChange={(paths) => setForm((p) => ({ ...p, kategoriak_paths: paths }))}
+              label="Kategóriák (blog)"
+              value={form.kategoriak_paths || []}
+              onChange={(paths) =>
+                setForm((prev) => ({ ...prev, kategoriak_paths: paths }))
+              }
+              from={"blog-categories"}
+              // ha a komponens tud forrást váltani: table="blog-categories"
             />
           </div>
+        </div>
 
-          {/* Tartalom (TipTap) */}
-          <div className="space-y-2">
+        {/* Tartalom (TipTap) */}
+          <div className="space-y-2 p-6">
             <BlogTextEditor
               legend="Tartalom (blog)"
-              value={form.tartalom}
+              value={form.tartalom || ""}
               onChange={(html) => setForm((prev) => ({ ...prev, tartalom: html }))}
               onPickImage={pickImageFromLibrary}
             />
           </div>
+
+          <div className="space-y-2 w-full px-6">
+              <div className="flex flex-nowrap gap-2 items-start mb-4">
+                <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+                <H3>SEO</H3>
+              </div>
+              <div className="space-y-2 w-full">
+              {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+              <SmallTextInput
+                legend={"Meta title"}
+                handleChange={handleChange}
+                name="meta_title"
+                value={form.meta_title || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Slug"}
+                handleChange={handleChange}
+                name="slug"
+                value={form.slug || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Főkép alt"}
+                handleChange={handleChange}
+                name="kep_alt"
+                value={form.kep_alt || ""}
+                placeholder=""
+                classname={""}
+              />
+            </div>
         </div>
 
         {/* Lábléc */}

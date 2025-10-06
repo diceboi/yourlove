@@ -63,8 +63,11 @@ export default function AdminProductEdit({ product }) {
     cimkek: toIdArray(product.cimkek),
   });
   const [selectedImage, setSelectedImage] = useState(product.termekkep || "");
+  const [selectedOGImage, setSelectedOGImage] = useState(product.og_image || "")
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(product);
+
+  const pickerModeRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -109,6 +112,7 @@ export default function AdminProductEdit({ product }) {
       ...rest,
       kozzeteve: !!published,
       termekkep: selectedImage || null,
+      og_image: selectedOGImage || null,
       kategoria: JSON.stringify(paths),
       cimkek: JSON.stringify(tagIds),   // <<< TEXT eset
     };
@@ -178,13 +182,35 @@ export default function AdminProductEdit({ product }) {
     <>
       <MediaLibraryModal
         isOpen={mediaModalOpen}
-        onClose={() => setMediaModalOpen(false)}
+        onClose={() => {
+          setMediaModalOpen(false);
+          pickerModeRef.current = null;
+        }}
         onSelect={(img) => {
-          setSelectedImage(img);
-          setCurrentProduct((prev) => ({ ...prev, termekkep: img }));
-          setForm((prev) => ({ ...prev, termekkep: img })); // fontos!
+          // ha a felhasználó mégsem választott semmit:
+          if (!img) {
+            setMediaModalOpen(false);
+            pickerModeRef.current = null;
+            return;
+          }
+
+          const mode = pickerModeRef.current;
+
+          if (mode === "og_image") {
+            setSelectedOGImage(img);
+            setForm((prev) => ({ ...prev, og_image: img }));
+          } else {
+            // default: termékkép
+            setSelectedImage(img);
+            setCurrentProduct((prev) => ({ ...prev, termekkep: img }));
+            setForm((prev) => ({ ...prev, termekkep: img }));
+          }
+
+          setMediaModalOpen(false);
+          pickerModeRef.current = null;
         }}
       />
+
       <div className="flex flex-col gap-6">
         <div className="sticky top-0 bg-[#f5f5f5] flex flex-col justify-between items-start md:flex-row gap-4 z-1 border-b border-[var(--border)]">
           <div className="flex flex-col md:flex-row justify-between md:items-center items-start w-full gap-2">
@@ -197,7 +223,7 @@ export default function AdminProductEdit({ product }) {
               </button>
               <div className="flex lg:flex-row flex-col gap-1 items-center">
                 <h1 className="text-xl font-bold w-full p-2 ">
-                  {form.seo_title || ""}
+                  {form.fo_cim || ""} {form.alcim || ""}
                 </h1>
                 <Paragraph classname={"min-w-fit"}>
                   ID: {form.id || ""}
@@ -226,7 +252,10 @@ export default function AdminProductEdit({ product }) {
             <div className="relative md:w-1/2 overflow-hidden rounded-lg">
               <div
                 className="relative cursor-pointer group"
-                onClick={() => setMediaModalOpen(true)}
+                onClick={() => {
+                  pickerModeRef.current = "termekkep";
+                  setMediaModalOpen(true);
+                }}
               >
                 <Image
                   src={selectedImage || "/default.png"}
@@ -298,6 +327,7 @@ export default function AdminProductEdit({ product }) {
               <TagsMultiSelect
                 value={form.cimkek || []}                 // ID-k tömbje
                 onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+                from={"product-tags"}
               />
               <CategoryPathMultiSelect
                 label="Kategóriák"
@@ -305,6 +335,7 @@ export default function AdminProductEdit({ product }) {
                 onChange={(paths) =>
                   setForm((prev) => ({ ...prev, kategoriak_paths: paths }))
                 }
+                from={"product-categories"}
               />
             </div>
           </div>
@@ -881,15 +912,27 @@ export default function AdminProductEdit({ product }) {
                 <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
                 <H3>SEO</H3>
               </div>
-              <div className="relative overflow-hidden rounded-lg">
-                <Image
-                  src={form.og_image || "/default.png"}
-                  width={500}
-                  height={500}
-                  alt={form.seo_slug || "termek-kep"}
-                  className="rounded-lg w-full h-auto"
-                />
-              </div>
+              <div className="space-y-4 relative md:w-full overflow-hidden rounded-lg bg-white">
+                <Label classname={"font-bold p-2 text-xs"}>OG Image</Label>
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={() => {
+                    pickerModeRef.current = "og_image";
+                    setMediaModalOpen(true);
+                  }}
+                >
+                  <Image
+                    src={selectedOGImage || "/default.png"}
+                    width={500}
+                    height={500}
+                    alt={product.seo_slug || "termek-kep"}
+                    className="rounded-lg w-full h-auto group-hover:opacity-70"
+                  />
+                  <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
+                    Kép módosítása
+                  </span>
+                </div>
+            </div>
             </div>
             <div className="space-y-2 w-full mt-0 lg:mt-12">
               {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
@@ -929,6 +972,14 @@ export default function AdminProductEdit({ product }) {
                 handleChange={handleChange}
                 name="og_title"
                 value={form.og_title || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Termékkép alt"}
+                handleChange={handleChange}
+                name="termekkep_alt"
+                value={form.termekkep_alt || ""}
                 placeholder=""
                 classname={""}
               />

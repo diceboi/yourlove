@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { TbChevronLeft, TbAlignJustified } from "react-icons/tb";
+import { TbChevronLeft, TbAlignJustified, TbSeo } from "react-icons/tb";
 import H3 from "@/app/components/UI/Texts/H3";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
@@ -112,7 +112,7 @@ export default function AdminBlogTagsEdit({ tags }) {
         </div>
 
         <div className="flex flex-col lg:p-6 p-3 min-h-[100vh]">
-          <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col gap-16">
             {/* Alapadatok */}
             <div className="space-y-2 w-full">
               <div className="flex gap-2 items-start mb-2">
@@ -121,8 +121,15 @@ export default function AdminBlogTagsEdit({ tags }) {
               </div>
 
               <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
-              <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
               <Textarea legend="Leírás" name="leiras" value={form.leiras || ""} rows={4} handleChange={handleChange} />
+            </div>
+
+            <div className="space-y-2 w-full">
+              <div className="flex gap-2 items-start mb-2">
+                <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+                <H3>SEO</H3>
+              </div>
+              <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
             </div>
           </div>
         </div>

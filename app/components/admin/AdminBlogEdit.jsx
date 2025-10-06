@@ -4,6 +4,8 @@ import { useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
+import H3 from "@/app/components/UI/Texts/H3";
+import Label from "../UI/Texts/Label";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
@@ -15,6 +17,7 @@ import BlogTextEditor from "@/app/components/UI/Inputfield/BlogTextEditor";
 import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
 import { createClient } from "@/utils/supabase/client";
+import { TbChevronLeft, TbAlignJustified, TbSeo } from "react-icons/tb"
 
 function toIdArray(v) {
   try {
@@ -224,13 +227,21 @@ export default function AdminBlogEdit({ blog }) {
       <div className="flex flex-col gap-6">
         {/* Fejléc */}
         <div className="sticky top-0 bg-[#f5f5f5] flex flex-col md:flex-row justify-between items-start gap-4 border-b border-[var(--border)] z-10">
-          <div className="flex flex-nowrap gap-2 items-center p-2">
-            <h1 className="text-xl font-bold">{form.cim || ""}</h1>
-            <span className="text-sm text-gray-500">ID: {form.id}</span>
+          <div className="flex flex-nowrap gap-2">
+            <button
+              className="flex justify-center items-start w-12 border-r border-[var(--border)] p-2 hover:bg-[var(--border)]"
+              onClick={handleClose}
+            >
+              <TbChevronLeft className="text-[var(--pink)] w-8 h-auto" />
+            </button>
+            <div className="flex lg:flex-row flex-col gap-1 items-center">
+              <h1 className="text-xl font-bold">{form.cim || ""}</h1>
+              <span className="text-sm text-gray-500">ID: {form.id}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:p-6 p-3 min-h-[100vh] gap-8">
+        <div className="flex flex-col md:flex-row lg:p-6 p-3 gap-8">
           {/* Főkép */}
           <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
             <div className="relative cursor-pointer group" onClick={openCoverPicker}>
@@ -245,24 +256,22 @@ export default function AdminBlogEdit({ blog }) {
                 Kép módosítása
               </span>
             </div>
-            <SmallTextInput
-              legend="Kép alt"
-              name="kep_alt"
-              value={form.kep_alt || ""}
-              handleChange={handleChange}
-            />
           </div>
 
           {/* Alapadatok */}
-          <div className="space-y-2 w-full">
+          <div className="space-y-2 md:w-1/2">
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbAlignJustified className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+              <H3>Általános</H3>
+            </div>
             <SmallTextInput legend="Cím" name="cim" value={form.cim || ""} handleChange={handleChange} />
-            <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
             <Textarea legend="Bevezető" name="bevezeto" value={form.bevezeto || ""} rows={4} handleChange={handleChange} />
 
             {/* BLOG cimkék */}
             <TagsMultiSelect
               value={form.cimkek || []}                 // [id, id, ...]
               onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+              from={"blog-tags"}
               // ha a komponens tud forrást váltani: source="blog"
             />
 
@@ -273,12 +282,14 @@ export default function AdminBlogEdit({ blog }) {
               onChange={(paths) =>
                 setForm((prev) => ({ ...prev, kategoriak_paths: paths }))
               }
+              from={"blog-categories"}
               // ha a komponens tud forrást váltani: table="blog-categories"
             />
           </div>
+        </div>
 
-          {/* Tartalom (TipTap) */}
-          <div className="space-y-2">
+        {/* Tartalom (TipTap) */}
+          <div className="space-y-2 p-6">
             <BlogTextEditor
               legend="Tartalom (blog)"
               value={form.tartalom || ""}
@@ -286,6 +297,39 @@ export default function AdminBlogEdit({ blog }) {
               onPickImage={pickImageFromLibrary}
             />
           </div>
+
+          <div className="space-y-2 w-full px-6">
+              <div className="flex flex-nowrap gap-2 items-start mb-4">
+                <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+                <H3>SEO</H3>
+              </div>
+              <div className="space-y-2 w-full">
+              {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+              <SmallTextInput
+                legend={"Meta title"}
+                handleChange={handleChange}
+                name="meta_title"
+                value={form.meta_title || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Slug"}
+                handleChange={handleChange}
+                name="slug"
+                value={form.slug || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Főkép alt"}
+                handleChange={handleChange}
+                name="kep_alt"
+                value={form.kep_alt || ""}
+                placeholder=""
+                classname={""}
+              />
+            </div>
         </div>
 
         {/* Lábléc */}

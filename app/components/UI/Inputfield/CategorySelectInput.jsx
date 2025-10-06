@@ -10,6 +10,7 @@ export default function CategorySelectInput({
   onChange,           // (id | null) -> void
   placeholder = "Válassz szülőkategóriát…",
   className = "",
+  from,
 }) {
   const [open, setOpen] = useState(false);
   const [allCats, setAllCats] = useState([]);     // {id, nev, slug} elemek
@@ -22,7 +23,7 @@ export default function CategorySelectInput({
     (async () => {
       const supabase = createClient();
       const { data, error } = await supabase
-        .from("product-categories")
+        .from(from)
         .select("id, nev, slug")
         .order("nev", { ascending: true });
 

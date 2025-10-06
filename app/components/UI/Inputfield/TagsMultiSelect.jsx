@@ -10,6 +10,7 @@ export default function TagsMultiSelect({
   onChange,                   // (ids:number[]) => void
   placeholder = "Válassz címkéket…",
   className = "",
+  from
 }) {
   const [open, setOpen] = useState(false);
   const [tags, setTags] = useState([]); // {id, nev, slug}
@@ -20,7 +21,7 @@ export default function TagsMultiSelect({
   useEffect(() => {
     const supabase = createClient();
     supabase
-      .from("blog-tags")
+      .from(from)
       .select("id, nev, slug")
       .order("nev", { ascending: true })
       .then(({ data, error }) => {

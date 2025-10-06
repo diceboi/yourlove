@@ -9,6 +9,7 @@ import {
   TbX,
   TbSeparatorHorizontal,
 } from "react-icons/tb";
+import Label from "@/app/components/UI/Texts/Label";
 
 const PARTS = [
   { key: "NAME", label: "Terméknév" },     // form.fo_cim
@@ -255,9 +256,9 @@ export default function SeoTitleBuilder({
 
   return (
     <fieldset className={`bg-white rounded-md shadow-sm ${className}`} ref={boxRef}>
-      <label className="px-2 py-2.5 text-xs font-bold bg-white block rounded-t-md">
-        SEO cím építő
-      </label>
+      <Label classname={"flex flex-nowrap gap-1 px-2 py-2.5 text-xs font-bold group-focus-within:bg-[var(--green)] outline outline-white group-focus-within:outline-[var(--green)] group-focus-within:text-white bg-white rounded-l-md min-w-fit"}>
+        SEO Cím építő
+      </Label>
 
       {/* chipek */}
       <div className="flex flex-wrap items-center gap-2 border border-[var(--border)] rounded-md px-2 py-2 m-2">

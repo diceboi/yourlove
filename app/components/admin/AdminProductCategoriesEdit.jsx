@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { TbChevronLeft, TbAlignJustified } from "react-icons/tb";
+import { TbChevronLeft, TbAlignJustified, TbSeo } from "react-icons/tb";
 import H3 from "@/app/components/UI/Texts/H3";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
@@ -139,7 +139,6 @@ export default function AdminProductCategoriesEdit({ category }) {
                   Kép módosítása
                 </span>
               </div>
-              <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
 
               {/* Ikon blokk – külön a képtől */}
                 <div className="mb-2 font-semibold">Ikon</div>
@@ -172,7 +171,6 @@ export default function AdminProductCategoriesEdit({ category }) {
               </div>
 
               <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
-              <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
 
               <CategorySelectInput
                 label="Szülőkategória"
@@ -182,6 +180,19 @@ export default function AdminProductCategoriesEdit({ category }) {
 
               <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent || ""} rows={4} handleChange={handleChange} />
               <Textarea legend="Alsó leírás" name="leiras_lent" value={form.leiras_lent || ""} rows={8} handleChange={handleChange} />
+            </div>
+          </div>
+
+          <div className="flex lg:flex-row flex-col lg:gap-8 gap-2 py-16">
+            <div className="space-y-2 w-full">
+              <div className="flex flex-nowrap gap-2 items-start mb-4">
+                <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+                <H3>SEO</H3>
+              </div>
+            {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+            <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
+            <SmallTextInput legend="Meta title" name="meta_title" value={form.meta_title || ""} handleChange={handleChange} />
+            <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
             </div>
           </div>
         </div>

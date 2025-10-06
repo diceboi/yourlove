@@ -10,6 +10,7 @@ export default function CategoryPathMultiSelect({
   onChange,                   // (paths:number[][]) => void
   placeholder = "Válassz kategóriákat…",
   className = "",
+  from
 }) {
   const [open, setOpen] = useState(false);
   const [cats, setCats] = useState([]); // {id, nev, slug, szulo}
@@ -19,7 +20,7 @@ export default function CategoryPathMultiSelect({
   useEffect(() => {
     const supabase = createClient();
     supabase
-      .from("blog-categories")
+      .from(from)
       .select("id, nev, slug, szulo")
       .order("nev", { ascending: true })
       .then(({ data, error }) => {

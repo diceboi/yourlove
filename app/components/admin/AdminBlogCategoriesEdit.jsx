@@ -129,7 +129,6 @@ export default function AdminBlogCategoriesEdit({ category }) {
                   Kép módosítása
                 </span>
               </div>
-              <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
             </div>
 
             {/* Alapadatok */}
@@ -140,16 +139,50 @@ export default function AdminBlogCategoriesEdit({ category }) {
               </div>
 
               <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
-              <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
 
               <CategorySelectInput
                 label="Szülőkategória"
                 value={form.szulo ?? null}
                 onChange={(parentId) => setForm((prev) => ({ ...prev, szulo: parentId }))}
+                from={"blog-categories"}
               />
 
               <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent || ""} rows={4} handleChange={handleChange} />
               <Textarea legend="Alsó leírás" name="leiras_lent" value={form.leiras_lent || ""} rows={8} handleChange={handleChange} />
+            </div>
+          </div>
+
+          <div className="space-y-2 w-full mt-12">
+            <div className="flex flex-nowrap gap-2 items-start mb-4">
+              <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+              <H3>SEO</H3>
+            </div>
+            <div className="space-y-2 w-full">
+            {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+            <SmallTextInput
+              legend={"Meta title"}
+              handleChange={handleChange}
+              name="meta_title"
+              value={form.meta_title || ""}
+              placeholder=""
+              classname={""}
+            />
+            <SmallTextInput
+              legend={"Slug"}
+              handleChange={handleChange}
+              name="slug"
+              value={form.slug || ""}
+              placeholder=""
+              classname={""}
+            />
+            <SmallTextInput
+              legend={"Főkép alt"}
+              handleChange={handleChange}
+              name="kep_alt"
+              value={form.kep_alt || ""}
+              placeholder=""
+              classname={""}
+            />
             </div>
           </div>
         </div>

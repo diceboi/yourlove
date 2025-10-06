@@ -39,11 +39,13 @@ export default function AdminProductCategoryCreate({ onClose }) {
     leiras_lent: "",
     kep_alt: "",
     og_image: "",
+    meta_title: "",
     icon: "",
   });
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [iconModalOpen, setIconModalOpen] = useState(false);
 
   const handleClose = () => {
     if (onClose) onClose();
@@ -74,6 +76,7 @@ export default function AdminProductCategoryCreate({ onClose }) {
       leiras_lent: form.leiras_lent || null,
       kep: selectedImage || null,
       kep_alt: form.kep_alt || null,
+      meta_title: form.meta_title || null,
       icon: form.icon || null,
       kozzeteve: !!published,
     };
@@ -139,12 +142,9 @@ export default function AdminProductCategoryCreate({ onClose }) {
         {/* törzs */}
         <div className="flex flex-col lg:p-6 p-3">
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Kép */}
+            {/* Kép blokk */}
             <div className="relative space-y-4 md:w-1/2 overflow-hidden rounded-lg">
-              <div
-                className="relative cursor-pointer group"
-                onClick={() => setMediaModalOpen(true)}
-              >
+              <div className="relative cursor-pointer group" onClick={() => setMediaModalOpen(true)}>
                 <Image
                   src={selectedImage || "/default.png"}
                   width={500}
@@ -153,18 +153,11 @@ export default function AdminProductCategoryCreate({ onClose }) {
                   className="rounded-lg w-full h-auto group-hover:opacity-70"
                 />
                 <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
-                  Kép kiválasztása
+                  Kép módosítása
                 </span>
               </div>
-              <SmallTextInput
-                legend="Kép alt"
-                name="kep_alt"
-                value={form.kep_alt}
-                handleChange={handleChange}
-              />
-            </div>
 
-            {/* Ikon blokk – külön a képtől */}
+              {/* Ikon blokk – külön a képtől */}
                 <div className="mb-2 font-semibold">Ikon</div>
                 <div className="flex items-center gap-3">
                   <div className="relative w-16 h-16 border border-[var(--border)] rounded-md bg-white">
@@ -185,6 +178,7 @@ export default function AdminProductCategoryCreate({ onClose }) {
                   </button>
                 </div>
                 {/* manuális szerkesztés, ha akarod kézzel beírni az URL-t */}
+            </div>
 
             {/* Alapadatok */}
             <div className="space-y-2 w-full md:w-1/2">
@@ -193,8 +187,7 @@ export default function AdminProductCategoryCreate({ onClose }) {
                 <H3>Alapadatok</H3>
               </div>
 
-              <SmallTextInput legend="Név" name="nev" value={form.nev} handleChange={handleChange} />
-              <SmallTextInput legend="Slug" name="slug" value={form.slug} handleChange={handleChange} />
+              <SmallTextInput legend="Név" name="nev" value={form.nev || ""} handleChange={handleChange} />
 
               <CategorySelectInput
                 label="Szülőkategória"
@@ -202,8 +195,21 @@ export default function AdminProductCategoryCreate({ onClose }) {
                 onChange={(parentId) => setForm((prev) => ({ ...prev, szulo: parentId }))}
               />
 
-              <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent} rows={4} handleChange={handleChange} />
-              <Textarea legend="Alsó leírás" name="leiras_lent" value={form.leiras_lent} rows={8} handleChange={handleChange} />
+              <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent || ""} rows={4} handleChange={handleChange} />
+              <Textarea legend="Alsó leírás" name="leiras_lent" value={form.leiras_lent || ""} rows={8} handleChange={handleChange} />
+            </div>
+          </div>
+
+          <div className="flex lg:flex-row flex-col lg:gap-8 gap-2 py-16">
+            <div className="space-y-2 w-full">
+              <div className="flex flex-nowrap gap-2 items-start mb-4">
+                <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
+                <H3>SEO</H3>
+              </div>
+            {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+            <SmallTextInput legend="Kép alt" name="kep_alt" value={form.kep_alt || ""} handleChange={handleChange} />
+            <SmallTextInput legend="Meta title" name="meta_title" value={form.meta_title || ""} handleChange={handleChange} />
+            <SmallTextInput legend="Slug" name="slug" value={form.slug || ""} handleChange={handleChange} />
             </div>
           </div>
         </div>

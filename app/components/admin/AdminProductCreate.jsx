@@ -2,19 +2,22 @@
 
 import H3 from "@/app/components/UI/Texts/H3";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
+import Label from "@/app/components/UI/Texts/Label";
 import SmallTextInput from "@/app/components/UI/Inputfield/SmallTextInput";
 import Textarea from "@/app/components/UI/Inputfield/Textarea";
 import CategoryPathMultiSelect from "@/app/components/UI/Inputfield/CategoryPathMultiSelect";
+import TagsMultiSelect from "@/app/components/UI/Inputfield/TagsMultiSelect";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import { TbAlignJustified, TbChevronLeft, TbSeo, TbClick, TbShoppingBag, TbPackage, TbListSearch } from "react-icons/tb";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ToggleSwitch from "@/app/components/UI/Inputfield/ToggleSwitch";
 import AdminSaveButton from "@/app/components/UI/Buttons/AdminSaveButton";
 import AdminCancelButton from "@/app/components/UI/Buttons/AdminCancelButton";
 import { createClient } from "@/utils/supabase/client";
 import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal";
+import SeoTitleBuilder from "@/app/components/UI/Inputfield/SeoTitleBuilder";
 
 function slugify(s = "") {
   return s
@@ -47,9 +50,13 @@ export default function AdminProductCreate({ onClose }) {
     og_title: "",
     og_image: "",
     kategoriak_paths: [], // [[1,2],[3,7]]
+    termekkep_alt: ""
   });
   const [selectedImage, setSelectedImage] = useState("");
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [selectedOGImage, setSelectedOGImage] = useState("")
+
+  const pickerModeRef = useRef(null);
 
   const handleClose = () => {
     if (onClose) onClose();
@@ -97,6 +104,7 @@ export default function AdminProductCreate({ onClose }) {
       og_title: form.og_title || null,
       og_image: form.og_image || null,
       termekkep: selectedImage || null,
+      termekkep_alt: form.termekkep_alt || null,
       kozzeteve: !!published,
       kategoria: JSON.stringify(paths), // TEXT oszlopban tárolt JSON
     };
@@ -123,10 +131,31 @@ export default function AdminProductCreate({ onClose }) {
     <>
       <MediaLibraryModal
         isOpen={mediaModalOpen}
-        onClose={() => setMediaModalOpen(false)}
+        onClose={() => {
+          setMediaModalOpen(false);
+          pickerModeRef.current = null;
+        }}
         onSelect={(img) => {
-          setSelectedImage(img);
-          setForm((prev) => ({ ...prev, termekkep: img }));
+          // ha a felhasználó mégsem választott semmit:
+          if (!img) {
+            setMediaModalOpen(false);
+            pickerModeRef.current = null;
+            return;
+          }
+
+          const mode = pickerModeRef.current;
+
+          if (mode === "og_image") {
+            setSelectedOGImage(img);
+            setForm((prev) => ({ ...prev, og_image: img }));
+          } else {
+            // default: termékkép
+            setSelectedImage(img);
+            setForm((prev) => ({ ...prev, termekkep: img }));
+          }
+
+          setMediaModalOpen(false);
+          pickerModeRef.current = null;
         }}
       />
       <div className="flex flex-col gap-6">
@@ -170,7 +199,10 @@ export default function AdminProductCreate({ onClose }) {
             <div className="relative md:w-1/2 overflow-hidden rounded-lg">
               <div
                 className="relative cursor-pointer group"
-                onClick={() => setMediaModalOpen(true)}
+                onClick={() => {
+                  pickerModeRef.current = "termekkep";
+                  setMediaModalOpen(true);
+                }}
               >
                 <Image
                   src={selectedImage || "/default.png"}
@@ -239,13 +271,10 @@ export default function AdminProductCreate({ onClose }) {
                 placeholder="Brand logó"
                 classname={""}
               />
-              <SmallTextInput
-                legend={"Címkék"}
-                handleChange={handleChange}
-                name="cimkek"
-                value={form.cimkek || ""}
-                placeholder="Címkék"
-                classname={""}
+              <TagsMultiSelect
+                value={form.cimkek || []}                 // ID-k tömbje
+                onChange={(ids) => setForm((p) => ({ ...p, cimkek: ids }))}
+                from={"product-tags"}
               />
               <CategoryPathMultiSelect
                 label="Kategóriák"
@@ -253,6 +282,7 @@ export default function AdminProductCreate({ onClose }) {
                 onChange={(paths) =>
                   setForm((prev) => ({ ...prev, kategoriak_paths: paths }))
                 }
+                from={"product-categories"}
               />
             </div>
           </div>
@@ -829,17 +859,36 @@ export default function AdminProductCreate({ onClose }) {
                 <TbSeo className="min-w-8 h-auto bg-[var(--pink)] p-1 rounded-md text-white" />
                 <H3>SEO</H3>
               </div>
-              <div className="relative overflow-hidden rounded-lg">
-                <Image
-                  src={form.og_image || "/default.png"}
-                  width={300}
-                  height={300}
-                  alt={form.seo_slug || "termek-kep"}
-                  className="rounded-lg w-full h-auto"
-                />
-              </div>
+              <div className="space-y-4 relative md:w-full overflow-hidden rounded-lg bg-white">
+                <Label classname={"font-bold p-2 text-xs"}>OG Image</Label>
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={() => {
+                    pickerModeRef.current = "og_image";
+                    setMediaModalOpen(true);
+                  }}
+                >
+                  <Image
+                    src={selectedOGImage || "/default.png"}
+                    width={500}
+                    height={500}
+                    alt={form.seo_slug || "termek-kep"}
+                    className="rounded-lg w-full h-auto group-hover:opacity-70"
+                  />
+                  <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
+                    Kép módosítása
+                  </span>
+                </div>
+            </div>
             </div>
             <div className="space-y-2 w-full mt-0 lg:mt-12">
+              {/* SEO Építő – ez automatikusan frissíti a form.seo_title-t */}
+              <SeoTitleBuilder
+                form={form}
+                siteName="Yourlove.hu"
+                value={form.seo_title || ""}
+                onChange={(t) => setForm((p) => ({ ...p, seo_title: t }))}
+              />
               <SmallTextInput
                 legend={"SEO Cím"}
                 handleChange={handleChange}
@@ -870,6 +919,14 @@ export default function AdminProductCreate({ onClose }) {
                 handleChange={handleChange}
                 name="og_title"
                 value={form.og_title || ""}
+                placeholder=""
+                classname={""}
+              />
+              <SmallTextInput
+                legend={"Termékkép alt"}
+                handleChange={handleChange}
+                name="termekkep_alt"
+                value={form.termekkep_alt || ""}
                 placeholder=""
                 classname={""}
               />
