@@ -150,6 +150,7 @@ const allPublished = Array.isArray(data) ? data : [];
         {products.map((p) => (
           <ProductListItem
             key={p.id}
+            id={p.id}
             image={p.termekkep || "/default.png"}
             focim={p.fo_cim}
             alcim={p.alcim}

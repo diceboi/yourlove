@@ -7,7 +7,8 @@ export default function GreenButton({
   onclick,
   buttonicon
 }) {
-  const IconComponent = TablerIcons[buttonicon] || null;
+  const IconComponent = buttonicon && TablerIcons[buttonicon] ? TablerIcons[buttonicon] : null
+  const safeOnClick = typeof onclick === 'function' ? onclick : undefined
 
   return (
     <Button
@@ -18,7 +19,7 @@ export default function GreenButton({
       bgcolor={"bg-[var(--green)]"}
       bordercolor={""}
       hoverbgcolor={"hover:bg-[var(--green-hover)]"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={safeOnClick}
       beforeicon={null}
       aftericon={
         IconComponent ? (
