@@ -1,12 +1,18 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { TbChevronRight } from "react-icons/tb";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { TbChevronRight } from 'react-icons/tb'
 
-const Breadcrumbs = () => {
-  const pathname = usePathname();
+/**
+ * Optional prop: trail = [{ label: 'Termékek', href: '/termekek' }, ...]
+ * Ha van trail, azt rendereljük (pl. kategória NÉVVEL).
+ * Ha nincs, a path-ból képezzük (fallback).
+ */
+export default function Breadcrumbs({ trail }) {
+  const pathname = usePathname()
 
+  // fallback címkék (ha nincs trail)
   const labelMap = {
     termekek: 'Termékek',
     about: 'Rólunk',
@@ -18,39 +24,51 @@ const Breadcrumbs = () => {
     contact: 'Kapcsolat',
     blog: 'Blog',
     kaposvar: 'Kaposvár',
-    // ide írhatod a többi slug jelentését
-  };
+  }
 
-  const pathSegments = pathname.split('/').filter(Boolean);
+  // ha kaptunk trail-t (már nevekkel), azt használjuk
+  let crumbs = Array.isArray(trail) && trail.length ? trail : null
 
-  const breadcrumbs = pathSegments.map((segment, index) => {
-    const href = '/' + pathSegments.slice(0, index + 1).join('/');
-    const label = labelMap[segment] ?? decodeURIComponent(segment).replace(/-/g, ' ');
-
-    return { href, label };
-  });
+  // különben path-ból építünk egyszerű fallbacket
+  if (!crumbs) {
+    const segments = pathname.split('/').filter(Boolean)
+    crumbs = segments.map((segment, index) => {
+      const href = '/' + segments.slice(0, index + 1).join('/')
+      const label =
+        labelMap[segment] ??
+        decodeURIComponent(segment).replace(/-/g, ' ')
+      return { href, label }
+    })
+  }
 
   return (
-    <nav aria-label="Breadcrumb" className="text-sm text-[var(--tertiary-text)] lg:border-0 border-b border-[var(--border)] pb-1">
-      <ol className="flex flex-wrap  space-x-2 lg:text-lg text-sm">
+    <nav
+      aria-label="Breadcrumb"
+      className="text-sm text-[var(--tertiary-text)] lg:border-0 border-b border-[var(--border)] pb-1"
+    >
+      <ol className="flex flex-wrap space-x-2 lg:text-lg text-sm">
         <li>
-          <Link href="/" className="hover:underline hover:text-[var(--black)]">Kezdőlap</Link>
+          <Link href="/" className="hover:underline hover:text-[var(--black)]">
+            Kezdőlap
+          </Link>
         </li>
-        {breadcrumbs.map((crumb, index) => (
-          <li key={crumb.href} className="flex items-center hover:text-[var(--black)]">
-            <TbChevronRight className="mr-1 text-xl text-[var(--green)]" />
-            {index < breadcrumbs.length - 1 ? (
-              <Link href={crumb.href} className="hover:underline">
-                {crumb.label}
-              </Link>
-            ) : (
-              <span className="text-[var(--black)]">{crumb.label}</span>
-            )}
-          </li>
-        ))}
+
+        {crumbs.map((crumb, index) => {
+          const isLast = index === crumbs.length - 1
+          return (
+            <li key={crumb.href || index} className="flex items-center hover:text-[var(--black)]">
+              <TbChevronRight className="mr-1 text-xl text-[var(--green)]" />
+              {isLast ? (
+                <span className="text-[var(--black)]">{crumb.label}</span>
+              ) : (
+                <Link href={crumb.href} className="hover:underline">
+                  {crumb.label}
+                </Link>
+              )}
+            </li>
+          )
+        })}
       </ol>
     </nav>
-  );
-};
-
-export default Breadcrumbs;
+  )
+}

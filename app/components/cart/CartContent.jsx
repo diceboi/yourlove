@@ -12,13 +12,6 @@ export default async function CartContent() {
     return (
       <div className="p-4 text-sm text-gray-600">
         A kosarad üres.
-        {/* DEBUG BLOKK – töröld később */}
-        <pre className="mt-2 text-xs text-gray-500 whitespace-pre-wrap">
-          token: {debug?.token || '-'}{'\n'}
-          cartId: {cart?.id || '-'}{'\n'}
-          count: {debug?.count ?? 0}{'\n'}
-          steps: {JSON.stringify(debug?.steps || [])}
-        </pre>
       </div>
     )
   }

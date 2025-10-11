@@ -9,6 +9,45 @@ import Image from "next/image";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import { Suspense } from "react";
 
+/* ---------- Segédfüggvények ---------- */
+
+function safeParseJSON(s) {
+  try { return JSON.parse(s) } catch { return null }
+}
+
+// a products.kategoria (string JSON) -> ID útvonalak tömbje
+function getCategoryPathsFromProduct(product) {
+  const raw = product?.kategoria;
+  const parsed = typeof raw === "string" ? safeParseJSON(raw) : raw;
+  return Array.isArray(parsed) ? parsed.filter((p) => Array.isArray(p) && p.length) : [];
+}
+
+// Válaszd ki a "legjobb" útvonalat:
+// - ha van currentCategoryId (kategória oldal), azt tartalmazó útvonalat részesítjük előnyben
+// - különben a leghosszabbat (legmélyebb kategória)
+function pickBestPath(paths, currentCategoryId = null) {
+  if (!paths.length) return null;
+  if (currentCategoryId != null) {
+    const withCurrent = paths.filter((p) => p.includes(currentCategoryId));
+    if (withCurrent.length) return withCurrent.sort((a, b) => b.length - a.length)[0];
+  }
+  return paths.slice().sort((a, b) => b.length - a.length)[0];
+}
+
+// ID útvonal -> slug útvonal (és név breadcrumbhoz)
+function idsPathToSlugsAndNames(idsPath, catsById) {
+  const slugs = [];
+  const names = [];
+  for (const id of idsPath || []) {
+    const c = catsById.get(id);
+    if (!c) continue;
+    slugs.push(c.slug);
+    names.push(c.nev);
+  }
+  return { slugs, names };
+}
+
+// ellenőrzés a kategóriafa ID-k alapján
 function pathIncludesId(kategoriaJson, id) {
   try {
     const paths = JSON.parse(kategoriaJson);
@@ -18,14 +57,39 @@ function pathIncludesId(kategoriaJson, id) {
   }
 }
 
+// Breadcrumbs trail építése kategória oldalra (szülőlánc alapján)
+function buildCategoryTrail(current, catsById) {
+  const chain = [];
+  let c = current;
+  while (c) {
+    chain.push(c);
+    c = c.szulo ? catsById.get(c.szulo) : null;
+  }
+  chain.reverse();
+  return chain.map((c, i) => ({
+    label: c.nev,
+    href: `/termekek/${chain.slice(0, i + 1).map((x) => x.slug).join("/")}`,
+  }));
+}
+
+/* ---------- Page ---------- */
+
 export default async function Page({ params, searchParams }) {
-  const { slug } = await params;                           // [...slug]
-  const sp = await searchParams;
-  const productSlug = slug[slug.length - 1];
-  const leaf = slug?.[slug.length - 1];              // utolsó szegmens
+  const { slug } = await params; // [...slug]
+  const sp = searchParams;
+  const leaf = slug?.[slug.length - 1];
+
   const supabase = await createClient();
 
-  // --- Termék oldal? ---
+  // ⬇️ Kategóriák lehúzása egyszer, közösen (mindkét ág használja)
+  const { data: allCats = [] } = await supabase
+    .from("product-categories")
+    .select("id, slug, nev, szulo");
+
+  const catsById = new Map(allCats.map((c) => [c.id, c]));
+
+  /* ---------- TERMÉKOLDAL? ---------- */
+
   const { data: product } = await supabase
     .from("products")
     .select("*")
@@ -37,6 +101,7 @@ export default async function Page({ params, searchParams }) {
     .from("free_shipping_limit")
     .select("ertek")
     .limit(1);
+
   const freeShippingLimit = freeshippingRows?.[0]?.ertek;
 
   const { data: productsUnderFreeShipping = [] } = await supabase
@@ -45,12 +110,27 @@ export default async function Page({ params, searchParams }) {
     .lt("eladasi_ar_brutto", freeShippingLimit ?? 9_999_999);
 
   if (product) {
-    // 🟢 TERMÉKOLDAL
+    // Termékoldali slug-útvonal feloldás
+    const paths = getCategoryPathsFromProduct(product);
+    const picked = pickBestPath(paths); // termékoldalon nincs currentCategoryId
+    const { slugs: catSlugs, names: catNames } = idsPathToSlugsAndNames(picked, catsById);
+    const categoryPath = catSlugs.join("/"); // pl. "noik/fehernemu/melltarto"
+
     return (
       <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
           <Suspense fallback={null}>
-            <Breadcrumbs />
+            {/* Ha a Breadcrumbs képes fogadni trail-t: */}
+            <Breadcrumbs
+              trail={[
+                { label: "Termékek", href: "/termekek" },
+                ...catSlugs.map((slug, i) => ({
+                  label: catNames[i],
+                  href: `/termekek/${catSlugs.slice(0, i + 1).join("/")}`,
+                })),
+                { label: product.fo_cim || product.seo_slug },
+              ]}
+            />
           </Suspense>
 
           <div className="flex lg:flex-row flex-col lg:gap-8 gap-4">
@@ -58,7 +138,6 @@ export default async function Page({ params, searchParams }) {
               <div className="flex flex-col lg:gap-16 gap-8 lg:w-2/3 w-full">
                 {/* képgaléria (rövidített) */}
                 <div className="flex lg:flex-row flex-col-reverse gap-4 w-full">
-                  {/* ...thumbok... */}
                   <div className="relative w-full lg:h-[70vh] h-[40vh]">
                     <Image
                       src={product.termekkep}
@@ -74,9 +153,7 @@ export default async function Page({ params, searchParams }) {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <Paragraph>
-                    {/* ide jöhet a leírás / content */}
-                  </Paragraph>
+                  <Paragraph>{/* leírás / content */}</Paragraph>
                 </div>
 
                 <UpsaleProducts products={productsUnderFreeShipping} />
@@ -92,7 +169,8 @@ export default async function Page({ params, searchParams }) {
     );
   }
 
-  // 🔵 KATEGÓRIA/ARCHÍV NÉZET
+  /* ---------- KATEGÓRIA / ARCHÍV NÉZET ---------- */
+
   // 1) Szülő kategória a leaf slug alapján
   const { data: category } = await supabase
     .from("product-categories")
@@ -110,27 +188,28 @@ export default async function Page({ params, searchParams }) {
 
   // 2) Szűrők (query stringből)
   const get = (k) => {
- const v = sp?.[k];
- return Array.isArray(v) ? v[0] : (v ?? "");
+    const v = sp?.[k];
+    return Array.isArray(v) ? v[0] : v ?? "";
   };
-  const arrange      = get("arrange");
-  const color        = get("color");
-  const childSlug    = get("category");
-  const stock        = get("stock");
-  const warranty     = get("warranty");
-  const priceRange   = get("pricerange");
-  const size         = get("size");
-  const weightrange  = get("weightrange");
-  const material     = get("material");
-  const charging     = get("charging");
+
+  const arrange = get("arrange");
+  const color = get("color");
+  const childSlug = get("category");
+  const stock = get("stock");
+  const warranty = get("warranty");
+  const priceRange = get("pricerange");
+  const size = get("size");
+  const weightrange = get("weightrange");
+  const material = get("material");
+  const charging = get("charging");
   const chargingtime = get("chargingtime");
-  const noise        = get("noise");
-  const waterproof   = get("waterproof");
-  const usetime      = get("usetime");
-  const modes        = get("modes");
-  const speed        = get("speed");
-  const controll     = get("controll");
-  const app          = get("app");
+  const noise = get("noise");
+  const waterproof = get("waterproof");
+  const usetime = get("usetime");
+  const modes = get("modes");
+  const speed = get("speed");
+  const controll = get("controll");
+  const app = get("app");
 
   // 3) Dinamikus query építése – amit lehet, a DB-ben szűrünk
   let q = supabase
@@ -168,12 +247,13 @@ export default async function Page({ params, searchParams }) {
   // készlet
   if (stock === "instock") q = q.gt("keszlet", 0);
   else if (stock === "out-of-stock") q = q.eq("keszlet", 0);
-  // else if (stock === "backorder") q = q.eq("keszlet", -1); // ha így jelölöd
 
   // ár intervallum
   if (priceRange) {
     if (priceRange.includes("-")) {
-      const [min, max] = priceRange.split("-").map((n) => Number(String(n).replace(/\D/g, "")));
+      const [min, max] = priceRange
+        .split("-")
+        .map((n) => Number(String(n).replace(/\D/g, "")));
       if (!Number.isNaN(min)) q = q.gte("eladasi_ar_brutto", min);
       if (!Number.isNaN(max)) q = q.lte("eladasi_ar_brutto", max);
     } else if (priceRange.endsWith("+")) {
@@ -190,7 +270,6 @@ export default async function Page({ params, searchParams }) {
   } else if (arrange === "newest") {
     q = q.order("created_at", { ascending: false });
   } else {
-    // default: relevancia/népszerűség oszlopodtól függően
     q = q.order("created_at", { ascending: false });
   }
 
@@ -211,16 +290,19 @@ export default async function Page({ params, searchParams }) {
     if (childCat) {
       filtered = filtered.filter((p) => pathIncludesId(p.kategoria, childCat.id));
     } else {
-      // ha a child slug nem létezik, üres lista
       filtered = [];
     }
   }
+
+  const catTrail = buildCategoryTrail(category, catsById);
 
   return (
     <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="flex flex-col lg:gap-8 gap-4">
         <Suspense fallback={null}>
-          <Breadcrumbs />
+          <Breadcrumbs
+            trail={[{ label: "Termékek", href: "/termekek" }, ...catTrail]}
+          />
         </Suspense>
 
         {/* Kategória szövegek */}
@@ -235,18 +317,25 @@ export default async function Page({ params, searchParams }) {
       </div>
 
       <div className="grid lg:grid-cols-5 grid-cols-2 mt-8 border-l border-t border-[var(--border)]">
-        {filtered.map((p) => (
-          <ProductListItem
-            key={p.id}
-            id={p.id}
-            image={p.termekkep || "/default.png"}
-            focim={p.fo_cim}
-            alcim={p.alcim}
-            price={p.eladasi_ar_brutto}
-            slug={p.seo_slug}
-            category={p.kategoria}
-          />
-        ))}
+        {filtered.map((p) => {
+          const paths = getCategoryPathsFromProduct(p);
+          const picked = pickBestPath(paths, category.id); // preferáld az aktuális kategóriát tartalmazó útvonalat
+          const { slugs: catSlugs } = idsPathToSlugsAndNames(picked, catsById);
+          const categoryPath = catSlugs.join("/");
+
+          return (
+            <ProductListItem
+              key={p.id}
+              id={p.id}
+              image={p.termekkep || "/default.png"}
+              focim={p.fo_cim}
+              alcim={p.alcim}
+              price={p.eladasi_ar_brutto}
+              slug={p.seo_slug}
+              categoryPath={categoryPath}
+            />
+          );
+        })}
 
         {filtered.length === 0 && (
           <div className="col-span-full text-sm text-gray-500 p-6">

@@ -18,6 +18,7 @@ export default function ProductListItem({
   price,
   slug,
   category,
+  categoryPath,
   rateing,
   stock,
   colors,
@@ -40,15 +41,15 @@ export default function ProductListItem({
       .replace(/^-|-$/g, "");
   }
 
-  const categoryPath = category
-    ? category.split(">").map((cat) => slugify(cat)).join("/")
-    : "";
+  const categoryPathFinal = categoryPath != null
+    ? String(categoryPath)
+    : (category ? category.split(">").map((cat) => slugify(cat)).join("/") : "")
 
   return (
     <div className="flex flex-col gap-4 lg:p-4 p-4 border-r border-b border-[var(--border)] hover:shadow-lg">
       <Link
         className="relative w-full 2xl:h-[40vh] h-[150px]"
-        href={`/termekek/${categoryPath}/${slug}`}
+        href={`/termekek/${categoryPathFinal}/${slug}`}
       >
         {image ? (
           <Image
