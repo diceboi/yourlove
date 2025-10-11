@@ -13,7 +13,7 @@ import Rating from "@/app/components/UI/Rating";
 import Stock from "@/app/components/UI/Stock";
 import ProductColors from "@/app/components/UI/ProductColors";
 import ProductUpsale from "@/app/components/UI/ProductUpsale";
-import AddToCartButton from "@/app/components/UI/Buttons/AddToCartButtonMain";
+import AddToCartButtonMain from "@/app/components/UI/Buttons/AddToCartButtonMain";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import UpsaleProducts from "@/app/components/UpsaleProducts";
 import ProductNameTextSmall from "./UI/Texts/ProductNameTextSmall";
@@ -66,7 +66,11 @@ export default function ProductInfoPanel({product}) {
           <ProductColors />
         </div>
         <div className="flex flex-col gap-4 py-4">
-          <AddToCartButton />
+          <AddToCartButtonMain 
+            productId={product.id}
+            defaultQty={1}
+            product={{ name: product.name, price_huf: product.price, image_url: product.image }}
+          />
           <Stock stock={""} />
         </div>
         <div className="border-t border-[var(--border)] py-4">

@@ -1,6 +1,8 @@
 import { Sora } from "next/font/google";
 import "./globals.css";
 import MenuContextProvider from "../MenuContext";
+import { CartUIProvider } from "../components/cart/CartUIProvider";
+import CartDrawer from "../components/cart/CartDrawer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
@@ -18,6 +20,7 @@ export default function SiteLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${sora.className}`}>
+        <CartUIProvider>
         <ToastContainer
           position="bottom-right"
           autoClose={3000}
@@ -34,6 +37,8 @@ export default function SiteLayout({ children }) {
           <MainNav />
         </MenuContextProvider>
         {children}
+        <CartDrawer />
+        </CartUIProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import ProductList from "./UI/ProductList";
 import Paragraph from "./UI/Texts/Paragraph";
 
 export default function UpsaleProducts({products}) {
+
   return (
     <div id="upsale" className="flex flex-col gap-4 w-full">
       <div className="flex flex-nowrap items-center gap-4">

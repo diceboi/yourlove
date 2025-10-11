@@ -238,6 +238,7 @@ export default async function Page({ params, searchParams }) {
         {filtered.map((p) => (
           <ProductListItem
             key={p.id}
+            id={p.id}
             image={p.termekkep || "/default.png"}
             focim={p.fo_cim}
             alcim={p.alcim}

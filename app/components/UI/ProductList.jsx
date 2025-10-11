@@ -58,6 +58,7 @@ export default function ProductList({products = [], slidesPerView640, slidesPerV
       {products.map((product) => (
         <SwiperSlide key={product.id || product.cikkszam}>
           <ProductListItem
+            id={product.id}
             image={product.termekkep}
             focim={product.fo_cim}
             price={product.eladasi_ar_brutto}

@@ -6,7 +6,7 @@ import UserMenu from "./UserMenu";
 import LanguageSelect from "./LanguageSelect";
 import MobileToggle from "./MobileToggle";
 import Favourites from "./Favourites";
-import Cart from "./Cart";
+import CartButton from "./cart/CartButton";
 import MenuText from "./UI/Texts/MenuText";
 import MainMenuItem from "./UI/MainMenuItem";
 import SubmenuItem from "./UI/SubmenuItem";
@@ -88,7 +88,7 @@ export default function MainNav() {
               <UserMenu />
               <LanguageSelect />
               <Favourites />
-              <Cart />
+              <CartButton />
               <MobileToggle />
             </div>
           </div>
