@@ -8,6 +8,9 @@ import FilterSection from "@/app/components/UI/FilterSection";
 import Image from "next/image";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import { Suspense } from "react";
+import FilterDrawerProvider from '@/app/components/filter/FilterDrawerProvider'
+import FilterDrawer from '@/app/components/filter/FilterDrawer'
+import FilterToggleButton from '@/app/components/filter/FilterToggleButton'
 
 /* ---------- Segédfüggvények ---------- */
 
@@ -306,17 +309,45 @@ export default async function Page({ params, searchParams }) {
         </Suspense>
 
         {/* Kategória szövegek */}
-        <CategoryPageTexts category={category.nev} />
+        <CategoryPageTexts category={category} />
 
         {/* Szűrők – a tényleges parent slugot adjuk át */}
         <div className="flex flex-col sticky top-0 left-0 z-10 bg-white border-b border-[var(--border)] py-0 2xl:py-4">
-          <Suspense fallback={<div>Betöltés...</div>}>
-            <FilterSection slug={category.slug} />
-          </Suspense>
+          
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 grid-cols-2 mt-8 border-l border-t border-[var(--border)]">
+      <div className="flex lg:flex-row flex-col gap-16">
+
+      <FilterDrawerProvider>
+        {/* mobil felső sor: csak a gomb */}
+        <div className="flex items-center justify-end md:hidden mt-4">
+          <FilterToggleButton />
+        </div>
+
+        <div className="mt-4 flex gap-6">
+          {/* DESKTOP oldalsáv */}
+          <div className="hidden md:block w-64 shrink-0">
+            <Suspense fallback={<div>Betöltés...</div>}>
+              <FilterSection slug={category.slug} />
+            </Suspense>
+          </div>
+
+          {/* TERMÉK RÁCS */}
+          <div className="flex-1">
+            <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
+              {/* ... ProductListItem map (nálad már megvan) ... */}
+            </div>
+          </div>
+        </div>
+
+        {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
+        <FilterDrawer>
+          <FilterSection slug={category.slug} />
+        </FilterDrawer>
+      </FilterDrawerProvider>
+
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-8 gap-4">
         {filtered.map((p) => {
           const paths = getCategoryPathsFromProduct(p);
           const picked = pickBestPath(paths, category.id); // preferáld az aktuális kategóriát tartalmazó útvonalat
@@ -342,6 +373,7 @@ export default async function Page({ params, searchParams }) {
             Nincs találat a megadott szűrőkre.
           </div>
         )}
+      </div>
       </div>
     </div>
   );

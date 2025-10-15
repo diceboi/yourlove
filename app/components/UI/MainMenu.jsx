@@ -37,12 +37,6 @@ export default function MainMenu() {
             onclick={c.slug}                 // a komponensed eddig stringet kapott
           />
         ))}
-
-        {/* Statikus oldalak – ha kellenek a kategóriák után */}
-        <MainMenuItem title={"Blog"} onclick={"blog"} />
-        <MainMenuItem title={"GYIK"} onclick={"gyik"} />
-        <MainMenuItem title={"Rólunk"} onclick={"rolunk"} />
-        <MainMenuItem title={"Kapcsolat"} onclick={"kapcsolat"} />
       </div>
   );
 }

@@ -53,7 +53,7 @@ export default function SearchBarDesktop() {
           placeholder={placeholder}
           onFocus={() => setSearchBarOpen(true)}
           onBlur={() => setSearchBarOpen(false)}
-          className="xl:min-w-[500px] min-w-full py-3 pl-6 pr-10 text-gray-800 bg-gray-100 rounded-full outline-none"
+          className="min-w-full py-3 pl-6 pr-10 text-gray-800 bg-gray-100 rounded-full outline-none"
         />
         <TbSearch
           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[var(--pink)]"

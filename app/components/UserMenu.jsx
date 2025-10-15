@@ -83,7 +83,7 @@ export default function UserMenu() {
       >
         {!user ? (
           <>
-            <TbUser className="w-5 h-5 text-[var(--pink)]" />
+            <TbUser className="xl:w-5 xl:h-5 w-6 h-6 text-[var(--pink)]" />
             <Paragraph classname={"xl:flex hidden"}>Bejelentkezés</Paragraph>
           </>
         ) : (
@@ -97,7 +97,7 @@ export default function UserMenu() {
                 className="rounded-full"
               />
             ) : (
-              <TbUser className="w-5 h-5 text-[var(--pink)]" />
+              <TbUser className="xl:w-5 xl:h-5 w-6 h-6 text-[var(--pink)]" />
             )}
             <Paragraph classname={"xl:flex hidden"}>
               {userProfile

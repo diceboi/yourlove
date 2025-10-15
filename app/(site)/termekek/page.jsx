@@ -4,6 +4,9 @@ import Breadcrumbs from "@/app/components/UI/Breadcrumbs";
 import ProductListItem from "@/app/components/UI/ProductListItem";
 import CategoryPageTexts from "@/app/components/CategoryPageTexts";
 import FilterSection from "@/app/components/UI/FilterSection";
+import FilterDrawerProvider from '@/app/components/filter/FilterDrawerProvider'
+import FilterDrawer from '@/app/components/filter/FilterDrawer'
+import FilterToggleButton from '@/app/components/filter/FilterToggleButton'
 import { Suspense } from "react";
 
 export default async function Page({ searchParams }) {
@@ -146,19 +149,49 @@ const allPublished = Array.isArray(data) ? data : [];
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 grid-cols-2 mt-8 border-l border-t border-[var(--border)]">
-        {products.map((p) => (
-          <ProductListItem
-            key={p.id}
-            id={p.id}
-            image={p.termekkep || "/default.png"}
-            focim={p.fo_cim}
-            alcim={p.alcim}
-            price={p.eladasi_ar_brutto}
-            slug={p.seo_slug}
-            category={p.kategoria}
-          />
-        ))}
+      <div className="flex lg:flex-row flex-col gap-16">
+        <FilterDrawerProvider>
+          {/* mobil felső sor: csak a gomb */}
+          <div className="flex items-center justify-end md:hidden mt-4">
+            <FilterToggleButton />
+          </div>
+  
+          <div className="mt-4 flex gap-6">
+            {/* DESKTOP oldalsáv */}
+            <div className="hidden md:block w-64 shrink-0">
+              <Suspense fallback={<div>Betöltés...</div>}>
+                <FilterSection />
+              </Suspense>
+            </div>
+  
+            {/* TERMÉK RÁCS */}
+            <div className="flex-1">
+              <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
+                {/* ... ProductListItem map (nálad már megvan) ... */}
+              </div>
+            </div>
+          </div>
+  
+          {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
+          <FilterDrawer>
+            <FilterSection />
+          </FilterDrawer>
+        </FilterDrawerProvider>
+
+        <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-8 gap-4">
+          {products.map((p) => (
+            <ProductListItem
+              key={p.id}
+              id={p.id}
+              image={p.termekkep || "/default.png"}
+              focim={p.fo_cim}
+              alcim={p.alcim}
+              price={p.eladasi_ar_brutto}
+              slug={p.seo_slug}
+              category={p.kategoria}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

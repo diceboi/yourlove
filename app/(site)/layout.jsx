@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
 import MainNav from "../components/Mainnav";
+import ScrollToTopButton from "../components/ScrollToTopButton";
 
 const sora = Sora({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function SiteLayout({ children }) {
         </MenuContextProvider>
         {children}
         <CartDrawer />
+        <ScrollToTopButton />
         </CartUIProvider>
       </body>
     </html>

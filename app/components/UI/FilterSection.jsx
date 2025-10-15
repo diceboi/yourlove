@@ -11,6 +11,7 @@ import FilterChipButton from "@/app/components/UI/Buttons/FilterChipButton";
 import FilterStock from "@/app/components/UI/FilterStock";
 import FilterWarranty from "@/app/components/UI/FilterWarranty";
 import FilterPriceRange from "@/app/components/UI/FilterPriceRange";
+import FilterPriceSlider from "./FilterPriceSlider";
 import FilterSize from "@/app/components/UI/FilterSize";
 import FilterWeightRange from "@/app/components/UI/FilterWeightRange";
 import FilterMaterial from "@/app/components/UI/FilterMaterial";
@@ -23,6 +24,10 @@ import FilterModes from "@/app/components/UI/FilterModes";
 import FilterSpeed from "@/app/components/UI/FilterSpeed";
 import FilterControll from "@/app/components/UI/FilterControll";
 import FilterApp from "@/app/components/UI/FilterApp";
+import AccordionFilterMulti from '@/app/components/UI/AccordionFilterMulti'
+import Accordion from '@/app/components/UI/Accordion'
+import FilterResetButton from '@/app/components/UI/FilterResetButton'
+
 
 export default function FilterSection({ slug }) {
   const router = useRouter();
@@ -305,239 +310,98 @@ export default function FilterSection({ slug }) {
   const has = (arr) => Array.isArray(arr) && arr.length > 0;
 
   return (
-    <>
-      {/* Felső filter sor – csak a relevánsakat mutatjuk */}
-      <div className="flex flex-row flex-wrap gap-4 py-2">
-        <FilterArrange
-          label="Rendezés"
-          options={[
-            { label: "Ár szerint csökkenő", value: "price-low-to-high" },
-            { label: "Ár szerint növekvő", value: "price-high-to-low" },
-            { label: "Legújabb", value: "newest" },
-            { label: "Értékelés", value: "rating" },
-            { label: "Legnépszerűbb", value: "popular" },
-            { label: "Legtöbbet keresett", value: "most-searched" },
-          ]}
-          onChange={(value) => updateFilter("arrange", value)}
-        />
-
-        {has(facet.color) && (
-          <FilterColor
-            label="Szín"
-            options={facet.color}
-            onChange={(value) => updateFilter("color", value)}
-          />
-        )}
-
-        {has(facet.category) && (
-          <FilterCategory
-            label="Kategória"
-            options={facet.category}
-            onChange={(value) => updateFilter("category", value)}
-          />
-        )}
-
-        {has(facet.stock) && (
-          <FilterStock
-            label="Raktárkészlet"
-            options={facet.stock}
-            onChange={(value) => updateFilter("stock", value)}
-          />
-        )}
-
-        {has(facet.warranty) && (
-          <FilterWarranty
-            label="Garancia"
-            options={facet.warranty}
-            onChange={(value) => updateFilter("warranty", value)}
-          />
-        )}
-
-        {has(facet.pricerange) && (
-          <FilterPriceRange
-            label="Ár"
-            options={facet.pricerange}
-            onChange={(value) => updateFilter("pricerange", value)}
-          />
-        )}
-
-        {has(facet.size) && (
-          <FilterSize
-            label="Méret"
-            options={facet.size}
-            onChange={(value) => updateFilter("size", value)}
-          />
-        )}
-
-        {has(facet.weightrange) && (
-          <FilterWeightRange
-            label="Súly"
-            options={facet.weightrange}
-            onChange={(value) => updateFilter("weightrange", value)}
-          />
-        )}
-
-        {has(facet.material) && (
-          <FilterMaterial
-            label="Anyag"
-            options={facet.material}
-            onChange={(value) => updateFilter("material", value)}
-          />
-        )}
-
-        {has(facet.charging) && (
-          <FilterCharging
-            label="Töltés"
-            options={facet.charging}
-            onChange={(value) => updateFilter("charging", value)}
-          />
-        )}
-
-        {has(facet.chargingtime) && (
-          <FilterChargingTime
-            label="Töltési idő"
-            options={facet.chargingtime}
-            onChange={(value) => updateFilter("chargingtime", value)}
-          />
-        )}
-
-        {has(facet.noise) && (
-          <FilterNoise
-            label="Zajszint"
-            options={facet.noise}
-            onChange={(value) => updateFilter("noise", value)}
-          />
-        )}
-
-        {has(facet.waterproof) && (
-          <FilterWaterproof
-            label="Vízállóság"
-            options={facet.waterproof}
-            onChange={(value) => updateFilter("waterproof", value)}
-          />
-        )}
-
-        {has(facet.usetime) && (
-          <FilterUsetime
-            label="Használati idő"
-            options={facet.usetime}
-            onChange={(value) => updateFilter("usetime", value)}
-          />
-        )}
-
-        {has(facet.modes) && (
-          <FilterModes
-            label="Használati módok"
-            options={facet.modes}
-            onChange={(value) => updateFilter("modes", value)}
-          />
-        )}
-
-        {has(facet.speed) && (
-          <FilterSpeed
-            label="Sebesség fokozatok"
-            options={facet.speed}
-            onChange={(value) => updateFilter("speed", value)}
-          />
-        )}
-
-        {has(facet.controll) && (
-          <FilterControll
-            label="Irányítás"
-            options={facet.controll}
-            onChange={(value) => updateFilter("controll", value)}
-          />
-        )}
-
-        {has(facet.app) && (
-          <FilterApp
-            label="Applikáció"
-            options={facet.app}
-            onChange={(value) => updateFilter("app", value)}
-          />
-        )}
+  <>
+    {/* Fejléc: Rendezés + Reset (mindig látszik) */}
+    <div className="mt-4 mb-2 flex items-center justify-between gap-3">
+      <div className="w-full max-w-xs">
+        <Accordion title="Rendezés" defaultOpen={false}>
+          <div className="grid grid-cols-1 gap-2">
+            {[
+              { label: "Ár szerint növekvő", value: "price-low-to-high" },
+              { label: "Ár szerint csökkenő", value: "price-high-to-low" },
+              { label: "Legújabb", value: "newest" },
+              { label: "Értékelés", value: "rating" },
+              { label: "Legnépszerűbb", value: "popular" },
+              { label: "Legtöbbet keresett", value: "most-searched" },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => updateFilter('arrange', opt.value)}
+                className={`text-left text-sm px-2 py-1 rounded hover:bg-gray-100 ${
+                  (useSearchParams().get('arrange') || '') === opt.value ? 'font-semibold' : ''
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </Accordion>
       </div>
 
-      {/* Chip sáv */}
-      <div
-        className={`flex flex-row flex-wrap gap-2 pb-1 ${
-          selectedColor ||
-          selectedSort ||
-          selectedCategory ||
-          selectedStock ||
-          selectedWarranty ||
-          selectedPriceRange ||
-          selectedSize ||
-          selectedWeightRange ||
-          selectedMaterial ||
-          selectedCharging ||
-          selectedChargingTime ||
-          selectedNoise ||
-          selectedWaterproof ||
-          selectedUseTime ||
-          selectedModes ||
-          selectedSpeed ||
-          selectedControll ||
-          selectedApp
-            ? "py-2"
-            : "py-0"
-        }`}
-      >
-        {selectedSort && (
-          <FilterChipButton title={selectedSort} buttonicon="TbX" onclick={() => updateFilter("arrange", "")} />
-        )}
-        {selectedColor && (
-          <FilterChipButton title={selectedColor} buttonicon="TbX" onclick={() => updateFilter("color", "")} />
-        )}
-        {selectedCategory && (
-          <FilterChipButton title={selectedCategory} buttonicon="TbX" onclick={() => updateFilter("category", "")} />
-        )}
-        {selectedStock && (
-          <FilterChipButton title={selectedStock} buttonicon="TbX" onclick={() => updateFilter("stock", "")} />
-        )}
-        {selectedWarranty && (
-          <FilterChipButton title={selectedWarranty} buttonicon="TbX" onclick={() => updateFilter("warranty", "")} />
-        )}
-        {selectedPriceRange && (
-          <FilterChipButton title={selectedPriceRange} buttonicon="TbX" onclick={() => updateFilter("pricerange", "")} />
-        )}
-        {selectedSize && (
-          <FilterChipButton title={selectedSize} buttonicon="TbX" onclick={() => updateFilter("size", "")} />
-        )}
-        {selectedWeightRange && (
-          <FilterChipButton title={selectedWeightRange} buttonicon="TbX" onclick={() => updateFilter("weightrange", "")} />
-        )}
-        {selectedMaterial && (
-          <FilterChipButton title={selectedMaterial} buttonicon="TbX" onclick={() => updateFilter("material", "")} />
-        )}
-        {selectedCharging && (
-          <FilterChipButton title={selectedCharging} buttonicon="TbX" onclick={() => updateFilter("charging", "")} />
-        )}
-        {selectedChargingTime && (
-          <FilterChipButton title={selectedChargingTime} buttonicon="TbX" onclick={() => updateFilter("chargingtime", "")} />
-        )}
-        {selectedNoise && (
-          <FilterChipButton title={selectedNoise} buttonicon="TbX" onclick={() => updateFilter("noise", "")} />
-        )}
-        {selectedWaterproof && (
-          <FilterChipButton title={selectedWaterproof} buttonicon="TbX" onclick={() => updateFilter("waterproof", "")} />
-        )}
-        {selectedUseTime && (
-          <FilterChipButton title={selectedUseTime} buttonicon="TbX" onclick={() => updateFilter("usetime", "")} />
-        )}
-        {selectedModes && (
-          <FilterChipButton title={selectedModes} buttonicon="TbX" onclick={() => updateFilter("modes", "")} />
-        )}
-        {selectedSpeed && (
-          <FilterChipButton title={selectedSpeed} buttonicon="TbX" onclick={() => updateFilter("speed", "")} />
-        )}
-        {selectedControll && (
-          <FilterChipButton title={selectedControll} buttonicon="TbX" onclick={() => updateFilter("controll", "")} />
-        )}
-        {selectedApp && (
-          <FilterChipButton title={selectedApp} buttonicon="TbX" onclick={() => updateFilter("app", "")} />
-        )}
-      </div>
-    </>
-  );
+      <FilterResetButton
+        keys={[
+          'arrange','color','category','stock','warranty','pricerange',
+          'size','weightrange','material','charging','chargingtime','noise',
+          'waterproof','usetime','modes','speed','controll','app'
+        ]}
+      />
+    </div>
+
+    {/* Ár slider */}
+    <div className="mb-4">
+      <FilterPriceSlider label="Ár" min={0} max={200000} step={1000} paramKey="pricerange" />
+    </div>
+
+    {/* Harmonika szekciók checkboxokkal */}
+    {has(facet.category) && (
+      <AccordionFilterMulti title="Kategória" paramKey="category" options={facet.category} />
+    )}
+    {has(facet.color) && (
+      <AccordionFilterMulti title="Szín" paramKey="color" options={facet.color} />
+    )}
+    {has(facet.stock) && (
+      <AccordionFilterMulti title="Raktárkészlet" paramKey="stock" options={facet.stock} />
+    )}
+    {has(facet.warranty) && (
+      <AccordionFilterMulti title="Garancia" paramKey="warranty" options={facet.warranty} />
+    )}
+    {has(facet.size) && (
+      <AccordionFilterMulti title="Méret" paramKey="size" options={facet.size} />
+    )}
+    {has(facet.weightrange) && (
+      <AccordionFilterMulti title="Súly" paramKey="weightrange" options={facet.weightrange} />
+    )}
+    {has(facet.material) && (
+      <AccordionFilterMulti title="Anyag" paramKey="material" options={facet.material} />
+    )}
+    {has(facet.charging) && (
+      <AccordionFilterMulti title="Töltés" paramKey="charging" options={facet.charging} />
+    )}
+    {has(facet.chargingtime) && (
+      <AccordionFilterMulti title="Töltési idő" paramKey="chargingtime" options={facet.chargingtime} />
+    )}
+    {has(facet.noise) && (
+      <AccordionFilterMulti title="Zajszint" paramKey="noise" options={facet.noise} />
+    )}
+    {has(facet.waterproof) && (
+      <AccordionFilterMulti title="Vízállóság" paramKey="waterproof" options={facet.waterproof} />
+    )}
+    {has(facet.usetime) && (
+      <AccordionFilterMulti title="Használati idő" paramKey="usetime" options={facet.usetime} />
+    )}
+    {has(facet.modes) && (
+      <AccordionFilterMulti title="Használati módok" paramKey="modes" options={facet.modes} />
+    )}
+    {has(facet.speed) && (
+      <AccordionFilterMulti title="Sebesség fokozatok" paramKey="speed" options={facet.speed} />
+    )}
+    {has(facet.controll) && (
+      <AccordionFilterMulti title="Irányítás" paramKey="controll" options={facet.controll} />
+    )}
+    {has(facet.app) && (
+      <AccordionFilterMulti title="Applikáció" paramKey="app" options={facet.app} />
+    )}
+  </>
+)
+
 }

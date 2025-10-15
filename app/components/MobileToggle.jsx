@@ -15,7 +15,7 @@ export default function MobileToggle() {
       className="flex xl:hidden xl:w-[44px] w-[40px] xl:h-[44px] h-[40px] rounded-full hover:bg-[var(--border)] items-center justify-center cursor-pointer"
       title="Menü"
     >
-      <TbMenu2 className="xl:w-6 w-5 xl:h-6 h-5 text-[var(--pink)]"/>
+      <TbMenu2 className="w-6 h-6 text-[var(--pink)]"/>
     </button>
   );
 }

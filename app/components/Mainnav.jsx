@@ -14,6 +14,8 @@ import Paragraph from "./UI/Texts/MenuText";
 import MainMenu from "./UI/MainMenu";
 import Submenu from "./UI/Submenu";
 import MobileMenuDrawer from "./UI/MobileMenuDrawer";
+import ContactUsMenu from "./ContactUsMenu";
+import TopMenu from "./TopMenu";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useContext } from "react";
 import { MenuContext } from "../MenuContext";
@@ -58,24 +60,22 @@ export default function MainNav() {
   }, [lastScrollY]);
 
   return (
-    <motion.div
+    <>
+    <TopMenu/>
+    <div
       className={`z-40 sticky top-0 left-0 bg-white xl:h-[84px] h-[54px] w-full`}
-      initial={{ y: 0 }}
-      animate={{
-        y: isShallowTermekekPage && scrolledEnough ? -200 : 0,
-      }}
-      transition={{ duration: 0.3 }}
     >
       <div
-        className={`flex flex-col xl:h-[84px] h-[54px] w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white ${isVisible ? "" : " lg:border-b border-0 border-[var(--border)]"}`}
+        className={`flex flex-col xl:h-[84px] h-[60px] w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white ${isVisible ? "" : " lg:border-b border-0 border-[var(--border)]"}`}
       >
         <div className="flex flex-col w-full xl:gap-0 gap-2">
           <div className="flex flex-row w-full justify-between gap-8 z-50 xl:pt-4 pt-2 bg-white">
             <div
               id="desktop-search-logo"
-              className="xl:flex hidden flex-row w-fit gap-8 items-center justify-start "
+              className="xl:flex hidden flex-row w-full gap-12 items-center justify-start "
             >
               <Logo />
+              <ContactUsMenu/>
               <SearchBarDesktop />
             </div>
             <motion.div
@@ -94,19 +94,13 @@ export default function MainNav() {
           </div>
         </div>
       </div>
-      <motion.div
+      <div
         id="desktop-menu"
         className="hidden xl:flex flex-col bg-white"
-        onMouseEnter={cancelCloseSubmenu}
-        onMouseLeave={() => scheduleCloseSubmenu()}
-        initial={{ y: 0 }}
-        animate={{ y: isVisible ? 0 : -84 }}
-        exit={{ y: 0 }}
-        transition={{ duration: 0.3 }}
       >
         <MainMenu />
         <Submenu />
-      </motion.div>
+      </div>
       <motion.div
         id="mobile-search"
         className="flex xl:hidden bg-white"
@@ -119,6 +113,7 @@ export default function MainNav() {
         </div>
         <MobileMenuDrawer />
       </motion.div>
-    </motion.div>
+    </div>
+    </>
   );
 }
