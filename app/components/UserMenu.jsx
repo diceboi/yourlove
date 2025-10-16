@@ -75,7 +75,7 @@ export default function UserMenu() {
       ref={menuRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="relative z-50"
+      className="relative z-50 lg:w-full"
     >
       <button
         onClick={!user ? () => router.push("/bejelentkezes") : null}
@@ -97,9 +97,9 @@ export default function UserMenu() {
                 className="rounded-full"
               />
             ) : (
-              <TbUser className="xl:w-5 xl:h-5 w-6 h-6 text-[var(--pink)]" />
+              <TbUser className="xl:min-w-5 xl:min-h-5 min-w-6 min-h-6 text-[var(--pink)]" />
             )}
-            <Paragraph classname={"xl:flex hidden"}>
+            <Paragraph classname={"xl:flex hidden min-w-fit"}>
               {userProfile
                 ? `Szia ${userProfile.firstname}`
                 : user?.email}

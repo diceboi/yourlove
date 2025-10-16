@@ -11,6 +11,10 @@ import { Suspense } from "react";
 import FilterDrawerProvider from '@/app/components/filter/FilterDrawerProvider'
 import FilterDrawer from '@/app/components/filter/FilterDrawer'
 import FilterToggleButton from '@/app/components/filter/FilterToggleButton'
+import ButtonText from "@/app/components/UI/Texts/ButtonText";
+import ProductsInfinite from "@/app/components/products/ProductsInfinite";
+import Link from 'next/link'
+
 
 /* ---------- Segédfüggvények ---------- */
 
@@ -75,6 +79,19 @@ function buildCategoryTrail(current, catsById) {
   }));
 }
 
+// Egy kategória teljes slug-útvonala a gyökerétől (pl. "noik/fehernemu/melltarto")
+function buildCategorySlugPath(catId, catsById) {
+  const chain = []
+  let cur = catsById.get(catId)
+  while (cur) {
+    chain.push(cur)
+    cur = cur.szulo ? catsById.get(cur.szulo) : null
+  }
+  chain.reverse()
+  return chain.map(c => c.slug).join('/')
+}
+
+
 /* ---------- Page ---------- */
 
 export default async function Page({ params, searchParams }) {
@@ -87,9 +104,10 @@ export default async function Page({ params, searchParams }) {
   // ⬇️ Kategóriák lehúzása egyszer, közösen (mindkét ág használja)
   const { data: allCats = [] } = await supabase
     .from("product-categories")
-    .select("id, slug, nev, szulo");
+    .select("id, slug, nev, szulo, kozzeteve, kep, icon");
 
   const catsById = new Map(allCats.map((c) => [c.id, c]));
+  const catsByIdObj = Object.fromEntries(allCats.map(c => [c.id, c]))
 
   /* ---------- TERMÉKOLDAL? ---------- */
 
@@ -301,7 +319,7 @@ export default async function Page({ params, searchParams }) {
 
   return (
     <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
-      <div className="flex flex-col lg:gap-8 gap-4">
+      <div className="flex flex-col lg:gap-8 gap-4 mb-8">
         <Suspense fallback={null}>
           <Breadcrumbs
             trail={[{ label: "Termékek", href: "/termekek" }, ...catTrail]}
@@ -311,69 +329,70 @@ export default async function Page({ params, searchParams }) {
         {/* Kategória szövegek */}
         <CategoryPageTexts category={category} />
 
-        {/* Szűrők – a tényleges parent slugot adjuk át */}
-        <div className="flex flex-col sticky top-0 left-0 z-10 bg-white border-b border-[var(--border)] py-0 2xl:py-4">
-          
-        </div>
-      </div>
+        {/* Alkategóriák (pill/box) */}
+        {(() => {
+          // fontos: stringes összevetés, és csak a közzétett gyerekeket mutatjuk
+          const childCats = (allCats || []).filter(
+            (c) =>
+              c &&
+              c.kozzeteve !== false &&
+              String(c.szulo ?? '') === String(category.id ?? '')
+          )
 
-      <div className="flex lg:flex-row flex-col gap-16">
-
-      <FilterDrawerProvider>
-        {/* mobil felső sor: csak a gomb */}
-        <div className="flex items-center justify-end md:hidden mt-4">
-          <FilterToggleButton />
-        </div>
-
-        <div className="mt-4 flex gap-6">
-          {/* DESKTOP oldalsáv */}
-          <div className="hidden md:block w-64 shrink-0">
-            <Suspense fallback={<div>Betöltés...</div>}>
-              <FilterSection slug={category.slug} />
-            </Suspense>
-          </div>
-
-          {/* TERMÉK RÁCS */}
-          <div className="flex-1">
-            <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
-              {/* ... ProductListItem map (nálad már megvan) ... */}
-            </div>
-          </div>
-        </div>
-
-        {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
-        <FilterDrawer>
-          <FilterSection slug={category.slug} />
-        </FilterDrawer>
-      </FilterDrawerProvider>
-
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-8 gap-4">
-        {filtered.map((p) => {
-          const paths = getCategoryPathsFromProduct(p);
-          const picked = pickBestPath(paths, category.id); // preferáld az aktuális kategóriát tartalmazó útvonalat
-          const { slugs: catSlugs } = idsPathToSlugsAndNames(picked, catsById);
-          const categoryPath = catSlugs.join("/");
+          if (!childCats.length) return null
 
           return (
-            <ProductListItem
-              key={p.id}
-              id={p.id}
-              image={p.termekkep || "/default.png"}
-              focim={p.fo_cim}
-              alcim={p.alcim}
-              price={p.eladasi_ar_brutto}
-              slug={p.seo_slug}
-              categoryPath={categoryPath}
-            />
-          );
-        })}
+            <div className="space-y-2">
+              <ButtonText>Alkategóriák</ButtonText>
+              <div className="flex md:flex-row flex-col gap-2 w-full">
+                {childCats.map((c) => {
+                  const path = buildCategorySlugPath(c.id, catsById)
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/termekek/${path}`}
+                      className="relative flex gap-2 items-center text-sm px-3 py-2 rounded-2xl border border-[var(--border)]
+                                hover:bg-[var(--grey-bg)] hover:border-[var(--border)]
+                                transition-colors whitespace-nowrap text-ellipsis min-w-fit"
+                      title={c.nev}
+                    >
+                      { (c.kep || c.icon) && <Image src={c.kep || c.icon} alt={c.nev} width={50} height={50} className="rounded" /> }
+                      {c.nev}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
 
-        {filtered.length === 0 && (
-          <div className="col-span-full text-sm text-gray-500 p-6">
-            Nincs találat a megadott szűrőkre.
-          </div>
-        )}
       </div>
+
+      <div className="flex md:flex-row flex-col md:gap-16 h-full">
+      <div className="md:sticky top-40 h-full">
+        <FilterDrawerProvider>
+          {/* mobil felső sor: csak a gomb */}
+          <div className="flex items-center justify-end md:hidden mt-4">
+            <FilterToggleButton />
+          </div>
+
+          <div className="md:mt-8 flex gap-6 max-h-[76vh] overflow-y-auto pr-4">
+            {/* DESKTOP oldalsáv */}
+            <div className="hidden md:block w-64 shrink-0">
+              <Suspense fallback={<div>Betöltés...</div>}>
+                <FilterSection slug={category.slug} />
+              </Suspense>
+            </div>
+          </div>
+
+          {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
+          <FilterDrawer>
+            <FilterSection slug={category.slug} />
+          </FilterDrawer>
+        </FilterDrawerProvider>
+      </div>
+
+      <ProductsInfinite catsByIdObj={catsByIdObj} categoryId={category.id} />
       </div>
     </div>
   );

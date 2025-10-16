@@ -14,7 +14,7 @@ export default function FiltersResetButton({ keys = [], className = '' }) {
     <button
       type="button"
       onClick={reset}
-      className={`px-4 h-10 rounded-full border hover:bg-gray-50 ${className}`}
+      className={`px-4 h-10 rounded-full border hover:bg-gray-50 ${className} min-w-fit`}
     >
       Szűrők törlése
     </button>

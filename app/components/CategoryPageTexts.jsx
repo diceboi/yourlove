@@ -4,7 +4,7 @@ import Paragraph from "@/app/components/UI/Texts/Paragraph";
 export default function CategoryPageTexts({category}) {
   return (
     <>
-      <H2>{category.nev}</H2>
+      <H2>{category.nev || category}</H2>
       <Paragraph classname={"xl:w-8/12 w-full"}>
         {category.leiras_lent}
       </Paragraph>

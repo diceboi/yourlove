@@ -84,7 +84,7 @@ export default function MainNav() {
             >
               <Logo />
             </motion.div>
-            <div className="flex flex-row w-fit items-center justify-end">
+            <div className="flex flex-row min-w-fit items-center justify-end">
               <UserMenu />
               <LanguageSelect />
               <Favourites />

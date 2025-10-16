@@ -311,6 +311,13 @@ export default function FilterSection({ slug }) {
 
   return (
   <>
+    <FilterResetButton
+      keys={[
+        'arrange','color','category','stock','warranty','pricerange',
+        'size','weightrange','material','charging','chargingtime','noise',
+        'waterproof','usetime','modes','speed','controll','app'
+      ]}
+    />
     {/* Fejléc: Rendezés + Reset (mindig látszik) */}
     <div className="mt-4 mb-2 flex items-center justify-between gap-3">
       <div className="w-full max-w-xs">
@@ -327,7 +334,7 @@ export default function FilterSection({ slug }) {
               <button
                 key={opt.value}
                 onClick={() => updateFilter('arrange', opt.value)}
-                className={`text-left text-sm px-2 py-1 rounded hover:bg-gray-100 ${
+                className={`text-left text-sm px-2 py-1 rounded hover:bg-gray-100 cursor-pointer ${
                   (useSearchParams().get('arrange') || '') === opt.value ? 'font-semibold' : ''
                 }`}
               >
@@ -337,14 +344,6 @@ export default function FilterSection({ slug }) {
           </div>
         </Accordion>
       </div>
-
-      <FilterResetButton
-        keys={[
-          'arrange','color','category','stock','warranty','pricerange',
-          'size','weightrange','material','charging','chargingtime','noise',
-          'waterproof','usetime','modes','speed','controll','app'
-        ]}
-      />
     </div>
 
     {/* Ár slider */}
@@ -369,7 +368,7 @@ export default function FilterSection({ slug }) {
       <AccordionFilterMulti title="Méret" paramKey="size" options={facet.size} />
     )}
     {has(facet.weightrange) && (
-      <AccordionFilterMulti title="Súly" paramKey="weightrange" options={facet.weightrange} />
+      <AccordionFilterMulti title="Súly" paramKey="weightrange" options={facet.weightrange} suffix={"gr"}/>
     )}
     {has(facet.material) && (
       <AccordionFilterMulti title="Anyag" paramKey="material" options={facet.material} />
@@ -378,7 +377,7 @@ export default function FilterSection({ slug }) {
       <AccordionFilterMulti title="Töltés" paramKey="charging" options={facet.charging} />
     )}
     {has(facet.chargingtime) && (
-      <AccordionFilterMulti title="Töltési idő" paramKey="chargingtime" options={facet.chargingtime} />
+      <AccordionFilterMulti title="Töltési idő" paramKey="chargingtime" options={facet.chargingtime} suffix={"perc"} />
     )}
     {has(facet.noise) && (
       <AccordionFilterMulti title="Zajszint" paramKey="noise" options={facet.noise} />
@@ -387,7 +386,7 @@ export default function FilterSection({ slug }) {
       <AccordionFilterMulti title="Vízállóság" paramKey="waterproof" options={facet.waterproof} />
     )}
     {has(facet.usetime) && (
-      <AccordionFilterMulti title="Használati idő" paramKey="usetime" options={facet.usetime} />
+      <AccordionFilterMulti title="Használati idő" paramKey="usetime" options={facet.usetime} suffix={"perc"} />
     )}
     {has(facet.modes) && (
       <AccordionFilterMulti title="Használati módok" paramKey="modes" options={facet.modes} />

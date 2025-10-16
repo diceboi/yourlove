@@ -46,7 +46,7 @@ export default function ProductListItem({
     : (category ? category.split(">").map((cat) => slugify(cat)).join("/") : "")
 
   return (
-    <div className="flex flex-col gap-4 lg:p-4 p-4 border border-transparent hover:border-[var(--border)] shadow-lg hover:shadow-2xl rounded-2xl">
+    <div className="flex flex-col gap-4 lg:p-4 p-4 shadow-box rounded-2xl">
       <Link
         className="relative w-full 2xl:h-[40vh] h-[150px]"
         href={`/termekek/${categoryPathFinal}/${slug}`}

@@ -34,29 +34,29 @@ export default function ProductList({products = [], slidesPerView640, slidesPerV
       breakpoints={{
         640: {
           slidesPerView: slidesPerView640,
-          spaceBetween: 16,
+          spaceBetween: 0,
         },
         768: {
           slidesPerView: slidesPerView768,
-          spaceBetween: 16,
+          spaceBetween: 0,
         },
         1024: {
           slidesPerView: slidesPerView1024,
-          spaceBetween: 16,
+          spaceBetween: 0,
         },
         1280: {
           slidesPerView: slidesPerView1280,
-          spaceBetween: 16,
+          spaceBetween: 0,
         },
         1440: {
           slidesPerView: slidesPerView1440,
-          spaceBetween: 16,
+          spaceBetween: 0,
         },
       }}
       className="w-full"
     >
       {products.map((product) => (
-        <SwiperSlide key={product.id || product.cikkszam}>
+        <SwiperSlide key={product.id || product.cikkszam} className="py-4 px-2">
           <ProductListItem
             id={product.id}
             image={product.termekkep}

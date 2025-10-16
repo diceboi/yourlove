@@ -23,7 +23,7 @@ export default function FilterDrawer({ children }) {
       />
       {/* drawer */}
       <aside
-        className={`fixed top-0 left-0 h-dvh w-[90vw] max-w-[420px] bg-white z-50 shadow-xl
+        className={`fixed top-0 left-0 h-dvh w-[90vw] max-w-[420px] bg-white z-1000 shadow-xl
                     transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-[-100%]'}`}
         role="dialog" aria-modal="true"
       >

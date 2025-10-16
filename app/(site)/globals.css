@@ -86,8 +86,16 @@ html {
 
   /*Custom shadow*/
 
-  .shadow-special {
-    box-shadow: 0px 5px 30px -15px var(--rose-15);
+  .shadow-box {
+  --tw-shadow: 0 5px 15px -10px #000;
+  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  }
+
+  .shadow-box:hover {
+  --tw-shadow: 0 5px 20px -10px #000;
+  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
   }
 
   /*Lightbox orientation fix*/

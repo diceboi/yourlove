@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Accordion from './Accordion'
 
 /** options: [{label, value}] ; paramKey pl. "color" */
-export default function AccordionFilterMulti({ title, paramKey, options = [], defaultOpen = false }) {
+export default function AccordionFilterMulti({ title, paramKey, options = [], defaultOpen = false, suffix }) {
   const router = useRouter()
   const sp = useSearchParams()
 
@@ -30,7 +30,7 @@ export default function AccordionFilterMulti({ title, paramKey, options = [], de
 
   return (
     <Accordion title={title} defaultOpen={defaultOpen}>
-      <div className="flex flex-col gap-2 max-h-64 overflow-auto pr-1">
+      <div className="flex flex-col gap-2 max-h-64 overflow-auto py-2 px-2 bg-[var(--grey-bg)]">
         {options.map(opt => {
           const id = `${paramKey}-${opt.value}`
           const checked = selected.has(String(opt.value))
@@ -43,7 +43,7 @@ export default function AccordionFilterMulti({ title, paramKey, options = [], de
                 onChange={() => toggle(String(opt.value))}
                 className="accent-[var(--pink)]"
               />
-              <span>{opt.label}</span>
+              <span>{opt.label} {suffix ? suffix:null}</span>
             </label>
           )
         })}
