@@ -203,7 +203,7 @@ export default async function Page({ searchParams }) {
               <FilterToggleButton />
             </div>
 
-            <div className="md:mt-8 flex gap-6 max-h-[60vh] overflow-y-auto pr-4">
+            <div className="md:mt-8 flex gap-6 max-h-[76vh] overflow-y-auto pr-4">
               {/* DESKTOP oldalsáv */}
               <div className="hidden md:block w-64 shrink-0">
                 <Suspense fallback={<div>Betöltés...</div>}>
