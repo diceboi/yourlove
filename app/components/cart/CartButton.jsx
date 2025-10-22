@@ -43,7 +43,7 @@ export default function CartButton() {
 
       {count > 0 && (
         <span
-          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1
+          className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1
                      rounded-full bg-[var(--pink)] text-white text-[10px]
                      font-semibold flex items-center justify-center shadow"
           aria-label={`Kosárban ${count} tétel`}

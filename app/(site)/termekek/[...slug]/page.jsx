@@ -96,8 +96,8 @@ function buildCategorySlugPath(catId, catsById) {
 /* ---------- Page ---------- */
 
 export default async function Page({ params, searchParams }) {
-  const { slug } = await params; // [...slug]
-  const sp = searchParams;
+  const { slug } = params;
+  const sp = await searchParams;
   const leaf = slug?.[slug.length - 1];
 
   const supabase = await createClient();
@@ -210,8 +210,11 @@ export default async function Page({ params, searchParams }) {
 
   // 2) Szűrők (query stringből)
   const get = (k) => {
+    if (sp && typeof sp.get === 'function') {
+      return sp.get(k) ?? '';
+    }
     const v = sp?.[k];
-    return Array.isArray(v) ? v[0] : v ?? "";
+    return Array.isArray(v) ? v[0] : (v ?? '');
   };
 
   const arrange = get("arrange");

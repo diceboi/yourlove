@@ -1,7 +1,6 @@
 "use client";
 
 import Logo from "./UI/Logo";
-import SearchBarDesktop from "./SearchBarDesktop";
 import UserMenu from "./UserMenu";
 import LanguageSelect from "./LanguageSelect";
 import MobileToggle from "./MobileToggle";
@@ -20,6 +19,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect, useContext } from "react";
 import { MenuContext } from "../MenuContext";
 import { usePathname } from "next/navigation";
+import SearchBar from "./search/SearchBar";
 
 export default function MainNav() {
   const [isVisible, setIsVisible] = useState(true);
@@ -76,7 +76,7 @@ export default function MainNav() {
             >
               <Logo />
               <ContactUsMenu/>
-              <SearchBarDesktop />
+              <SearchBar />
             </div>
             <motion.div
               id="mobile-logo"
@@ -109,7 +109,7 @@ export default function MainNav() {
         transition={{ duration: 0.3 }}
       >
         <div className="w-[calc(100%-32px)] mx-auto py-2">
-          <SearchBarDesktop />
+          <SearchBar />
         </div>
         <MobileMenuDrawer />
       </motion.div>
