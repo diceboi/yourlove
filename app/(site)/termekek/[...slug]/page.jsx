@@ -13,6 +13,7 @@ import FilterDrawer from '@/app/components/filter/FilterDrawer'
 import FilterToggleButton from '@/app/components/filter/FilterToggleButton'
 import ButtonText from "@/app/components/UI/Texts/ButtonText";
 import ProductsInfinite from "@/app/components/products/ProductsInfinite";
+import ProductsPaginated from "@/app/components/products/ProductsPaginated";
 import Link from 'next/link'
 
 
@@ -138,7 +139,7 @@ export default async function Page({ params, searchParams }) {
     const categoryPath = catSlugs.join("/"); // pl. "noik/fehernemu/melltarto"
 
     return (
-      <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
+      <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
           <Suspense fallback={null}>
             {/* Ha a Breadcrumbs képes fogadni trail-t: */}
@@ -201,7 +202,7 @@ export default async function Page({ params, searchParams }) {
 
   if (!category) {
     return (
-      <div className="w-full xl:pt-28 pt-20 px-4 xl:px-12">
+      <div className="w-full xl:pt-18 pt-10 px-4 xl:px-12">
         <div className="text-sm text-gray-500 py-8">Kategória nem található.</div>
       </div>
     );
@@ -318,7 +319,7 @@ export default async function Page({ params, searchParams }) {
   const catTrail = buildCategoryTrail(category, catsById);
 
   return (
-    <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
+    <div className="w-full xl:pt-18 pt-10 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="flex flex-col lg:gap-8 gap-4 mb-8">
         <Suspense fallback={null}>
           <Breadcrumbs
@@ -376,7 +377,7 @@ export default async function Page({ params, searchParams }) {
             <FilterToggleButton />
           </div>
 
-          <div className="md:mt-8 flex gap-6 max-h-[76vh] overflow-y-auto pr-4">
+          <div className="md:mt-8 flex gap-6 max-h-[60vh] overflow-y-auto pr-4">
             {/* DESKTOP oldalsáv */}
             <div className="hidden md:block w-64 shrink-0">
               <Suspense fallback={<div>Betöltés...</div>}>
@@ -392,7 +393,7 @@ export default async function Page({ params, searchParams }) {
         </FilterDrawerProvider>
       </div>
 
-      <ProductsInfinite catsByIdObj={catsByIdObj} categoryId={category.id} />
+      <ProductsPaginated catsByIdObj={catsByIdObj} categoryId={category.id} />
       </div>
     </div>
   );

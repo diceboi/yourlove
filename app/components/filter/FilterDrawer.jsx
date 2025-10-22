@@ -34,13 +34,8 @@ export default function FilterDrawer({ children }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto h-[calc(100dvh-56px-56px)] px-4 py-3">
+        <div className="overflow-y-auto h-full py-3">
           {children}
-        </div>
-
-        <div className="h-14 border-t px-4 flex items-center justify-end gap-2">
-          <button onClick={close} className="px-4 py-2 rounded-full border">Mégse</button>
-          <button onClick={close} className="px-4 py-2 rounded-full bg-[var(--pink)] text-white">Kész</button>
         </div>
       </aside>
     </>

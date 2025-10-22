@@ -12,6 +12,7 @@ import Image from "next/image"
 import ButtonText from "@/app/components/UI/Texts/ButtonText"
 import { Suspense } from "react"
 import ProductsInfinite from "@/app/components/products/ProductsInfinite"
+import ProductsPaginated from "@/app/components/products/ProductsPaginated"
 
 /* ---------- Segédfüggvények ---------- */
 function safeParseJSON(s) { try { return JSON.parse(s) } catch { return null } }
@@ -163,7 +164,7 @@ export default async function Page({ searchParams }) {
   }
 
   return (
-    <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
+    <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="flex flex-col lg:gap-4 gap-4  mb-8">
         <Suspense fallback={null}>
           <Breadcrumbs />
@@ -202,7 +203,7 @@ export default async function Page({ searchParams }) {
               <FilterToggleButton />
             </div>
 
-            <div className="md:mt-8 flex gap-6 max-h-[76vh] overflow-y-auto pr-4">
+            <div className="md:mt-8 flex gap-6 max-h-[60vh] overflow-y-auto pr-4">
               {/* DESKTOP oldalsáv */}
               <div className="hidden md:block w-64 shrink-0">
                 <Suspense fallback={<div>Betöltés...</div>}>
@@ -218,7 +219,7 @@ export default async function Page({ searchParams }) {
           </FilterDrawerProvider>
         </div>
 
-        <ProductsInfinite catsByIdObj={catsByIdObj} />
+        <ProductsPaginated catsByIdObj={catsByIdObj} />
       </div>
     </div>
   )

@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import ProductListItem from '@/app/components/UI/ProductListItem'
 import ProductCardSkeleton from '@/app/components/UI/ProductCardSkeleton'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 16
 
 function safeParseJSON(s) { try { return JSON.parse(s) } catch { return null } }
 function getCategoryPathsFromProduct(product) {
@@ -192,7 +192,7 @@ export default function ProductsInfinite({ catsByIdObj, categoryId = null }) {
       entries => {
         const entry = entries[0]
         if (entry.isIntersecting && hasMore && !loading) {
-          fetchPage(page) // mindig az aktuális page-et kéri a következőhöz
+          fetchPage(page)
         }
       },
       { root: null, rootMargin: '600px 0px 600px 0px', threshold: 0.01 }
@@ -200,13 +200,13 @@ export default function ProductsInfinite({ catsByIdObj, categoryId = null }) {
 
     obs.observe(el)
     return () => obs.disconnect()
-  }, [page, hasMore, loading]) // page/hasMore/loading változáskor újraköti
+  }, [page, hasMore, loading])
 
-  // Skeleton az első körben
+  // Skeleton az első körben (16 darab)
   if (items.length === 0 && loading) {
     return (
       <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-8 gap-4 w-full">
-        {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+        {Array.from({ length: PAGE_SIZE }).map((_, i) => <ProductCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -245,7 +245,7 @@ export default function ProductsInfinite({ catsByIdObj, categoryId = null }) {
         )}
       </div>
 
-      {/* Fallback gomb (ha az Observer nem futna valamiért) */}
+      {/* Fallback gomb */}
       {hasMore && !loading && (
         <div className="flex items-center justify-center pb-8">
           <button

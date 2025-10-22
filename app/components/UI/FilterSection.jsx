@@ -3,65 +3,66 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import Accordion from "@/app/components/UI/Accordion";
+import { useFilterDrawer } from '@/app/components/filter/FilterDrawerProvider'
 
-import FilterArrange from "@/app/components/UI/FilterArrange";
-import FilterColor from "@/app/components/UI/FilterColor";
-import FilterCategory from "@/app/components/UI/FilterCategory";
-import FilterChipButton from "@/app/components/UI/Buttons/FilterChipButton";
-import FilterStock from "@/app/components/UI/FilterStock";
-import FilterWarranty from "@/app/components/UI/FilterWarranty";
-import FilterPriceRange from "@/app/components/UI/FilterPriceRange";
-import FilterPriceSlider from "./FilterPriceSlider";
-import FilterSize from "@/app/components/UI/FilterSize";
-import FilterWeightRange from "@/app/components/UI/FilterWeightRange";
-import FilterMaterial from "@/app/components/UI/FilterMaterial";
-import FilterCharging from "@/app/components/UI/FilterCharging";
-import FilterChargingTime from "@/app/components/UI/FilterChargingTime";
-import FilterNoise from "@/app/components/UI/FilterNoise";
-import FilterWaterproof from "@/app/components/UI/FilterWaterproof";
-import FilterUsetime from "@/app/components/UI/FilterUsetime";
-import FilterModes from "@/app/components/UI/FilterModes";
-import FilterSpeed from "@/app/components/UI/FilterSpeed";
-import FilterControll from "@/app/components/UI/FilterControll";
-import FilterApp from "@/app/components/UI/FilterApp";
-import AccordionFilterMulti from '@/app/components/UI/AccordionFilterMulti'
-import Accordion from '@/app/components/UI/Accordion'
-import FilterResetButton from '@/app/components/UI/FilterResetButton'
-
+// --- Kis, helyben használt, “checkbox-stílusú” egyválasztós harmonika ---
+function DraftAccordionSelect({ title, value, onChange, options = [], suffix, classname }) {
+  return (
+    <Accordion title={title} defaultOpen={false}>
+      <div className="flex flex-col gap-1">
+        {options.map((opt) => {
+          const selected = value === opt.value;
+          return (
+            <label
+              key={opt.value}
+              className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer border
+                         ${selected ? "bg-[var(--grey-bg)] border-[var(--border)]" : "border-transparent hover:bg-gray-50"} ${classname}`}
+              onClick={() => onChange(opt.value)}
+            >
+              <span className="text-sm">
+                {opt.label}
+                {suffix ? ` ${suffix}` : ""}
+              </span>
+              <span
+                className={`w-4 h-4 rounded border ml-3 flex items-center justify-center
+                           ${selected ? "bg-[var(--pink)] border-[var(--pink)]" : "border-[var(--border)]"}`}
+              >
+                {selected ? (
+                  <span className="block w-2 h-2 rounded-sm bg-white" />
+                ) : null}
+              </span>
+            </label>
+          );
+        })}
+        {value && (
+          <button
+            className="mt-2 self-start text-xs underline text-[var(--tertiary-text)] hover:text-[var(--black)]"
+            onClick={() => onChange("")}
+            type="button"
+          >
+            Törlés
+          </button>
+        )}
+      </div>
+    </Accordion>
+  );
+}
 
 export default function FilterSection({ slug }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
+  const { open, close } = useFilterDrawer()
 
-  // --- URL-ből kivett kiválasztások (chip sávhoz) ---
-  const selectedColor = searchParams.get("color") || "";
-  const selectedSort = searchParams.get("arrange") || "";
-  const selectedCategory = searchParams.get("category") || "";
-  const selectedStock = searchParams.get("stock") || "";
-  const selectedWarranty = searchParams.get("warranty") || "";
-  const selectedPriceRange = searchParams.get("pricerange") || "";
-  const selectedSize = searchParams.get("size") || "";
-  const selectedWeightRange = searchParams.get("weightrange") || "";
-  const selectedMaterial = searchParams.get("material") || "";
-  const selectedCharging = searchParams.get("charging") || "";
-  const selectedChargingTime = searchParams.get("chargingtime") || "";
-  const selectedNoise = searchParams.get("noise") || "";
-  const selectedWaterproof = searchParams.get("waterproof") || "";
-  const selectedUseTime = searchParams.get("usetime") || "";
-  const selectedModes = searchParams.get("modes") || "";
-  const selectedSpeed = searchParams.get("speed") || "";
-  const selectedControll = searchParams.get("controll") || "";
-  const selectedApp = searchParams.get("app") || "";
-
-  // --- Dinamikus opciók állapota ---
+  // --- Betöltött facettek az adatbázisból ---
   const [loading, setLoading] = useState(false);
   const [facet, setFacet] = useState({
     color: [],
     category: [],
     stock: [],
     warranty: [],
-    pricerange: [],   // ha maradna statikus, hagyhatod üresen is
+    pricerange: [],
     size: [],
     weightrange: [],
     material: [],
@@ -76,7 +77,56 @@ export default function FilterSection({ slug }) {
     app: [],
   });
 
-  // --- Helper: string normalizálás és listázás ---
+  // --- Draft (helyi) űrlapállapot: URL -> induló értékek, majd csak gombra írjuk vissza ---
+  const [draft, setDraft] = useState({
+    arrange: "",
+    color: "",
+    category: "",
+    stock: "",
+    warranty: "",
+    pricerange: "",
+    size: "",
+    weightrange: "",
+    material: "",
+    charging: "",
+    chargingtime: "",
+    noise: "",
+    waterproof: "",
+    usetime: "",
+    modes: "",
+    speed: "",
+    controll: "",
+    app: "",
+  });
+
+  // URL -> draft (induló értékek)
+  useEffect(() => {
+    const get = (k) => searchParams.get(k) || "";
+    setDraft((d) => ({
+      ...d,
+      arrange: get("arrange"),
+      color: get("color"),
+      category: get("category"),
+      stock: get("stock"),
+      warranty: get("warranty"),
+      pricerange: get("pricerange"),
+      size: get("size"),
+      weightrange: get("weightrange"),
+      material: get("material"),
+      charging: get("charging"),
+      chargingtime: get("chargingtime"),
+      noise: get("noise"),
+      waterproof: get("waterproof"),
+      usetime: get("usetime"),
+      modes: get("modes"),
+      speed: get("speed"),
+      controll: get("controll"),
+      app: get("app"),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // ha a lista újrarajzolás miatt változik az URL, frissítjük a draftot is
+
+  // --- Segédek a facet betöltéshez ---
   const norm = (v) => String(v || "").trim();
   const splitMulti = (v) =>
     norm(v)
@@ -84,20 +134,15 @@ export default function FilterSection({ slug }) {
       .map((s) => s.trim())
       .filter(Boolean);
 
-  // kategória JSON-útvonal tartalmaz-e egy id-t
   const pathContainsId = (kategoriaJson, id) => {
     try {
       const paths = JSON.parse(kategoriaJson);
-      return (
-        Array.isArray(paths) &&
-        paths.some((p) => Array.isArray(p) && p.includes(id))
-      );
+      return Array.isArray(paths) && paths.some((p) => Array.isArray(p) && p.includes(id));
     } catch {
       return false;
     }
   };
 
-  // közvetlen gyermek id a parentId után (egy adott úton)
   const findDirectChildId = (kategoriaJson, parentId) => {
     try {
       const paths = JSON.parse(kategoriaJson);
@@ -109,11 +154,10 @@ export default function FilterSection({ slug }) {
     return null;
   };
 
-  // --- Dinamikus opciók betöltése ---
+  // --- Facet betöltés (ugyanaz a logika, mint eddig) ---
   const loadFacets = useCallback(async () => {
     setLoading(true);
 
-    // 1) ha van slug, kérjük le a szülő kategória id-t
     let parent = null;
     if (slug) {
       const { data: parentCat } = await supabase
@@ -124,14 +168,12 @@ export default function FilterSection({ slug }) {
       parent = parentCat || null;
     }
 
-    // 2) kategória térkép (id -> {nev, slug, szulo})
     const { data: allCats = [] } = await supabase
       .from("product-categories")
       .select("id, nev, slug, szulo");
 
     const catById = new Map(allCats.map((c) => [c.id, c]));
 
-    // 3) termékek lekérése (csak a szükséges oszlopok)
     const { data: allProducts = [] } = await supabase
       .from("products")
       .select(
@@ -159,14 +201,12 @@ export default function FilterSection({ slug }) {
         ].join(",")
       )
       .eq("kozzeteve", true)
-      .limit(1000); // finomhangold/pagináld igény szerint
+      .limit(1000);
 
-    // 4) ha van slug → szűrés a kategóriára (kliens oldalon a kategoria JSON alapján)
     const products = parent
       ? allProducts.filter((p) => pathContainsId(p.kategoria, parent.id))
       : allProducts;
 
-    // 5) halmazok felépítése
     const setColor = new Set();
     const setSize = new Set();
     const setWeight = new Set();
@@ -181,87 +221,49 @@ export default function FilterSection({ slug }) {
     const setControll = new Set();
     const setApp = new Set();
     const setWarranty = new Set();
-    const setStock = new Set(["instock", "out-of-stock"]); // mindig megjelenhet, ha így akarod
+    const setStock = new Set(["instock", "out-of-stock"]);
 
-    // kategória-szűrő opciók: a szülő alatti közvetlen gyermek kategóriák,
-    // amelyeket a termékek valóban használnak
     const setChildCatIds = new Set();
 
     for (const p of products) {
-      // színek
       if (p.szin) splitMulti(p.szin).forEach((v) => setColor.add(v));
-
-      // méret (szabad szöveg)
       if (p.meretek) splitMulti(p.meretek).forEach((v) => setSize.add(v));
-
-      // súly → itt vagy konkrét értékek, vagy képezhetsz bucketeket
       if (p.suly) setWeight.add(norm(p.suly));
-
-      // anyagok
       if (p.anyag) splitMulti(p.anyag).forEach((v) => setMaterial.add(v));
-
-      // töltés
       if (p.toltes) splitMulti(p.toltes).forEach((v) => setCharging.add(v));
-
-      // töltési idő
-      if (p.toltesi_ido)
-        splitMulti(p.toltesi_ido).forEach((v) => setChargingTime.add(v));
-
-      // zajszint
+      if (p.toltesi_ido) splitMulti(p.toltesi_ido).forEach((v) => setChargingTime.add(v));
       if (p.zajszint) splitMulti(p.zajszint).forEach((v) => setNoise.add(v));
-
-      // vízállóság
-      if (p.vizallosag)
-        splitMulti(p.vizallosag).forEach((v) => setWaterproof.add(v));
-
-      // használati idő
-      if (p.hasznalati_ido)
-        splitMulti(p.hasznalati_ido).forEach((v) => setUseTime.add(v));
-
-      // módok – itt a példában 'vibracios_modok' van
-      if (p.vibracios_modok)
-        splitMulti(p.vibracios_modok).forEach((v) => setModes.add(v));
-
-      // sebességfokozatok
-      if (p.sebessegfokozatok)
-        splitMulti(p.sebessegfokozatok).forEach((v) => setSpeed.add(v));
-
-      // vezérlés
+      if (p.vizallosag) splitMulti(p.vizallosag).forEach((v) => setWaterproof.add(v));
+      if (p.hasznalati_ido) splitMulti(p.hasznalati_ido).forEach((v) => setUseTime.add(v));
+      if (p.vibracios_modok) splitMulti(p.vibracios_modok).forEach((v) => setModes.add(v));
+      if (p.sebessegfokozatok) splitMulti(p.sebessegfokozatok).forEach((v) => setSpeed.add(v));
       if (p.vezerles) splitMulti(p.vezerles).forEach((v) => setControll.add(v));
+      if (p.applikacio) splitMulti(p.applikacio).forEach((v) => setApp.add(v.toLowerCase()));
 
-      // applikáció
-      if (p.applikacio)
-        splitMulti(p.applikacio).forEach((v) => setApp.add(v.toLowerCase()));
-
-      // garancia → normalizáljuk "1-year", "2-year" stb. alakra
       if (p.garancia) {
-        const raw = norm(p.garancia).toLowerCase(); // pl. "1 év"
+        const raw = norm(p.garancia).toLowerCase();
         const m = raw.match(/(\d+)/);
         if (m) setWarranty.add(`${m[1]}-year`);
         else setWarranty.add(raw);
       }
 
-      // készlet → 'instock'/'out-of-stock' (ha nincs „backorder” infó)
       if (typeof p.keszlet === "number")
         setStock.add(p.keszlet > 0 ? "instock" : "out-of-stock");
 
-      // gyermek kategória opciók (ha van parent)
       if (parent) {
         const childId = findDirectChildId(p.kategoria, parent.id);
         if (childId) setChildCatIds.add(childId);
       }
     }
 
-    // kategória opciók összeállítása (csak ha van parent)
     const categoryOptions = parent
       ? Array.from(setChildCatIds)
           .map((id) => catById.get(id))
           .filter(Boolean)
           .map((c) => ({ label: c.nev, value: c.slug }))
           .sort((a, b) => a.label.localeCompare(b.label, "hu"))
-      : []; // fő archívumban akár top kategóriákat is adhatnál ide
+      : [];
 
-    // helper: Set -> [{label, value}]
     const toOptions = (s) =>
       Array.from(s)
         .map((v) => ({ label: v, value: String(v) }))
@@ -272,7 +274,6 @@ export default function FilterSection({ slug }) {
       category: categoryOptions,
       stock: toOptions(setStock),
       warranty: toOptions(setWarranty),
-      // price range maradhat statikus, ha úgy szeretnéd
       pricerange: [
         { label: "0–10 000", value: "0-10000" },
         { label: "10 000+", value: "10000+" },
@@ -298,29 +299,55 @@ export default function FilterSection({ slug }) {
     loadFacets();
   }, [loadFacets]);
 
-  // --- URL frissítés ---
-  const updateFilter = (key, value) => {
+  // --- Draft setter helper ---
+  const setField = (key, value) => setDraft((d) => ({ ...d, [key]: value }));
+
+  // --- APPLY: draft -> URL paramok ---
+  const applyFilters = () => {
     const params = new URLSearchParams(window.location.search);
-    if (value) params.set(key, value);
-    else params.delete(key);
+    Object.entries(draft).forEach(([k, v]) => {
+      if (v) params.set(k, v);
+      else params.delete(k);
+    });
+    // lapozást vedd vissza az első oldalra (ha használsz ?page= paramot a lista alatt)
+    params.delete("page");
     router.push(`?${params.toString()}`);
   };
 
-  // Helper: csak akkor rendereljünk egy filtert, ha van opció
-  const has = (arr) => Array.isArray(arr) && arr.length > 0;
+  // --- RESET: mindent törlünk (draft + URL) ---
+  const resetFilters = () => {
+    setDraft({
+      arrange: "",
+      color: "",
+      category: "",
+      stock: "",
+      warranty: "",
+      pricerange: "",
+      size: "",
+      weightrange: "",
+      material: "",
+      charging: "",
+      chargingtime: "",
+      noise: "",
+      waterproof: "",
+      usetime: "",
+      modes: "",
+      speed: "",
+      controll: "",
+      app: "",
+    });
+    const params = new URLSearchParams(window.location.search);
+    Object.keys(Object.fromEntries(params)).forEach((k) => {
+      params.delete(k);
+    });
+    router.push(`?${params.toString()}`);
+  };
 
+  // --- UI ---
   return (
-  <>
-    <FilterResetButton
-      keys={[
-        'arrange','color','category','stock','warranty','pricerange',
-        'size','weightrange','material','charging','chargingtime','noise',
-        'waterproof','usetime','modes','speed','controll','app'
-      ]}
-    />
-    {/* Fejléc: Rendezés + Reset (mindig látszik) */}
-    <div className="mt-4 mb-2 flex items-center justify-between gap-3">
-      <div className="w-full max-w-xs">
+    <div className="relative">
+      {/* Rendezés */}
+      <div className="mb-2 w-full max-w-xs">
         <Accordion title="Rendezés" defaultOpen={false}>
           <div className="grid grid-cols-1 gap-2">
             {[
@@ -330,77 +357,187 @@ export default function FilterSection({ slug }) {
               { label: "Értékelés", value: "rating" },
               { label: "Legnépszerűbb", value: "popular" },
               { label: "Legtöbbet keresett", value: "most-searched" },
-            ].map(opt => (
-              <button
+            ].map((opt) => (
+              <label
                 key={opt.value}
-                onClick={() => updateFilter('arrange', opt.value)}
-                className={`text-left text-sm px-2 py-1 rounded hover:bg-gray-100 cursor-pointer ${
-                  (useSearchParams().get('arrange') || '') === opt.value ? 'font-semibold' : ''
-                }`}
+                className={`text-left text-sm px-2 py-1 rounded cursor-pointer
+                            ${draft.arrange === opt.value ? "font-semibold bg-gray-100" : "hover:bg-gray-50"}`}
               >
+                <input
+                  type="radio"
+                  name="arrange"
+                  value={opt.value}
+                  checked={draft.arrange === opt.value}
+                  onChange={() => setField("arrange", opt.value)}
+                  className="mr-2"
+                />
                 {opt.label}
-              </button>
+              </label>
             ))}
           </div>
         </Accordion>
       </div>
+
+      {/* Ár (egyválasztós sávvariánsok) — ha slider kell, ide tegyél controlled input range-t */}
+      <DraftAccordionSelect
+        title="Ár"
+        value={draft.pricerange}
+        onChange={(v) => setField("pricerange", v)}
+        options={facet.pricerange}
+      />
+
+      {/* Harmonika szekciók (egyválasztós) */}
+      {facet.category?.length > 0 && (
+        <DraftAccordionSelect
+          title="Kategória"
+          value={draft.category}
+          onChange={(v) => setField("category", v)}
+          options={facet.category}
+        />
+      )}
+      {facet.color?.length > 0 && (
+        <DraftAccordionSelect
+          title="Szín"
+          value={draft.color}
+          onChange={(v) => setField("color", v)}
+          options={facet.color}
+        />
+      )}
+      {facet.stock?.length > 0 && (
+        <DraftAccordionSelect
+          title="Raktárkészlet"
+          value={draft.stock}
+          onChange={(v) => setField("stock", v)}
+          options={facet.stock}
+        />
+      )}
+      {facet.warranty?.length > 0 && (
+        <DraftAccordionSelect
+          title="Garancia"
+          value={draft.warranty}
+          onChange={(v) => setField("warranty", v)}
+          options={facet.warranty}
+        />
+      )}
+      {facet.size?.length > 0 && (
+        <DraftAccordionSelect
+          title="Méret"
+          value={draft.size}
+          onChange={(v) => setField("size", v)}
+          options={facet.size}
+        />
+      )}
+      {facet.weightrange?.length > 0 && (
+        <DraftAccordionSelect
+          title="Súly"
+          value={draft.weightrange}
+          onChange={(v) => setField("weightrange", v)}
+          options={facet.weightrange}
+          suffix="gr"
+        />
+      )}
+      {facet.material?.length > 0 && (
+        <DraftAccordionSelect
+          title="Anyag"
+          value={draft.material}
+          onChange={(v) => setField("material", v)}
+          options={facet.material}
+        />
+      )}
+      {facet.charging?.length > 0 && (
+        <DraftAccordionSelect
+          title="Töltés"
+          value={draft.charging}
+          onChange={(v) => setField("charging", v)}
+          options={facet.charging}
+        />
+      )}
+      {facet.chargingtime?.length > 0 && (
+        <DraftAccordionSelect
+          title="Töltési idő"
+          value={draft.chargingtime}
+          onChange={(v) => setField("chargingtime", v)}
+          options={facet.chargingtime}
+          suffix="perc"
+        />
+      )}
+      {facet.noise?.length > 0 && (
+        <DraftAccordionSelect
+          title="Zajszint"
+          value={draft.noise}
+          onChange={(v) => setField("noise", v)}
+          options={facet.noise}
+        />
+      )}
+      {facet.waterproof?.length > 0 && (
+        <DraftAccordionSelect
+          title="Vízállóság"
+          value={draft.waterproof}
+          onChange={(v) => setField("waterproof", v)}
+          options={facet.waterproof}
+        />
+      )}
+      {facet.usetime?.length > 0 && (
+        <DraftAccordionSelect
+          title="Használati idő"
+          value={draft.usetime}
+          onChange={(v) => setField("usetime", v)}
+          options={facet.usetime}
+          suffix="perc"
+        />
+      )}
+      {facet.modes?.length > 0 && (
+        <DraftAccordionSelect
+          title="Használati módok"
+          value={draft.modes}
+          onChange={(v) => setField("modes", v)}
+          options={facet.modes}
+        />
+      )}
+      {facet.speed?.length > 0 && (
+        <DraftAccordionSelect
+          title="Sebesség fokozatok"
+          value={draft.speed}
+          onChange={(v) => setField("speed", v)}
+          options={facet.speed}
+        />
+      )}
+      {facet.controll?.length > 0 && (
+        <DraftAccordionSelect
+          title="Irányítás"
+          value={draft.controll}
+          onChange={(v) => setField("controll", v)}
+          options={facet.controll}
+        />
+      )}
+      {facet.app?.length > 0 && (
+        <DraftAccordionSelect
+          title="Applikáció"
+          value={draft.app}
+          onChange={(v) => setField("app", v)}
+          options={facet.app}
+          classname={"mb-8"}
+        />
+      )}
+      {/* Lábléc: Alkalmaz / Reset */}
+      <div className="sticky bottom-0 left-0 py-4 px-4 flex items-center justify-between gap-3 bg-white">
+        <div className="absolute -top-16 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent pointer-events-none z-1000"></div>
+        <div className="relative flex gap-2 text-sm">
+          <button
+            onClick={() => {applyFilters(), close()}}
+            className="px-4 h-9 rounded-full bg-[var(--pink)] text-white hover:bg-[var(--pink-hover)] transition"
+          >
+            Alkalmaz
+          </button>
+          <button
+            onClick={() => {resetFilters(), close()}}
+            className="px-4 h-9 rounded-full border border-[var(--border)] hover:bg-[var(--border)]/40 transition min-w-fit"
+            type="button"
+          >
+            Szűrők törlése
+          </button>
+        </div>
+      </div>
     </div>
-
-    {/* Ár slider */}
-    <div className="mb-4">
-      <FilterPriceSlider label="Ár" min={0} max={200000} step={1000} paramKey="pricerange" />
-    </div>
-
-    {/* Harmonika szekciók checkboxokkal */}
-    {has(facet.category) && (
-      <AccordionFilterMulti title="Kategória" paramKey="category" options={facet.category} />
-    )}
-    {has(facet.color) && (
-      <AccordionFilterMulti title="Szín" paramKey="color" options={facet.color} />
-    )}
-    {has(facet.stock) && (
-      <AccordionFilterMulti title="Raktárkészlet" paramKey="stock" options={facet.stock} />
-    )}
-    {has(facet.warranty) && (
-      <AccordionFilterMulti title="Garancia" paramKey="warranty" options={facet.warranty} />
-    )}
-    {has(facet.size) && (
-      <AccordionFilterMulti title="Méret" paramKey="size" options={facet.size} />
-    )}
-    {has(facet.weightrange) && (
-      <AccordionFilterMulti title="Súly" paramKey="weightrange" options={facet.weightrange} suffix={"gr"}/>
-    )}
-    {has(facet.material) && (
-      <AccordionFilterMulti title="Anyag" paramKey="material" options={facet.material} />
-    )}
-    {has(facet.charging) && (
-      <AccordionFilterMulti title="Töltés" paramKey="charging" options={facet.charging} />
-    )}
-    {has(facet.chargingtime) && (
-      <AccordionFilterMulti title="Töltési idő" paramKey="chargingtime" options={facet.chargingtime} suffix={"perc"} />
-    )}
-    {has(facet.noise) && (
-      <AccordionFilterMulti title="Zajszint" paramKey="noise" options={facet.noise} />
-    )}
-    {has(facet.waterproof) && (
-      <AccordionFilterMulti title="Vízállóság" paramKey="waterproof" options={facet.waterproof} />
-    )}
-    {has(facet.usetime) && (
-      <AccordionFilterMulti title="Használati idő" paramKey="usetime" options={facet.usetime} suffix={"perc"} />
-    )}
-    {has(facet.modes) && (
-      <AccordionFilterMulti title="Használati módok" paramKey="modes" options={facet.modes} />
-    )}
-    {has(facet.speed) && (
-      <AccordionFilterMulti title="Sebesség fokozatok" paramKey="speed" options={facet.speed} />
-    )}
-    {has(facet.controll) && (
-      <AccordionFilterMulti title="Irányítás" paramKey="controll" options={facet.controll} />
-    )}
-    {has(facet.app) && (
-      <AccordionFilterMulti title="Applikáció" paramKey="app" options={facet.app} />
-    )}
-  </>
-)
-
+  );
 }
