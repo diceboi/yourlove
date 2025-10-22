@@ -1,4 +1,3 @@
-// app/components/products/ProductsPaginated.jsx
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -9,7 +8,7 @@ import ProductCardSkeleton from '@/app/components/UI/ProductCardSkeleton';
 import { TbArrowLeft, TbArrowRight } from 'react-icons/tb';
 
 const PAGE_SIZE = 16;
-const MAX_COUNT_ROWS = 10000; // biztonsági sapka kliens oldali counthoz
+const MAX_COUNT_ROWS = 10000;
 
 function safeParseJSON(s) { try { return JSON.parse(s); } catch { return null; } }
 function getCategoryPathsFromProduct(product) {
@@ -73,7 +72,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
   const [total, setTotal]   = useState(0);
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
-  const remainingPages = Math.max(0, totalPages - (page + 1));
 
   // URL frissítése, ha lapozunk
   const updatePageInUrl = useCallback((nextPage) => {
@@ -117,7 +115,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
   const baseQuery = (columns = '*', options) =>
     supabase
       .from('products')
-      .select(columns, options)  // FONTOS: előbb select, aztán eq/ilike
+      .select(columns, options)
       .eq('kozzeteve', true);
 
   const applyFilters = (q) => {
@@ -176,7 +174,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     (async () => {
       setLoading(true);
 
-      // Nincs kategória-path filter → pontos DB count
       if (!effectiveCategoryId) {
         let cq = baseQuery('id', { count: 'exact', head: true });
         cq = applyFilters(cq);
@@ -189,7 +186,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
         return;
       }
 
-      // Van kategória-path filter → id + kategoria fel, kliensen szűrjük
       let cq = baseQuery('id,kategoria');
       cq = applyFilters(cq).range(0, MAX_COUNT_ROWS - 1);
       const { data: rows, error } = await cq;
@@ -228,7 +224,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
       const safeRows = Array.isArray(rows) ? rows : [];
       if (error) console.error('page fetch error:', error);
 
-      // kliens oldali kategória-path szűrés (ha kell)
       let filtered = safeRows;
       if (effectiveCategoryId) {
         const wantId = Number(effectiveCategoryId);
@@ -250,6 +245,61 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     charging,chargingtime,noise,waterproof,usetime,modes,speed,controll,app,effectiveCategoryId
   ]);
 
+  // rendezés selector változtatása
+  const onSortChange = (e) => {
+    const val = e.target.value;
+    const params = new URLSearchParams(window.location.search);
+    if (val) params.set('arrange', val); else params.delete('arrange');
+    params.delete('page'); // vissza az első oldalra
+    router.push(`?${params.toString()}`);
+  };
+
+  // lapozó UI
+  const Pagination = () => {
+    const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
+    if (totalPages <= 1) return null;
+    const windowSize = 3;
+    const start = Math.max(0, Math.min(page - Math.floor(windowSize/2), totalPages - windowSize));
+    const end = Math.min(totalPages - 1, start + windowSize - 1);
+    const go = (p) => { setPage(p); updatePageInUrl(p); };
+
+    return (
+      <div className="flex flex-col items-center gap-2 mt-6">
+        <div className="text-xs text-gray-500">Összesen {totalPages} oldal</div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => go(0)} disabled={page === 0}
+            className="px-2.5 py-1 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer">
+            Első
+          </button>
+          <button onClick={() => go(Math.max(0, page - 1))} disabled={page === 0}
+            className="px-2.5 py-2 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer" aria-label="Előző oldal">
+            <TbArrowLeft/>
+          </button>
+          {Array.from({ length: end - start + 1 }).map((_, i) => {
+            const p = start + i;
+            const active = p === page;
+            return (
+              <button key={p} onClick={() => go(p)}
+                className={`px-2.5 py-1 text-sm rounded-full transition cursor-pointer ${
+                  active ? 'bg-[var(--green)] text-white' : 'hover:bg-[var(--border)]/40'
+                }`}>
+                {p + 1}
+              </button>
+            );
+          })}
+          <button onClick={() => go(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
+            className="px-2.5 py-2 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer" aria-label="Következő oldal">
+            <TbArrowRight/>
+          </button>
+          <button onClick={() => go(totalPages - 1)} disabled={page >= totalPages - 1}
+            className="px-2.5 py-1 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer">
+            Utolsó
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // skeleton az első kör(ök)ben
   if (loading && items.length === 0) {
     return (
@@ -259,77 +309,31 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     );
   }
 
-  // lapozó UI (ablakolt számozás)
-  const Pagination = () => {
-    if (totalPages <= 1) return null;
-    const windowSize = 3;
-    const start = Math.max(0, Math.min(page - Math.floor(windowSize/2), totalPages - windowSize));
-    const end = Math.min(totalPages - 1, start + windowSize - 1);
-    const go = (p) => { setPage(p); updatePageInUrl(p); };
-
-    return (
-      <div className="flex flex-col items-center gap-2 mt-6">
-        <div className="text-xs text-gray-500">
-          Összesen {totalPages} oldal
-        </div>
-        <div className="flex items-center gap-">
-          <button
-            onClick={() => go(0)}
-            disabled={page === 0}
-            className="px-2.5 py-1 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer"
-          >
-            Első
-          </button>
-          <button
-            onClick={() => go(Math.max(0, page - 1))}
-            disabled={page === 0}
-            className="px-2.5 py-2 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer"
-            aria-label="Előző oldal"
-          >
-            <TbArrowLeft/>
-          </button>
-
-          {Array.from({ length: end - start + 1 }).map((_, i) => {
-            const p = start + i;
-            const active = p === page;
-            return (
-              <button
-                key={p}
-                onClick={() => go(p)}
-                className={`px-2.5 py-1 text-sm rounded-full transition cursor-pointer ${
-                  active
-                    ? 'bg-[var(--green)] text-white'
-                    : 'hover:bg-[var(--border)]/40'
-                }`}
-              >
-                {p + 1}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => go(Math.min(totalPages - 1, page + 1))}
-            disabled={page >= totalPages - 1}
-            className="px-2.5 py-2 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer"
-            aria-label="Következő oldal"
-          >
-            <TbArrowRight/>
-          </button>
-          <button
-            onClick={() => go(totalPages - 1)}
-            disabled={page >= totalPages - 1}
-            className="px-2.5 py-1 text-sm rounded-full disabled:opacity-40 hover:bg-[var(--border)]/40 cursor-pointer"
-          >
-            Utolsó
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-8 gap-4">
+      {/* FEJLÉC: bal oldalt találatszám, jobb oldalt rendezés */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm text-[var(--tertiary-text)]">
+          {total} találat
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort" className="text-sm">Rendezés:</label>
+          <select
+            id="sort"
+            value={arrange}
+            onChange={onSortChange}
+            className="h-9 rounded-full border border-[var(--border)] px-3 text-sm bg-white"
+          >
+            <option value="">Alapértelmezett</option>
+            <option value="price-low-to-high">Ár szerint növekvő</option>
+            <option value="price-high-to-low">Ár szerint csökkenő</option>
+            <option value="newest">Legújabb</option>
+            {/* Ha később lesz: rating/popular/most-searched is ide jöhet */}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-2 gap-4">
         {items.map((p) => {
           const paths = getCategoryPathsFromProduct(p);
           const picked = pickBestPath(paths);
@@ -352,7 +356,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
           );
         })}
 
-        {/* ha nincs találat */}
         {!loading && items.length === 0 && (
           <div className="col-span-full text-sm text-gray-500 p-6">
             Nincs találat a megadott szűrőkre.
@@ -360,7 +363,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
         )}
       </div>
 
-      {/* skeleton a lapváltások közben (alul) */}
       {loading && items.length > 0 && (
         <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
           {Array.from({ length: Math.min(PAGE_SIZE, 4) }).map((_, i) => (

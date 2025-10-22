@@ -319,7 +319,7 @@ export default async function Page({ params, searchParams }) {
   const catTrail = buildCategoryTrail(category, catsById);
 
   return (
-    <div className="w-full xl:pt-18 pt-10 xl:pb-8 pb-4 px-4 xl:px-12">
+    <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="flex flex-col lg:gap-8 gap-4 mb-8">
         <Suspense fallback={null}>
           <Breadcrumbs
