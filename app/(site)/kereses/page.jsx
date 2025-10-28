@@ -1,6 +1,8 @@
 // app/(site)/kereses/page.jsx
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import H1 from '@/app/components/UI/Texts/H1'
+import H2 from '@/app/components/UI/Texts/H2'
 
 async function absoluteFetch(pathWithQuery) {
   // pl. "/api/search?..." → abszolút URL
@@ -42,7 +44,7 @@ export default async function SearchArchive({ searchParams }) {
   return (
     <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <div className="mb-4 flex items-end justify-between gap-4">
-        <h1 className="text-xl font-semibold">Keresés: „{q}”</h1>
+        <H2 className="text-xl font-semibold">Keresés: „{q}”</H2>
         <div className="text-sm text-gray-500">Találatok: {total}</div>
       </div>
 

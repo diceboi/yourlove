@@ -1,3 +1,4 @@
+// app/components/products/ProductsPaginated.jsx
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
@@ -8,7 +9,8 @@ import ProductCardSkeleton from '@/app/components/UI/ProductCardSkeleton';
 import { TbArrowLeft, TbArrowRight } from 'react-icons/tb';
 
 const PAGE_SIZE = 16;
-const MAX_COUNT_ROWS = 10000;
+const FETCH_CHUNK = 200;         // ennyit kérünk batchenként a túl-fetchhez
+const MAX_COUNT_ROWS = 10000;    // count sapka
 
 function safeParseJSON(s) { try { return JSON.parse(s); } catch { return null; } }
 function getCategoryPathsFromProduct(product) {
@@ -168,7 +170,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     return q.order('created_at', { ascending: false }).order('id', { ascending: true });
   };
 
-  // összes találat számolása
+  // összes találat számolása (kliensen szűrt kategóriával)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -208,33 +210,52 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     charging,chargingtime,noise,waterproof,usetime,modes,speed,controll,app,effectiveCategoryId
   ]);
 
-  // aktuális oldal adatainak lekérése
+  // --- OLDAL ADATAINAK LEKÉRÉSE: dinamikus túl-fetch, hogy mindig kijöjjön 16 elem ---
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
 
-      const from = page * PAGE_SIZE;
-      const to   = from + PAGE_SIZE - 1;
+      const needCount = (page + 1) * PAGE_SIZE;                // eddig kell eljutnunk a SZŰRT listában
+      const sliceFrom = page * PAGE_SIZE;
+      const sliceTo   = sliceFrom + PAGE_SIZE;
 
-      let pq = baseQuery('*');
-      pq = applyOrdering(applyFilters(pq)).range(from, to);
+      let acc = [];                                            // összegyűjtött (már SZŰRT) elemek
+      let fetchedTotal = 0;                                    // eddig lekért nyers sorok száma
+      let keepGoing = true;
 
-      const { data: rows, error } = await pq;
-      const safeRows = Array.isArray(rows) ? rows : [];
-      if (error) console.error('page fetch error:', error);
+      while (keepGoing && acc.length < needCount) {
+        const from = fetchedTotal;
+        const to   = from + FETCH_CHUNK - 1;
 
-      let filtered = safeRows;
-      if (effectiveCategoryId) {
-        const wantId = Number(effectiveCategoryId);
-        filtered = safeRows.filter(p => {
-          const paths = getCategoryPathsFromProduct(p);
-          return paths.some(path => Array.isArray(path) && path.includes(wantId));
-        });
+        let pq = baseQuery('*');
+        pq = applyOrdering(applyFilters(pq)).range(from, to);
+
+        const { data: rows, error } = await pq;
+        const safeRows = Array.isArray(rows) ? rows : [];
+        if (error) console.error('page fetch error:', error);
+
+        fetchedTotal += safeRows.length;
+
+        // kliens oldali kategória-path szűrés (ha kell)
+        let filtered = safeRows;
+        if (effectiveCategoryId) {
+          const wantId = Number(effectiveCategoryId);
+          filtered = safeRows.filter(p => {
+            const paths = getCategoryPathsFromProduct(p);
+            return paths.some(path => Array.isArray(path) && path.includes(wantId));
+          });
+        }
+
+        acc = acc.concat(filtered);
+
+        // akkor állunk meg, ha kevesebb jött, mint a chunk (nincs több oldal), vagy már megvan elég
+        keepGoing = safeRows.length === FETCH_CHUNK && acc.length < needCount;
       }
 
       if (!cancelled) {
-        setItems(filtered);
+        const pageItems = acc.slice(sliceFrom, sliceTo);       // garantáltan max 16, gyakran pont 16
+        setItems(pageItems);
         setLoading(false);
       }
     })();
@@ -254,9 +275,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     router.push(`?${params.toString()}`);
   };
 
-  // lapozó UI
   const Pagination = () => {
-    const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
     if (totalPages <= 1) return null;
     const windowSize = 3;
     const start = Math.max(0, Math.min(page - Math.floor(windowSize/2), totalPages - windowSize));
@@ -311,7 +330,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* FEJLÉC: bal oldalt találatszám, jobb oldalt rendezés */}
+            {/* FEJLÉC: bal oldalt találatszám, jobb oldalt rendezés */}
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm text-[var(--tertiary-text)]">
           {total} találat
@@ -328,7 +347,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
             <option value="price-low-to-high">Ár szerint növekvő</option>
             <option value="price-high-to-low">Ár szerint csökkenő</option>
             <option value="newest">Legújabb</option>
-            {/* Ha később lesz: rating/popular/most-searched is ide jöhet */}
           </select>
         </div>
       </div>
@@ -356,6 +374,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
           );
         })}
 
+        {/* ha nincs találat */}
         {!loading && items.length === 0 && (
           <div className="col-span-full text-sm text-gray-500 p-6">
             Nincs találat a megadott szűrőkre.
@@ -363,6 +382,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
         )}
       </div>
 
+      {/* lapváltás közbeni skeleton (alul) */}
       {loading && items.length > 0 && (
         <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
           {Array.from({ length: Math.min(PAGE_SIZE, 4) }).map((_, i) => (
@@ -375,3 +395,4 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
     </div>
   );
 }
+

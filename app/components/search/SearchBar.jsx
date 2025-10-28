@@ -21,6 +21,7 @@ function badgeColor(type) {
     case 'category': return 'bg-emerald-100 text-emerald-700'
     case 'post': return 'bg-indigo-100 text-indigo-700'
     case 'tag': return 'bg-amber-100 text-amber-700'
+    default: return 'bg-gray-100 text-gray-700'
   }
 }
 
@@ -37,7 +38,7 @@ export default function SearchBar() {
   const panelRef = useRef(null)
   const inputRef = useRef(null)
 
-  // local recent keresések
+  // helyi „recent”
   useEffect(() => {
     const raw = localStorage.getItem('recentSearches') || '[]'
     try { setRecent(JSON.parse(raw)) } catch {}
@@ -48,53 +49,71 @@ export default function SearchBar() {
     localStorage.setItem('recentSearches', JSON.stringify(arr))
   }
 
-  // fetch dropdown javaslatok
+  // 🔎 server-side naplózás (fire-and-forget)
+  const trackSearch = (term) => {
+    const payload = JSON.stringify({ term })
+    const url = '/api/searchlog'
+    if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+      const blob = new Blob([payload], { type: 'application/json' })
+      navigator.sendBeacon(url, blob)
+    } else {
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true })
+        .catch(() => {}) // szándékosan lenyeljük
+    }
+  }
+
+  // dropdown javaslatok
   useEffect(() => {
     let ignore = false
     ;(async () => {
+      // ha üres: top keresések az utolsó 30 napból
       if (!debounced) {
         setHits([])
-        // kérünk popular-t q nélkül is
-        const res = await fetch(`/api/search?limit=6`)
-        const js = await res.json()
-        if (!ignore) setPopular((js.popular || []).map((p) => p.term))
+        try {
+          const res = await fetch(`/api/searchlog/top?days=30&limit=10`, { cache: 'no-store' })
+          const js = await res.json()
+          if (!ignore) setPopular(js?.top || [])
+        } catch {}
         return
       }
       setLoading(true)
-      const res = await fetch(`/api/search?q=${encodeURIComponent(debounced)}&limit=6`)
-      const js = await res.json()
-      if (!ignore) {
-        const items = []
-        ;(js.products || []).forEach((p) => items.push({
-          type: 'product',
-          id: String(p.id),
-          title: p.fo_cim || p.alcim || p.seo_slug,
-          subtitle: p.alcim || '',
-          image: p.termekkep || '',
-          href: `/termekek/${p.seo_slug}`, // ha kell categoryPath, itt bővítsd
-        }))
-        ;(js.categories || []).forEach((c) => items.push({
-          type: 'category',
-          id: String(c.id),
-          title: c.nev,
-          href: `/termekek/${c.slug}`,
-        }))
-        ;(js.posts || []).forEach((b) => items.push({
-          type: 'post',
-          id: String(b.id),
-          title: b.title,
-          href: `/blog/${b.slug}`,
-        }))
-        ;(js.tags || []).forEach((t) => items.push({
-          type: 'tag',
-          id: String(t.id),
-          title: t.name,
-          href: `/cimkek/${t.slug}`,
-        }))
-        setHits(items.slice(0, 18))
-        setPopular((js.popular || []).map((p) => p.term))
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(debounced)}&limit=6`, { cache: 'no-store' })
+        const js = await res.json()
+        if (!ignore) {
+          const items = []
+          ;(js.products || []).forEach((p) => items.push({
+            type: 'product',
+            id: String(p.id),
+            title: p.fo_cim || p.alcim || p.seo_slug,
+            subtitle: p.alcim || '',
+            image: p.termekkep || '',
+            href: `/termekek/${p.seo_slug}`,
+          }))
+          ;(js.categories || []).forEach((c) => items.push({
+            type: 'category',
+            id: String(c.id),
+            title: c.nev,
+            href: `/termekek/${c.slug}`,
+          }))
+          ;(js.posts || []).forEach((b) => items.push({
+            type: 'post',
+            id: String(b.id),
+            title: b.title,
+            href: `/blog/${b.slug}`,
+          }))
+          ;(js.tags || []).forEach((t) => items.push({
+            type: 'tag',
+            id: String(t.id),
+            title: t.name,
+            href: `/cimkek/${t.slug}`,
+          }))
+          setHits(items.slice(0, 18))
+          setPopular((js.popular || []).map(p => p.term)) // ha az /api/search is küld topot, használjuk
+        }
+      } finally {
+        if (!ignore) setLoading(false)
       }
-      setLoading(false)
     })()
     return () => { ignore = true }
   }, [debounced])
@@ -112,13 +131,15 @@ export default function SearchBar() {
       e.preventDefault()
       if (index >= 0 && hits[index]) {
         const h = hits[index]
-        pushRecent(q || h.title)
+        const term = q || h.title
+        pushRecent(term)
+        trackSearch(term)        // << naplózza
         router.push(h.href)
         setOpen(false)
-      } else {
-        // archív oldalra
-        pushRecent(q)
-        router.push(`/kereses?q=${encodeURIComponent(q)}`)
+      } else if (q.trim()) {
+        pushRecent(q.trim())
+        trackSearch(q.trim())    // << naplózza
+        router.push(`/kereses?q=${encodeURIComponent(q.trim())}`)
         setOpen(false)
       }
     } else if (e.key === 'Escape') {
@@ -167,13 +188,20 @@ export default function SearchBar() {
               <div
                 className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 cursor-pointer rounded-t-xl"
                 onMouseDown={(e)=>e.preventDefault()}
-                onClick={()=>{ pushRecent(q); router.push(`/kereses?q=${encodeURIComponent(q)}`); setOpen(false) }}
+                onClick={()=>{
+                  const term = q.trim()
+                  if (!term) return
+                  pushRecent(term)
+                  trackSearch(term) // << naplózza
+                  router.push(`/kereses?q=${encodeURIComponent(term)}`)
+                  setOpen(false)
+                }}
               >
-                Keresés az archívumban: <span className="font-medium text-gray-800">„{q}”</span>
+                Keresés: <span className="font-medium text-gray-800">„{q}”</span>
               </div>
             )}
 
-            {/* recent & popular */}
+            {/* recent & popular (üres inputnál) */}
             {(recent.length > 0 || popular.length > 0) && !q && (
               <div className="px-3 py-2 border-t border-[var(--border)]">
                 {recent.length > 0 && (
@@ -193,7 +221,7 @@ export default function SearchBar() {
                 )}
                 {popular.length > 0 && (
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Népszerű</div>
+                    <div className="text-xs text-gray-500 mb-1">Népszerű (30 nap)</div>
                     <div className="flex flex-wrap gap-2">
                       {popular.map((r, i)=>(
                         <button
@@ -212,9 +240,7 @@ export default function SearchBar() {
             {/* találatok */}
             {q && (
               <div className="max-h-[60vh] overflow-auto divide-y divide-[var(--border)]">
-                {loading && (
-                  <div className="px-3 py-3 text-sm text-gray-500">Keresés…</div>
-                )}
+                {loading && <div className="px-3 py-3 text-sm text-gray-500">Keresés…</div>}
                 {!loading && hits.length === 0 && (
                   <div className="px-3 py-3 text-sm text-gray-500">Nincs találat.</div>
                 )}
@@ -225,12 +251,13 @@ export default function SearchBar() {
                     onMouseEnter={()=> setIndex(i)}
                     onMouseDown={(e)=>e.preventDefault()}
                     onClick={()=>{
-                      pushRecent(q || h.title)
+                      const term = q || h.title
+                      pushRecent(term)
+                      trackSearch(term) // << naplózza
                       router.push(h.href)
                       setOpen(false)
                     }}
                   >
-                    {/* thumb csak termékhez */}
                     {'image' in h && h.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={h.image} alt="" className="w-10 h-10 object-cover rounded-md" />
@@ -248,8 +275,7 @@ export default function SearchBar() {
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${badgeColor(h.type)}`}>
                       {h.type === 'product' ? 'Termék' :
                        h.type === 'category' ? 'Kategória' :
-                       h.type === 'post' ? 'Blog' :
-                       'Címke'}
+                       h.type === 'post' ? 'Blog' : 'Címke'}
                     </span>
                   </div>
                 ))}
