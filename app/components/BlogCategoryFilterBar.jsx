@@ -1,38 +1,40 @@
-'use client';
+'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation'
 
-const categories = [
-  { key: 'osszes', label: 'Összes' },
-  { key: 'termek-tesztek', label: 'Termék tesztek' },
-  { key: 'tortenetek', label: 'Történetek' },
-  { key: 'tippek', label: 'Tippek' },
-  { key: 'egyeb', label: 'Egyéb' },
-];
+export default function BlogCategoryFilterBar({ categories }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentCategory = searchParams.get('category') || 'osszes'
+  const currentTag = searchParams.get('tag') || ''
 
-export default function CategoryFilterBar() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentCategory = searchParams.get('category') || 'osszes';
-
-  const handleCategoryClick = (key) => {
-    router.push(`/blog?category=${key}`);
-  };
+  const updateQuery = (nextCat) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('category', nextCat)
+    // lapozást reseteljük
+    params.delete('page')
+    router.push(`/blog?${params.toString()}`)
+  }
 
   return (
-    <div className="flex gap-2 justify-center items-center flex-wrap z-10 bg-white p-1 rounded-3xl border border-[var(--border)]">
-      {categories.map(({ key, label }) => (
+    <div className="flex gap-2 justify-center items-center flex-wrap z-10 bg-white p-1 rounded-2xl border border-[var(--border)]">
+      {categories.map(({ slug, nev }) => (
         <button
-          key={key}
-          onClick={() => handleCategoryClick(key)}
+          key={slug}
+          onClick={() => updateQuery(slug)}
           className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer 
-            ${currentCategory === key ? 'bg-[var(--pink)] text-white' : 'bg-white hover:bg-[var(--grey-bg)]'} 
+            ${currentCategory === slug ? 'bg-[var(--pink)] text-white' : 'bg-white hover:bg-[var(--grey-bg)]'} 
             transition duration-200`}
+          aria-pressed={currentCategory === slug}
         >
-          {label}
+          {nev}
         </button>
       ))}
+      {currentTag && (
+        <span className="px-3 py-2 text-xs rounded-full border bg-[var(--grey-bg)]">
+          Címke: {currentTag}
+        </span>
+      )}
     </div>
-  );
+  )
 }

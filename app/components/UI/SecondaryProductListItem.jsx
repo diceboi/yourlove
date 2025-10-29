@@ -10,7 +10,7 @@ import FavouriteButton from "./Buttons/FavouriteButton";
 import Stock from "./Stock";
 import ProductColors from "./ProductColors";
 
-export default function ProductListItem({
+export default function SecondaryProductListItem({
   id,
   image,
   focim,
@@ -72,7 +72,6 @@ export default function ProductListItem({
         </Link>
 
         <ProductPriceText>{(price ?? 0).toLocaleString("hu-HU")} Ft</ProductPriceText>
-        <Rating ratings={{ value: rateing ?? 3.5, count: 10 }} />
 
         <div className="flex flex-col gap-4">
           <AddToCartButtonSmall
@@ -80,15 +79,6 @@ export default function ProductListItem({
             defaultQty={1}
             product={{ name: product.name, price_huf: product.price_huf, image_url: product.image_url }}
           />
-          <div className="flex flex-row gap-2">
-            <FavouriteButton />
-            <CompareButton />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Stock stock={stock} />
-          <ProductColors colors={colors} />
         </div>
       </div>
     </div>

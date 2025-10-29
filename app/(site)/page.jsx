@@ -10,7 +10,9 @@ export default function HomePage() {
     <HomeHero />
     <Benefits />
     <PopularProducts />
-    <MainCta />
+    <div className='py-16 px-4 xl:px-12 '>
+      <MainCta />
+    </div>
     <NewProducts />
     </>
   )

@@ -6,7 +6,6 @@ import Image from "next/image";
 
 export default function MainCta() {
   return (
-    <div className="flex flex-col gap-8 w-full py-16 px-4 xl:px-12 bg-[var(--grey-bg)]">
       <div className="bg-[var(--green)] w-full rounded-2xl px-8 pt-8 overflow-hidden">
         <div className="container flex flex-row justify-between lg:w-10/12 w-full mx-auto">
           <div className="flex flex-col gap-8 items-start justify-center min-w-fit">
@@ -36,6 +35,5 @@ export default function MainCta() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
