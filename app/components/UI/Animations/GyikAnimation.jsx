@@ -2,10 +2,10 @@
 
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-export default function KapcsolatAnimation() {
+export default function GyikAnimation() {
   return (
     <DotLottieReact
-        src="animations/kapcsolat.lottie"
+        src="animations/gyik.lottie"
         loop
         autoplay
         style={{ height: 800, width: 800 }}

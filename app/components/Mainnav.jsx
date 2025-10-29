@@ -103,12 +103,12 @@ export default function MainNav() {
       </div>
       <motion.div
         id="mobile-search"
-        className="flex xl:hidden bg-white"
+        className="flex xl:hidden bg-white py-2"
         initial={{ y: 0 }}
-        animate={{ y: isVisible ? 0 : -200 }}
+        animate={{ y: isVisible ? 0 : -175 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="w-[calc(100%-32px)] mx-auto py-2">
+        <div className="w-[calc(100%-32px)] mx-auto py-0">
           <SearchBar />
         </div>
         <MobileMenuDrawer />

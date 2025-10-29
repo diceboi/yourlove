@@ -36,12 +36,12 @@ export default async function CartPage() {
               ))}
             </ul>
 
-            <div className="flex flex-col items-center justify-end gap-4 lg:w-1/3 w-full">
+            <div className="flex flex-col items-center justify-evenly gap-4 lg:w-1/3 w-full bg-[var(--grey-bg)] p-2 rounded-2xl">
               <div className="flex flex-row justify-between text-sm w-full">
                 <span className="text-gray-600 mr-2">Felhasznált hűségpontok:</span>
                 <span className="font-semibold">0 Ft</span>
               </div>
-              <div className="flex flex-row justify-between text-lg w-full">
+              <div className="flex flex-row justify-between text-lg w-full border-b border-[var(--border)]">
                 <span className="text-gray-600 mr-2">Bruttó végösszeg:</span>
                 <span className="font-semibold">{total.toLocaleString('hu-HU')} Ft</span>
               </div>

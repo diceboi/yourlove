@@ -221,7 +221,7 @@ export default function SearchBar() {
                 )}
                 {popular.length > 0 && (
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Népszerű (30 nap)</div>
+                    <div className="text-xs text-gray-500 mb-1">Leggyakrabban keresett</div>
                     <div className="flex flex-wrap gap-2">
                       {popular.map((r, i)=>(
                         <button

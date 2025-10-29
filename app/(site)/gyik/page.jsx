@@ -5,6 +5,7 @@ import H2 from '@/app/components/UI/Texts/H2'
 import H3 from '@/app/components/UI/Texts/H3'
 import Paragraph from '@/app/components/UI/Texts/Paragraph'
 import React from 'react'
+import GyikAnimation from '@/app/components/UI/Animations/GyikAnimation'
 
 export const metadata = {
   title: 'GYIK – Gyakran Ismételt Kérdések | YourLove',
@@ -154,20 +155,29 @@ export default function Page() {
     <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
       <Breadcrumbs />
       <div className="flex flex-col gap-4 w-full my-8">
-        <H1>GYIK</H1>
-        <H2>Gyakran ismételt kérdések</H2>
-        <Paragraph classname={"pb-8"}>
-          Összegyűjtöttük a leggyakoribb kérdéseket általános webáruházas témákban és külön az erotikus termékekkel kapcsolatban.
-          A válaszok a rendelés leadásától a szállításon át az adatvédelemig segítenek eligazodni.
-        </Paragraph>
-
-        <div className="flex flex-col gap-10">
-          <FaqSection title="Általános webshop kérdések" items={generalFaq} idPrefix="general" />
-          <FaqSection title="Erotikus témájú webshop kérdések" items={adultFaq} idPrefix="adult" />
+        <div className="flex flex-col items-center justify-center relative w-full xl:h-[60vh] h-[50vh] rounded-2xl xl:pt-0 pt-8">
+            <div className="absolute top-0 left-0 w-full h-full bg-[var(--grey-bg)] rounded-2xl" />
+            <div className="w-full flex flex-col gap-8 items-start justify-between">
+                <div className="flex flex-col items-center gap-8 z-10 w-full p-2">
+                    <H1 classname="text-center text-[var(--pink)]">GYIK</H1>
+                    <H2>Gyakran ismételt kérdések</H2>
+                    <Paragraph classname="text-center lg:w-1/2 w-full">
+                        Összegyűjtöttük a leggyakoribb kérdéseket általános webáruházas témákban és külön az erotikus termékekkel kapcsolatban.
+                        A válaszok a rendelés leadásától a szállításon át az adatvédelemig segítenek eligazodni.
+                    </Paragraph>
+                </div>
+                <div className="z-10 absolute xl:-top-0 -top-44 left-1/2 -translate-x-1/2 overflow-hidden w-[200px] h-auto">
+                    <GyikAnimation/>
+                </div>
+            </div>
         </div>
       </div>
 
       <FaqJsonLd sections={sections} />
+      <div className="flex flex-col gap-10">
+          <FaqSection title="Általános webshop kérdések" items={generalFaq} idPrefix="general" />
+          <FaqSection title="Erotikus témájú webshop kérdések" items={adultFaq} idPrefix="adult" />
+        </div>
     </div>
     <PopularProducts/>
     </>
