@@ -263,9 +263,7 @@ export default function AdminProductList({ products }) {
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
                           href={
-                            categorySlugPath
-                              ? `/termekek/${categorySlugPath}/${product.seo_slug}`
-                              : `/termekek/${product.seo_slug}`
+                            `/termekek/${product.canonical_path}/${product.seo_slug}`
                           }
                           target="_blank"
                           rel="noopener noreferrer"

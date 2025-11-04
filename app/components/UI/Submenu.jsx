@@ -60,7 +60,7 @@ export default function Submenu() {
     // 3) fallback termékek, ha nincs gyerek
     const { data: prods, error: prodErr } = await supabase
       .from("products")
-      .select("id, fo_cim, seo_slug, termekkep, kategoria, kozzeteve")
+      .select("id, fo_cim, seo_slug, canonical_slug, termekkep, kategoria, kozzeteve")
       .eq("kozzeteve", true)
       .order("kattintasok", { ascending: false })
       .limit(24);
@@ -123,7 +123,7 @@ export default function Submenu() {
         id: `prod-${p.id}`,
         title: `${p.fo_cim}`,
         image: p.termekkep || "/default.png",
-        href: `/termekek/${encodeURIComponent(parentCat?.slug || "")}/${encodeURIComponent(p.seo_slug)}`,
+        href: `/termekek/${canonical_slug || ""}/${p.seo_slug}`,
       }))
     );
   }

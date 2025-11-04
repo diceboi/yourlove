@@ -176,6 +176,7 @@ export default function AdminProductCategoriesEdit({ category }) {
                 label="Szülőkategória"
                 value={form.szulo ?? null}
                 onChange={(parentId) => setForm((prev) => ({ ...prev, szulo: parentId }))}
+                from={"product-categories"}
               />
 
               <Textarea legend="Felső leírás" name="leiras_fent" value={form.leiras_fent || ""} rows={4} handleChange={handleChange} />

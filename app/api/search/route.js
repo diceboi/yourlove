@@ -46,7 +46,7 @@ export async function GET(req) {
     // Megjegyzés: ha van "akcios_ar_brutto", a rendezést/kiírást nálad lehet finomítani
     const productsQ = supabase
       .from('products')
-      .select('id, fo_cim, alcim, seo_slug, termekkep, eladasi_ar_brutto, akcios_ar_brutto, kozzeteve', { count: isArchive ? 'exact' : undefined })
+      .select('*', { count: isArchive ? 'exact' : undefined })
       .eq('kozzeteve', true)
       .or(`fo_cim.ilike.${needle},alcim.ilike.${needle},seo_slug.ilike.${needle}`)
       .order('created_at', { ascending: false })
@@ -106,7 +106,7 @@ export async function GET(req) {
     let tagsCount = 0
     try {
       const tagsQ = supabase
-        .from('tags')
+        .from('blog-tags, product-tags')
         .select('id, name, slug', { count: isArchive ? 'exact' : undefined })
         .or(`name.ilike.${needle},slug.ilike.${needle}`)
         .order('name', { ascending: true })

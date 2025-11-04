@@ -95,6 +95,33 @@ export default function AdminProductEdit({ product }) {
           .filter((p) => p.length > 0)
       : [];
 
+    // --- canonical_path + primary_category_id előállítás ---
+    let canonical_path = null
+    let primary_category_id = null
+
+    if (paths.length > 0) {
+      // 1) Válassz kanonikus pathot (most: az első)
+      const canonicalIds = paths[0] // pl. [2, 11]
+      primary_category_id = canonicalIds[canonicalIds.length - 1] ?? null
+
+      // 2) Csak a szükséges kategória ID-k slugjai kellenek
+      const idsToFetch = Array.from(new Set(canonicalIds))
+
+      const supabase = createClient()
+      const { data: catRows, error: catErr } = await supabase
+        .from("product-categories")
+        .select("id, slug")
+        .in("id", idsToFetch)
+
+      if (!catErr && Array.isArray(catRows)) {
+        const slugMap = Object.fromEntries(catRows.map(c => [String(c.id), c.slug]))
+        const slugs = canonicalIds.map(id => slugMap[String(id)]).filter(Boolean)
+        if (slugs.length === canonicalIds.length) {
+          canonical_path = slugs.join("/")
+        }
+      }
+    }
+
     const tagIds = Array.isArray(form.cimkek)
     ? Array.from(new Set(form.cimkek.map(Number).filter(Number.isFinite)))
     : [];  
@@ -114,7 +141,8 @@ export default function AdminProductEdit({ product }) {
       termekkep: selectedImage || null,
       og_image: selectedOGImage || null,
       kategoria: JSON.stringify(paths),
-      cimkek: JSON.stringify(tagIds),   // <<< TEXT eset
+      cimkek: JSON.stringify(tagIds),
+      canonical_path,
     };
 
     const idStr = String(form.id || "").trim();

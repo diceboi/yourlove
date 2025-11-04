@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { headers } from 'next/headers'
 import H1 from '@/app/components/UI/Texts/H1'
 import H2 from '@/app/components/UI/Texts/H2'
+import ProductListItem from '@/app/components/UI/ProductListItem'
 
 async function absoluteFetch(pathWithQuery) {
   // pl. "/api/search?..." → abszolút URL
@@ -67,17 +68,20 @@ export default async function SearchArchive({ searchParams }) {
         })}
       </div>
 
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 gap-4">
         {items.map((it) => {
           if (tab === 'products') {
             const price = (it.akcios_ar_brutto ?? it.eladasi_ar_brutto ?? 0)
             return (
-              <Link key={it.id} href={`/termekek/${it.seo_slug}`} className="border rounded-xl p-3 hover:shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={it.termekkep || '/default.png'} alt="" className="w-full aspect-square object-cover rounded-md mb-2" />
-                <div className="text-sm font-medium line-clamp-2">{it.fo_cim || it.alcim || it.seo_slug}</div>
-                <div className="text-xs text-gray-500 mt-1">{price.toLocaleString('hu-HU')} Ft</div>
-              </Link>
+              <ProductListItem 
+              key={it.id} 
+              id={it.id} 
+              image={it.termekkep} 
+              focim={it.fo_cim}
+              alcim={it.alcim} 
+              price={price.toLocaleString('hu-HU')} 
+              slug={it.slug} 
+              category={it.kategoria} />
             )
           }
           if (tab === 'categories') {

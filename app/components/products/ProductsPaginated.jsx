@@ -329,7 +329,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
             {/* FEJLÉC: bal oldalt találatszám, jobb oldalt rendezés */}
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm text-[var(--tertiary-text)]">
@@ -351,7 +351,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-2 gap-4">
+      <div className="grid xl:grid-cols-6 lg:grid-cols-4 md:grid-cols-3 grid-cols-2 mt-2 gap-4">
         {items.map((p) => {
           const paths = getCategoryPathsFromProduct(p);
           const picked = pickBestPath(paths);
@@ -381,15 +381,6 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
           </div>
         )}
       </div>
-
-      {/* lapváltás közbeni skeleton (alul) */}
-      {loading && items.length > 0 && (
-        <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-4">
-          {Array.from({ length: Math.min(PAGE_SIZE, 4) }).map((_, i) => (
-            <ProductCardSkeleton key={`sk-${i}`} />
-          ))}
-        </div>
-      )}
 
       <Pagination />
     </div>
