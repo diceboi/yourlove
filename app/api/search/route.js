@@ -62,7 +62,7 @@ export async function GET(req) {
     // --- CATEGORIES ---
     const categoriesQ = supabase
       .from('product-categories')
-      .select('id, nev, slug, kozzeteve', { count: isArchive ? 'exact' : undefined })
+      .select('id, nev, slug, kozzeteve, kep, icon', { count: isArchive ? 'exact' : undefined })
       .eq('kozzeteve', true)
       .or(`nev.ilike.${needle},slug.ilike.${needle}`)
       .order('nev', { ascending: true })

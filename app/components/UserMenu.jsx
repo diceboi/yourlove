@@ -70,6 +70,15 @@ export default function UserMenu() {
     setUser(null);
   };
 
+  const firstWord = (s) =>
+  (s ?? '').trim().split(/\s+/)[0] || '';
+
+  const displayName =
+  userProfile?.firstname
+  || firstWord(user?.user_metadata?.name)
+  || firstWord((user?.email || '').split('@')[0])  // végső fallback
+  || 'Felhasználó';
+
   return (
     <div
       ref={menuRef}
@@ -99,10 +108,8 @@ export default function UserMenu() {
             ) : (
               <TbUser className="xl:min-w-5 xl:min-h-5 min-w-6 min-h-6 text-[var(--pink)]" />
             )}
-            <Paragraph classname={"xl:flex hidden min-w-fit"}>
-              {userProfile
-                ? `Szia ${userProfile.firstname}`
-                : user?.email}
+            <Paragraph className="xl:flex hidden min-w-fit">
+              {`Szia, ${displayName}`}
             </Paragraph>
           </>
         )}
@@ -116,8 +123,10 @@ export default function UserMenu() {
           >
             <Label>Admin felület</Label>
           </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
-            <Label>Profil</Label>
+          <button 
+            onClick={() => router.push("/fiok")}
+            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
+              <Label>Fiók</Label>
           </button>
           <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
             <Label>Rendelések</Label>

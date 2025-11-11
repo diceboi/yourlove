@@ -15,7 +15,7 @@ export default function CartDrawerClient({ content, footer }) {
       />
 
       {/* Panel */}
-      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50
+      <div className={`fixed right-0 top-0 h-full w-[90vw] max-w-md bg-white shadow-2xl z-50
                        transform transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
           <h3 className="text-lg font-semibold">Kosár</h3>

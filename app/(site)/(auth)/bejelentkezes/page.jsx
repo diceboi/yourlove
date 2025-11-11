@@ -1,10 +1,11 @@
 "use client";
 
-import { singIn } from "@/actions/auth";
+import { singIn } from "@/app/_actions/auth";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { toast } from "react-toastify";
+import GoogleButton from "@/app/components/auth/GoogleButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,8 +58,9 @@ export default function LoginPage() {
               className="mt-1 w-full px-4 p-2 h-10 rounded-md border border-gray-200 bg-white text-sm text-gray-700"
             />
           </div>
-          <div className="mt-4">
-            <AuthButton type="Sign in" loading={loading} />
+          <div className="mt-4 space-y-4">
+            <AuthButton type="Bejelentkezés" loading={loading} />
+            <GoogleButton type={"/"} title={"Bejelentkezés Google-lel"}/>
           </div>
           {error && <p className="text-red-500">{error}</p>}
         </form>

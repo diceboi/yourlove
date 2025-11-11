@@ -22,6 +22,7 @@ export default function ProductListItem({
   rateing,
   stock,
   colors,
+  canonical_path,
 }) {
   const product = {
     id,
@@ -49,7 +50,7 @@ export default function ProductListItem({
     <div className="flex flex-col gap-4 lg:p-4 p-4 shadow-box rounded-2xl bg-white">
       <Link
         className="relative w-full 2xl:h-[40vh] h-[150px]"
-        href={`/termekek/${categoryPathFinal}/${slug}`}
+        href={`/termekek/${canonical_path}/${slug}`}
       >
         {image ? (
           <Image
@@ -66,7 +67,7 @@ export default function ProductListItem({
       </Link>
 
       <div className="flex flex-col gap-4 w-full h-1/2">
-        <Link className="hover:underline flex flex-col gap-1" href={`/termekek/${categoryPath}/${slug}`}>
+        <Link className="hover:underline flex flex-col gap-1" href={`/termekek/${canonical_path}/${slug}`}>
           <ProductNameText>{focim}</ProductNameText>
           <ProductNameTextSmall>{alcim}</ProductNameTextSmall>
         </Link>

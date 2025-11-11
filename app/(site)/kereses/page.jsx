@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import H1 from '@/app/components/UI/Texts/H1'
 import H2 from '@/app/components/UI/Texts/H2'
 import ProductListItem from '@/app/components/UI/ProductListItem'
+import Image from 'next/image'
 
 async function absoluteFetch(pathWithQuery) {
   // pl. "/api/search?..." → abszolút URL
@@ -80,15 +81,25 @@ export default async function SearchArchive({ searchParams }) {
               focim={it.fo_cim}
               alcim={it.alcim} 
               price={price.toLocaleString('hu-HU')} 
-              slug={it.slug} 
-              category={it.kategoria} />
+              slug={it.seo_slug} 
+              category={it.kategoria}
+              canonical_path={it.canonical_path}
+              />
             )
           }
           if (tab === 'categories') {
             return (
-              <Link key={it.id} href={`/termekek/${it.slug}`} className="border rounded-xl p-3 hover:shadow-sm">
-                <div className="text-sm font-medium">{it.nev}</div>
-              </Link>
+              <Link
+                  key={it.id}
+                  href={`/termekek/${it.slug}`}
+                  className="relative flex gap-2 items-center text-sm px-3 py-2 rounded-2xl border border-[var(--border)]
+                             hover:bg-[var(--grey-bg)] hover:border-[var(--border)]
+                             transition-colors whitespace-nowrap text-ellipsis min-w-fit"
+                  title={it.nev}
+                >
+                  { (it.kep || it.icon) && <Image src={it.kep || it.icon} alt={it.nev} width={50} height={50} className="rounded" /> }
+                  {it.nev}
+                </Link>
             )
           }
           if (tab === 'posts') {

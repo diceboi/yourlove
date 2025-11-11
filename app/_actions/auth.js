@@ -16,7 +16,7 @@ export async function getUserSession() {
 
 export async function signUp(formData) {
   const supabase = await createClient();
-
+  
   const email = formData.get("email")?.toString() ?? "";
   const password = formData.get("jelszo")?.toString() ?? "";
   const firstname = formData.get("keresztnev")?.toString() ?? "";

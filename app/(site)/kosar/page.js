@@ -28,7 +28,7 @@ export default async function CartPage() {
           </div>
         ) : (
           <>
-            <ul className="divide-y divide-[var(--border)] bg-white border border-[var(--border)] rounded-2xl lg:w-2/3 w-full">
+            <ul className="divide-y divide-[var(--border)] bg-white border border-[var(--border)] rounded-2xl lg:w-2/3 w-full h-fit">
               {items.map((it) => (
                 <li key={it.id} className="p-4">
                   <CartItemRow item={it} />
@@ -36,7 +36,7 @@ export default async function CartPage() {
               ))}
             </ul>
 
-            <div className="flex flex-col items-center justify-evenly gap-4 lg:w-1/3 w-full bg-[var(--grey-bg)] p-2 rounded-2xl">
+            <div className="flex flex-col items-center gap-4 lg:w-1/3 w-full bg-[var(--grey-bg)] p-2 rounded-2xl h-fit">
               <div className="flex flex-row justify-between text-sm w-full">
                 <span className="text-gray-600 mr-2">Felhasznált hűségpontok:</span>
                 <span className="font-semibold">0 Ft</span>

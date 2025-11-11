@@ -3,7 +3,8 @@
 import { useState } from "react";
 import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { useRouter } from "next/navigation";
-import { signUp } from "@/actions/auth"
+import { signUp } from "@/app/_actions/auth"
+import GoogleButton from "@/app/components/auth/GoogleButton";
 
 export default function LoginPage() {
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
     setLoading(false);
   };
   return (
-    <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
+    <div className="w-full xl:pt-28 pt-20 xl:pb-28 pb-4 px-4 xl:px-12">
         <div className="flex flex-col items-center justify-center ">
       <form onSubmit={handleSubmit} className="lg:w-1/2 md:w-3/4 w-full flex flex-col gap-4">
         <div>
@@ -91,8 +92,9 @@ export default function LoginPage() {
             className="mt-1 w-full px-4 p-2  h-10 rounded-md border border-gray-200 bg-white text-sm text-gray-700"
           />
         </div>
-        <div className="mt-4">
-          <AuthButton type="Sign up" loading={loading} />
+        <div className="mt-4 space-y-4">
+          <AuthButton type="Regisztráció" loading={loading} />
+          <GoogleButton next="/" title={"Regisztráció Google-lel"} />
         </div>
         {error && <p className="text-red-500">{error}</p>}
       </form>

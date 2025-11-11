@@ -369,7 +369,7 @@ export default function ProductsPaginated({ catsByIdObj, categoryId = null }) {
               alcim={p.alcim}
               price={p.eladasi_ar_brutto}
               slug={p.seo_slug}
-              categoryPath={categoryPath}
+              canonical_path={p.canonical_path}
             />
           );
         })}
