@@ -1,45 +1,60 @@
+// /app/api/orders/route.js
 import { NextResponse } from "next/server";
-import { requireUser } from "../api/_utils/auth";
+import { requireUser } from "@/app/api/_utils/auth";
 
 export async function GET() {
   const { user, supabase, resp } = await requireUser();
   if (!user) return resp;
 
-  // 1) Orders userhez
-  const { data: orders, error: oErr } = await supabase
+  // Orders (minimál mezők: id, user_id, created_at, status, total_huf vagy számoljuk sorokból)
+  const { data: orders, error: e1 } = await supabase
     .from("orders")
-    .select("id, number, status, total, created_at")
+    .select("id, created_at, status")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (oErr) return NextResponse.json({ error: oErr.message }, { status: 400 });
-  if (!orders?.length) return NextResponse.json([]);
+  if (e1) return NextResponse.json({ error: e1.message }, { status: 400 });
 
-  const orderIds = orders.map(o => o.id);
+  // Order items join products: name + ár
+  const { data: items, error: e2 } = await supabase
+    .from("order_items")
+    .select("id, order_id, product_id, qty, unit_price_huf, products:product_id (fo_cim)")
+    .in(
+      "order_id",
+      (orders || []).map((o) => o.id).length ? orders.map((o) => o.id) : ["00000000-0000-0000-0000-000000000000"]
+    );
 
-  // 2) Items részletekkel a view-ból
-  const { data: items, error: iErr } = await supabase
-    .from("order_items_detailed")
-    .select("*")
-    .in("order_id", orderIds);
+  if (e2) return NextResponse.json({ error: e2.message }, { status: 400 });
 
-  if (iErr) return NextResponse.json({ error: iErr.message }, { status: 400 });
-
-  // 3) összerakjuk
   const byOrder = new Map();
-  for (const o of orders) byOrder.set(o.id, { ...o, items: [] });
+  (orders || []).forEach((o) => {
+    byOrder.set(o.id, {
+      id: o.id,
+      number: o.number || o.id,     // ha nincs number, mutatjuk az id-t
+      created_at: o.created_at,
+      status: o.status || "processing",
+      items: [],
+    });
+  });
 
-  for (const it of items || []) {
-    byOrder.get(it.order_id)?.items.push({
+  (items || []).forEach((it) => {
+    const bucket = byOrder.get(it.order_id);
+    if (!bucket) return;
+    bucket.items.push({
       id: it.id,
       productId: it.product_id,
-      name: it.product_name,
-      image: it.product_image,
-      qty: it.qty,
-      unit_price: it.unit_price,
-      vat_rate: it.vat_rate,
+      name: it.products?.fo_cim || "Termék",
+      qty: it.qty || 1,
+      unit_price: it.unit_price_huf || 0,
     });
-  }
+  });
 
-  return NextResponse.json([...byOrder.values()]);
+  // total számolás
+  const out = Array.from(byOrder.values()).map((o) => ({
+    ...o,
+    total:
+      o.items.reduce((s, it) => s + (it.qty || 0) * (it.unit_price || 0), 0) || 0,
+  }));
+
+  return NextResponse.json(out);
 }

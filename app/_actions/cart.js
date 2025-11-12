@@ -80,7 +80,7 @@ export async function addToCart(productId, qty = 1) {
       .from('products')
       .select('id, eladasi_ar_brutto, akcios_ar_brutto, akcio_szazalek, akcio_ar')
       .eq('id', productId)
-      .single()
+      .maybeSingle()
 
     if (pErr || !product) {
       console.error('addToCart: product not found', { productId, pErr })

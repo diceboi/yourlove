@@ -15,8 +15,8 @@ export default function CartItemRow({ item }) {
 
   const name = [item?.product?.fo_cim, item?.product?.alcim].filter(Boolean).join(' ') || 'Termék'
   const img = item?.product?.termekkep || null
-  const unitPrice = item.unit_price || 0
-  const totalPrice = unitPrice * (item.qty || 1)
+  const unitPrice = item.unit_price_huf ?? 0
+  const totalPrice = (item.qty || 1) * (unitPrice || 0);
 
   const inc = () => start(async () => { 
     await updateQty(item.id, item.qty + 1)

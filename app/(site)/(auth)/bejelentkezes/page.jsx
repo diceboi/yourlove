@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { toast } from "react-toastify";
 import GoogleButton from "@/app/components/auth/GoogleButton";
+import H2 from "@/app/components/UI/Texts/H2";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,8 +34,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
-      <div className="flex flex-col items-center justify-center">
+    <div className="w-full xl:pt-28 pt-20 xl:pb-28 pb-20 px-4 xl:px-12">
+      <div className="flex flex-col gap-8 items-center w-full">
+      <H2 className="items-center text-2xl font-semibold mb-4">Bejelentkezés</H2>
+      <div className="flex flex-col items-center justify-center w-full">
         <form onSubmit={handleSubmit} className="lg:w-1/2 md:w-3/4 w-full flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-200">
@@ -64,6 +67,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-red-500">{error}</p>}
         </form>
+      </div>
       </div>
     </div>
   );

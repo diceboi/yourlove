@@ -11,7 +11,7 @@ import PrivateShipping from '@/app/components/PrivateShipping'
 
 export default async function CartPage() {
   const { items } = await getCartWithItemsRSC()
-  const total = (items || []).reduce((s, it) => s + (it.unit_price || 0) * (it.qty || 0), 0)
+  const total = (items || []).reduce((s, it) => s + (it.unit_price_huf || 0) * (it.qty || 0), 0)
 
   return (
     <>

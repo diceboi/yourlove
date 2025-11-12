@@ -5,6 +5,7 @@ import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/app/_actions/auth"
 import GoogleButton from "@/app/components/auth/GoogleButton";
+import H2 from "@/app/components/UI/Texts/H2";
 
 export default function LoginPage() {
 
@@ -29,8 +30,10 @@ export default function LoginPage() {
     setLoading(false);
   };
   return (
-    <div className="w-full xl:pt-28 pt-20 xl:pb-28 pb-4 px-4 xl:px-12">
-        <div className="flex flex-col items-center justify-center ">
+    <div className="w-full xl:pt-28 pt-20 xl:pb-28 pb-20 px-4 xl:px-12">
+      <div className="flex flex-col gap-8 items-center">
+      <H2 className="flex flex-col items-center text-2xl font-semibold mb-4 self-center">Regisztráció</H2>
+      <div className="flex flex-col items-center justify-center w-full">
       <form onSubmit={handleSubmit} className="lg:w-1/2 md:w-3/4 w-full flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-200">
@@ -98,6 +101,7 @@ export default function LoginPage() {
         </div>
         {error && <p className="text-red-500">{error}</p>}
       </form>
+      </div>
       </div>
     </div>
   );

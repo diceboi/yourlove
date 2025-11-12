@@ -1,72 +1,62 @@
+// /app/api/cart/add/route.js
 import { NextResponse } from "next/server";
 import { requireUser } from "../../_utils/auth";
-
-async function getOrCreateCart(supabase, userId) {
-  // keresünk egy nyitott cart-ot (állapot mező nálad lehet más; ha nincs, a legutóbbit használjuk)
-  let { data: cart } = await supabase
-    .from("carts")
-    .select("id")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!cart) {
-    const { data, error } = await supabase
-      .from("carts")
-      .insert({ user_id: userId })
-      .select("id")
-      .single();
-    if (error) throw error;
-    cart = data;
-  }
-  return cart.id;
-}
 
 export async function POST(req) {
   const { user, supabase, resp } = await requireUser();
   if (!user) return resp;
 
-  const { product_id, qty = 1 } = await req.json();
-  if (!product_id) return NextResponse.json({ error: "product_id required" }, { status: 400 });
+  const body = await req.json();
+  const productId = body.product_id;
+  const qty = Math.max(1, parseInt(body.qty || 1, 10));
 
-  // 1) cart id
-  const cartId = await getOrCreateCart(supabase, user.id);
+  if (!productId) {
+    return NextResponse.json({ error: "product_id required" }, { status: 400 });
+  }
 
-  // 2) termék árazás (unit_price, vat_rate) – a te táblád alapján
-  const { data: product, error: pErr } = await supabase
-    .from("products")
-    .select("id, unit_price, vat_rate")
-    .eq("id", product_id)
-    .maybeSingle();
-  if (pErr || !product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  // 1) keresünk nyitott kosarat (ha nincs status mező, hagyd ki a where-t és hozz létre egyet)
+  let { data: carts, error: e1 } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "open")
+    .limit(1);
 
-  // 3) ha már a kosárban van, növeljük a qty-t
-  const { data: existing } = await supabase
+  if (e1) return NextResponse.json({ error: e1.message }, { status: 400 });
+
+  let cartId = carts?.[0]?.id;
+  if (!cartId) {
+    const { data: inserted, error: e2 } = await supabase
+      .from("carts")
+      .insert({ user_id: user.id, status: "open" })
+      .select("id")
+      .single();
+    if (e2) return NextResponse.json({ error: e2.message }, { status: 400 });
+    cartId = inserted.id;
+  }
+
+  // 2) cart_items: ha van ilyen product a kosárban, növeljük; különben beszúrjuk
+  const { data: existing, error: e3 } = await supabase
     .from("cart_items")
     .select("id, qty")
     .eq("cart_id", cartId)
-    .eq("product_id", product_id)
+    .eq("product_id", productId)
     .maybeSingle();
 
+  if (e3) return NextResponse.json({ error: e3.message }, { status: 400 });
+
   if (existing) {
-    const { error } = await supabase
+    const { error: e4 } = await supabase
       .from("cart_items")
-      .update({ qty: existing.qty + Number(qty || 1) })
+      .update({ qty: (existing.qty || 0) + qty })
       .eq("id", existing.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (e4) return NextResponse.json({ error: e4.message }, { status: 400 });
   } else {
-    const { error } = await supabase
+    const { error: e5 } = await supabase
       .from("cart_items")
-      .insert({
-        cart_id: cartId,
-        product_id,
-        qty: Number(qty || 1),
-        unit_price: product.unit_price, // a te sémád szerint
-        vat_rate: product.vat_rate ?? 27,
-      });
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+      .insert({ cart_id: cartId, product_id: productId, qty });
+    if (e5) return NextResponse.json({ error: e5.message }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true, cart_id: cartId });
+  return NextResponse.json({ ok: true });
 }

@@ -5,7 +5,7 @@ import { TbArrowDown } from "react-icons/tb"
 export default async function Summary() {
   const { items } = await getCartWithItemsRSC()
   const total = (items || []).reduce(
-    (s, it) => s + (it.unit_price || 0) * (it.qty || 0),
+    (s, it) => s + (it.unit_price_huf || 0) * (it.qty || 0),
     0
   )
   const itemCount = items?.reduce((s, it) => s + (it.qty || 0), 0) || 0
@@ -19,7 +19,7 @@ export default async function Summary() {
       {/* Mobilon: <details> / <summary> — nincs JS, SSR barát */}
       <details
         className="lg:hidden border border-[var(--border)] rounded-2xl overflow-hidden"
-        defaultOpen={false}
+        open
       >
         <summary className="flex justify-between items-center px-4 py-3 bg-gray-50 cursor-pointer list-none">
           <div className="flex flex-col text-left">
@@ -63,7 +63,7 @@ export default async function Summary() {
                         </div>
                       </div>
                       <div className="text-sm font-medium">
-                        {(it.unit_price * it.qty).toLocaleString('hu-HU')} Ft
+                        {(it.unit_price_huf * it.qty).toLocaleString('hu-HU')} Ft
                       </div>
                     </li>
                   )
@@ -117,7 +117,7 @@ export default async function Summary() {
                       </div>
                     </div>
                     <div className="text-sm font-medium">
-                      {(it.unit_price * it.qty).toLocaleString('hu-HU')} Ft
+                      {(it.unit_price_huf * it.qty).toLocaleString('hu-HU')} Ft
                     </div>
                   </li>
                 )

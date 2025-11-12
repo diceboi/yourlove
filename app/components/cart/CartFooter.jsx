@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 export default async function CartFooter() {
   const { items } = await getCartWithItemsRSC()
   const total = (items || []).reduce(
-    (s, it) => s + (it.unit_price || 0) * (it.qty || 0),
+    (s, it) => s + (it.unit_price_huf || 0) * (it.qty || 0),
     0
   )
 

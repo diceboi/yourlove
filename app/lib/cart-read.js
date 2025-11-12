@@ -18,7 +18,7 @@ export async function getCartWithItemsRSC() {
   const { data: items, error } = await sb
     .from('cart_items')
     .select(`
-      id, cart_id, product_id, qty, unit_price,
+      id, cart_id, product_id, qty, unit_price_huf,
       product:products (
         id, fo_cim, alcim, termekkep
       )
@@ -29,7 +29,7 @@ export async function getCartWithItemsRSC() {
     // fallback join nélkül, ha bármiért hibázna
     const { data: plain } = await sb
       .from('cart_items')
-      .select('id, cart_id, product_id, qty, unit_price')
+      .select('id, cart_id, product_id, qty, unit_price_huf')
       .eq('cart_id', cart.id)
     return { cart, items: plain || [] }
   }

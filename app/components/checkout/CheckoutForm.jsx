@@ -133,7 +133,15 @@ export default function CheckoutStepper() {
     setPending(true)
     setError('')
     try {
-      const res = await createOrderFromCart({ ...form, phone: fullPhone })
+      const fullPhone = `${dial} ${form.phone}`.trim().replace(/\s+/g, ' ')
+      const fullName = `${form.lastname} ${form.firstname}`.trim()
+
+      const res = await createOrderFromCart({
+        ...form,
+        name: fullName, // ha a backend 'name'-et vár
+        phone: fullPhone
+      })
+
       if (!res?.ok) throw new Error(res?.message || 'Hiba történt a rendelés leadása során.')
       router.push(`/koszonjuk?order=${res.orderId}`)
     } catch (e) {
@@ -142,6 +150,7 @@ export default function CheckoutStepper() {
       setPending(false)
     }
   }
+
 
   // --- SEGÉDFÜGGVÉNY a hibákhoz
   const errorText = (field) => {
@@ -154,8 +163,14 @@ export default function CheckoutStepper() {
       return 'Érvénytelen e-mail formátum'
     }
 
-    if (field === 'phone' && !HUNGARIAN_PHONE_REGEX.test(form.phone.trim())) {
-      return 'Érvénytelen magyar telefonszám formátum'
+    if (field === 'phone') {
+      const full = `${dial} ${form.phone}`.trim()
+      const ok = dial === '+36'
+        ? HUNGARIAN_PHONE_REGEX.test(full)
+        : GENERIC_PHONE_REGEX.test(full)
+      if (!ok) return dial === '+36'
+        ? 'Érvénytelen magyar telefonszám formátum'
+        : 'Érvénytelen telefonszám formátum'
     }
 
     return ''

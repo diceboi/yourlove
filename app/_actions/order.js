@@ -2,84 +2,91 @@
 
 import { cookies } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
+import { getOrCreateCart } from '@/app/_actions/cart' // már létezik nálad
 
-// a te olvasód: token->cart->items
-async function getCartAndItems(sb) {
-  const token = (await cookies()).get('cart_token')?.value
-  if (!token) return { cart: null, items: [] }
-
-  const { data: cart } = await sb
-    .from('carts')
-    .select('id, currency, status')
-    .eq('cart_token', token)
-    .maybeSingle()
-  if (!cart) return { cart: null, items: [] }
-
-  const { data: items } = await sb
-    .from('cart_items')
-    .select('id, cart_id, product_id, qty, unit_price')
-    .eq('cart_id', cart.id)
-
-  return { cart, items: items || [] }
+function toInt(x) {
+  if (x == null) return null
+  const n = Number(String(x).replace(/\s+/g,'').replace(',','.'))
+  return Number.isFinite(n) ? Math.round(n) : null
 }
 
-export async function createOrderFromCart(customer) {
-  try {
-    const sb = await createClient()
-    const { cart, items } = await getCartAndItems(sb)
-    if (!cart || !items?.length) {
-      return { ok: false, message: 'A kosár üres.' }
-    }
+export async function createOrderFromCart(payload) {
+  const sb = await createClient()
 
-    // hozzuk le a termék snapshot mezőit
-    const ids = [...new Set(items.map(i => i.product_id))]
-    const { data: products } = await sb
-      .from('products')
-      .select('id, fo_cim, alcim, termekkep')
-      .in('id', ids)
+  // 1) user beolvasása (ha van session)
+  const { data: { user } } = await sb.auth.getUser().catch(() => ({ data: { user: null }}))
 
-    const byId = new Map((products || []).map(p => [p.id, p]))
-    const subtotal = items.reduce((s, it) => s + (it.unit_price || 0) * (it.qty || 0), 0)
+  // 2) aktív kosár (cookie alapján)
+  const cart = await getOrCreateCart()
 
-    // 1) order
-    const { data: order, error: oErr } = await sb
-      .from('orders')
-      .insert({
-        cart_id: cart.id,
-        status: 'draft',
-        currency: cart.currency || 'HUF',
-        subtotal_huf: subtotal,
-        total_huf: subtotal, // itt később szállítás/kupon stb.
-        // opcionális: customer adatok JSON-ben
-        // customer_json: customer ? JSON.stringify(customer) : null
-      })
-      .select('id')
-      .single()
-    if (oErr) return { ok: false, message: oErr.message }
-
-    // 2) order_items snapshot
-    const rows = items.map(it => {
-      const p = byId.get(it.product_id)
-      const name = p ? [p.fo_cim, p.alcim].filter(Boolean).join(' ') : 'Termék'
-      const image_url = p?.termekkep || null
-      return {
-        order_id: order.id,
-        product_id: it.product_id,
-        name,
-        image_url,
-        qty: it.qty,
-        unit_price_huf: it.unit_price,
-      }
-    })
-
-    const { error: oiErr } = await sb.from('order_items').insert(rows)
-    if (oiErr) return { ok: false, message: oiErr.message }
-
-    // 3) cart státusz frissítése (opcionális, akkor is látod utólag)
-    await sb.from('carts').update({ status: 'converted' }).eq('id', cart.id)
-
-    return { ok: true, orderId: order.id }
-  } catch (e) {
-    return { ok: false, message: e?.message || 'Ismeretlen hiba' }
+  // ha bejelentkezett és még nincs hozzákötve a kosár:
+  if (user && !cart.user_id) {
+    await sb.from('carts')
+      .update({ user_id: user.id })
+      .eq('id', cart.id)
+      .is('user_id', null) // csak ha tényleg null
   }
+
+  // 3) kosár tételek
+  const { data: items, error: ciErr } = await sb
+    .from('cart_items')
+    .select('id, product_id, qty, unit_price_huf')
+    .eq('cart_id', cart.id)
+
+  if (ciErr) return { ok: false, message: ciErr.message }
+  if (!items?.length) return { ok: false, message: 'A kosár üres.' }
+
+  const lines = items.map(it => ({
+    product_id: it.product_id,
+    qty: toInt(it.qty) || 1,
+    unit_price_huf: toInt(it.unit_price_huf) || 0,
+    line_total_huf: (toInt(it.unit_price_huf) || 0) * (toInt(it.qty) || 1),
+  }))
+  const order_total = lines.reduce((s, l) => s + l.line_total_huf, 0)
+
+  // 4) rendelés létrehozása
+  const orderRow = {
+    user_id: user?.id ?? null,
+    cart_id: cart.id,                           // << új
+    status: 'processing',
+    currency: 'HUF',
+    email: payload.email,
+    phone: payload.phone,
+    customer_lastname: payload.lastname,
+    customer_firstname: payload.firstname,
+    shipping_method: payload.shipping || null,
+    billing_zip: payload.zip,
+    billing_city: payload.city,
+    billing_address: [payload.address, payload.address_extra].filter(Boolean).join(', '),
+    notes: payload.notes || null,
+    total_huf: order_total,
+  };
+
+  const { data: created, error: oErr } = await sb
+    .from('orders')
+    .insert(orderRow)
+    .select('id') // vissza az id
+    .single()
+
+  if (oErr) return { ok: false, message: oErr.message }
+
+  // 5) order_items beszúrás
+  const oiRows = lines.map(l => ({
+    order_id: created.id,
+    product_id: l.product_id,
+    qty: l.qty,
+    unit_price_huf: l.unit_price_huf,
+    vat_rate: 27,                    // ha van rá meződ; állítsd, amire kell
+  }))
+
+  const { error: oiErr } = await sb.from('order_items').insert(oiRows)
+  if (oiErr) return { ok: false, message: oiErr.message }
+
+  // 6) kosár lezárása
+  await sb.from('carts').update({ status: 'converted' }).eq('id', cart.id); // << 'ordered' helyett
+  await sb.from('cart_items').delete().eq('cart_id', cart.id);
+
+  // (opcionális) rendelés szám generálás, e-mail, stb…
+
+  return { ok: true, orderId: created.id }
 }

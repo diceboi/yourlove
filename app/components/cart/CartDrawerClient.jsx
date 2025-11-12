@@ -1,10 +1,24 @@
 'use client'
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useCartUI } from './CartUIProvider'
 import { TbX } from "react-icons/tb";
+import { useRouter } from 'next/navigation';
 
 export default function CartDrawerClient({ content, footer }) {
   const { open, setOpen } = useCartUI()
+  const router = useRouter()
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    const onChanged = () => router.refresh()   // RSC újra-fetchel
+
+    window.addEventListener('cart:open', onOpen)
+    window.addEventListener('cart:changed', onChanged)
+    return () => {
+      window.removeEventListener('cart:open', onOpen)
+      window.removeEventListener('cart:changed', onChanged)
+    }
+  }, [router, setOpen])
 
   return (
     <>
