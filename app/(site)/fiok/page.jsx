@@ -147,7 +147,7 @@ export default function AccountPage() {
   return (
     <div className="flex flex-col gap-8 w-full xl:py-28 py-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <H2 className="text-2xl font-semibold mb-4">Fiók</H2>
-      <div className="mx-auto w-full flex flex-col lg:flex-row-reverse gap-6">
+      <div className="w-full flex flex-col lg:flex-row-reverse gap-6">
         {/* Tartalom */}
         <main className="lg:w-2/3 w-full">
           <div className="rounded-2xl border border-[var(--border)] p-4 lg:p-6 ">
