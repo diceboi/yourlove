@@ -179,8 +179,8 @@ export default function AccountPage() {
         </main>
 
         {/* Sidebar */}
-        <aside className="lg:w-1/3 lg:max-w-sm w-full">
-          <nav className="rounded-2xl bg-[var(--grey-bg)] p-3 space-y-2">
+        <aside className="lg:w-1/3 w-full">
+          <nav className="space-y-2">
             <MenuButton active={section === "fiokadatok"} onClick={() => setSection("fiokadatok")} label="Fiókadatok" />
             <MenuButton active={section === "cimek"} onClick={() => setSection("cimek")} label="Címadatok" />
             <MenuButton active={section === "rendelesek"} onClick={() => setSection("rendelesek")} label="Korábbi rendelések" />
@@ -207,7 +207,7 @@ export default function AccountPage() {
 function MenuButton({ active, onClick, label }) {
   return (
     <button
-      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition
+      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition cursor-pointer
         ${active ? "bg-[var(--green)]" : "hover:bg-white"}`}
       onClick={onClick}
     >

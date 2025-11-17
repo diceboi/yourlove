@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import Link from "next/link";
 
 export default function LoginForm() {
   const router = useRouter();

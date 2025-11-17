@@ -7,6 +7,8 @@ import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { toast } from "react-toastify";
 import GoogleButton from "@/app/components/auth/GoogleButton";
 import H2 from "@/app/components/UI/Texts/H2";
+import Paragraph from "@/app/components/UI/Texts/Paragraph";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,7 +65,17 @@ export default function LoginPage() {
           </div>
           <div className="mt-4 space-y-4">
             <AuthButton type="Bejelentkezés" loading={loading} />
+            <div className="relative w-full flex flex-nowrap items-center justify-center gap-2 py-4">
+              <div className="flex items-center w-full">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <Paragraph classname={"mx-4 text-gray-500"}>Vagy</Paragraph>
+                <div className="flex-grow border-t border-gray-300"></div>
+              </div>
+            </div>
             <GoogleButton type={"/"} title={"Bejelentkezés Google-lel"}/>
+            <Link href={"/regisztracio"} className="w-full text-center">
+              <Paragraph classname={"text-[var(--pink)] underline"}>Regisztráció</Paragraph>
+            </Link>
           </div>
           {error && <p className="text-red-500">{error}</p>}
         </form>
