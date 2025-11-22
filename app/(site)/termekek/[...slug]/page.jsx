@@ -156,8 +156,8 @@ export default async function Page({ params, searchParams }) {
           </Suspense>
 
           <div className="flex lg:flex-row flex-col lg:gap-8 gap-4">
-            <div className="flex lg:flex-row flex-col lg:gap-32 gap-8 w-full">
-              <div className="flex flex-col lg:gap-16 gap-8 lg:w-2/3 w-full">
+            <div className="flex lg:flex-row flex-col lg:gap-16 gap-8 w-full">
+              <div className="flex flex-col lg:gap-16 gap-8 lg:w-3/5 w-full">
                 {/* képgaléria (rövidített) */}
                 <div className="flex lg:flex-row flex-col-reverse gap-4 w-full">
                   <div className="relative w-full lg:h-[70vh] h-[40vh]">
@@ -181,7 +181,7 @@ export default async function Page({ params, searchParams }) {
                 <UpsaleProducts products={productsUnderFreeShipping} />
               </div>
 
-              <div className="hidden lg:block relative lg:w-1/3 w-full">
+              <div className="hidden lg:block relative lg:w-2/5 w-full">
                 <ProductInfoPanel product={product} />
               </div>
             </div>

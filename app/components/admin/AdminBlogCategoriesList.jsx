@@ -13,7 +13,9 @@ export default function AdminBlogCategoriesList({ categories }) {
 
   // saját state + prop szinkron
   const [rows, setRows] = useState(categories || []);
-  useEffect(() => { setRows(categories || []); }, [categories]);
+  useEffect(() => {
+    setRows(categories || []);
+  }, [categories]);
 
   // refetch az adatbázisból
   const refetch = useCallback(async () => {
@@ -114,17 +116,35 @@ export default function AdminBlogCategoriesList({ categories }) {
   return (
     <>
       {/* ====== Táblázat (md és fölötte) ====== */}
-      <div className="hidden md:block px-6">
-        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
-          <table className="w-full table-auto text-sm">
+      <div className="hidden md:block px-3 md:px-6">
+        <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="min-w-full text-sm">
             <thead className="bg-[#f5f5f5] sticky top-0 z-10">
               <tr>
-                <th className="text-left font-semibold px-3 py-3 min-w-[240px]">Név</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
-                {/* dinamikus szélesség: nincs min-w */}
-                <th className="text-left font-semibold px-3 py-3">Elérés</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
-                <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
+                {/* Név – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Név
+                </th>
+
+                {/* Slug – lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Slug
+                </th>
+
+                {/* Elérés – xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Elérés
+                </th>
+
+                {/* Állapot – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Állapot
+                </th>
+
+                {/* Műveletek – fix szélesség */}
+                <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">
+                  Műveletek
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -138,7 +158,7 @@ export default function AdminBlogCategoriesList({ categories }) {
                     key={category.id}
                     className="border-t border-[var(--border)] hover:bg-gray-50"
                   >
-                    {/* Név + ID + kép */}
+                    {/* Név + ID + kép – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       <div className="flex items-center gap-3">
                         <Image
@@ -149,14 +169,18 @@ export default function AdminBlogCategoriesList({ categories }) {
                           className="rounded-md flex-none object-cover"
                         />
                         <div className="min-w-0">
-                          <div className="font-semibold truncate">{category.nev}</div>
-                          <div className="text-xs text-gray-500 truncate">#{category.id}</div>
+                          <div className="font-semibold truncate">
+                            {category.nev}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            #{category.id}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Slug */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Slug – lg+ */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       {category.slug ? (
                         <span className="font-medium">{category.slug}</span>
                       ) : (
@@ -164,26 +188,32 @@ export default function AdminBlogCategoriesList({ categories }) {
                       )}
                     </td>
 
-                    {/* Elérés (breadcrumb) – clamp, nincs min-w */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Elérés – xl+ */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {breadcrumb ? (
-                        <span className="font-medium line-clamp-2">{breadcrumb}</span>
+                        <span className="font-medium line-clamp-2">
+                          {breadcrumb}
+                        </span>
                       ) : (
                         <span className="text-gray-500">—</span>
                       )}
                     </td>
 
-                    {/* Állapot */}
+                    {/* Állapot – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       {category.kozzeteve ? (
-                        <span className="font-bold text-[var(--green)]">Közzétéve</span>
+                        <span className="font-bold text-[var(--green)]">
+                          Közzétéve
+                        </span>
                       ) : (
-                        <span className="font-bold text-[var(--warning)]">Vázlat</span>
+                        <span className="font-bold text-[var(--warning)]">
+                          Vázlat
+                        </span>
                       )}
                     </td>
 
-                    {/* Műveletek – fél-fél kattintható terület */}
-                    <td className="pl-3 align-middle">
+                    {/* Műveletek – fix szélesség */}
+                    <td className="pl-3 align-middle w-[140px] min-w-[140px]">
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
                           href={href}

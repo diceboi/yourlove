@@ -21,6 +21,7 @@ import {
   TbListSearch,
   TbSeo,
   TbChevronLeft,
+  TbPhotoPlus
 } from "react-icons/tb";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
@@ -66,6 +67,13 @@ export default function AdminProductEdit({ product }) {
   const [selectedOGImage, setSelectedOGImage] = useState(product.og_image || "")
   const [mediaModalOpen, setMediaModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(product);
+  const [gallery, setGallery] = useState(() => {
+  const raw = product.kepgaleria || "";
+    return raw
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  });
 
   const pickerModeRef = useRef(null);
 
@@ -143,6 +151,7 @@ export default function AdminProductEdit({ product }) {
       kategoria: JSON.stringify(paths),
       cimkek: JSON.stringify(tagIds),
       canonical_path,
+      kepgaleria: (gallery || []).join(";"), // <-- ÚJ
     };
 
     const idStr = String(form.id || "").trim();
@@ -210,33 +219,35 @@ export default function AdminProductEdit({ product }) {
     <>
       <MediaLibraryModal
         isOpen={mediaModalOpen}
+        multiple={pickerModeRef.current === "gallery" ? true : false}
+        initialSelected={pickerModeRef.current === "gallery" ? gallery : []}
         onClose={() => {
           setMediaModalOpen(false);
           pickerModeRef.current = null;
         }}
-        onSelect={(img) => {
-          // ha a felhasználó mégsem választott semmit:
-          if (!img) {
-            setMediaModalOpen(false);
-            pickerModeRef.current = null;
-            return;
-          }
-
+        onSelect={(value) => {
           const mode = pickerModeRef.current;
 
-          if (mode === "og_image") {
-            setSelectedOGImage(img);
-            setForm((prev) => ({ ...prev, og_image: img }));
+          if (mode === "gallery") {
+              const urls = Array.isArray(value) ? value : [value];
+              setGallery(urls);
+              setForm((f) => ({
+                ...f,
+                kepgaleria: urls.join(";"),
+              }));
+            return;
+          } else if (mode === "og_image") {
+            const url = Array.isArray(value) ? value[0] : value;
+            setSelectedOGImage(url);
+            setForm((prev) => ({ ...prev, og_image: url }));
           } else {
-            // default: termékkép
-            setSelectedImage(img);
-            setCurrentProduct((prev) => ({ ...prev, termekkep: img }));
-            setForm((prev) => ({ ...prev, termekkep: img }));
+            const url = Array.isArray(value) ? value[0] : value;
+            setSelectedImage(url);
+            setForm((prev) => ({ ...prev, termekkep: url }));
           }
-
-          setMediaModalOpen(false);
-          pickerModeRef.current = null;
         }}
+
+
       />
 
       <div className="flex flex-col gap-6">
@@ -295,6 +306,69 @@ export default function AdminProductEdit({ product }) {
                 <span className="absolute bottom-2 right-2 bg-white text-sm px-2 py-1 rounded shadow">
                   Kép módosítása
                 </span>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Label classname="font-bold text-xs">Termék galéria</Label>
+                  
+                </div>
+
+                {gallery.length === 0 ? (
+                  <button
+                    type="button"
+                    className="flex flex-col items-center justify-center gap-2 text-xs text-[var(--secondary-text)] px-2 py-1 border border-[var(--border)] rounded-md hover:bg-[var(--border)] h-20"
+                    onClick={() => {
+                      pickerModeRef.current = "gallery";
+                      setMediaModalOpen(true);
+                    }}
+                  >
+                    <TbPhotoPlus className="w-6 h-auto" />
+                    Kép hozzáadása
+                  </button>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {gallery.map((src, idx) => (
+                      <div
+                        key={idx}
+                        className="relative w-20 h-20 border border-[var(--border)] rounded-md overflow-hidden group"
+                      >
+                        <Image
+                          src={src}
+                          alt={`Galéria kép ${idx + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-0 right-0 bg-[var(--error)]/80 text-[10px] text-white px-1.25 py-0.5 m-1 rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                          onClick={() => {
+                            setGallery((prev) => {
+                              const next = prev.filter((_, i) => i !== idx);
+                              setForm((f) => ({
+                                ...f,
+                                kepgaleria: next.join(";"),
+                              }));
+                              return next;
+                            });
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="flex flex-col items-center justify-center gap-2 text-xs text-[var(--secondary-text)] px-2 py-1 border border-[var(--border)] rounded-md hover:bg-[var(--border)] h-20"
+                      onClick={() => {
+                        pickerModeRef.current = "gallery";
+                        setMediaModalOpen(true);
+                      }}
+                    >
+                      <TbPhotoPlus className="w-6 h-auto" />
+                      Kép hozzáadása
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

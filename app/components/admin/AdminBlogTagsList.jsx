@@ -6,7 +6,6 @@ import { AdminMenuContext } from "@/app/AdminContext";
 import { TbExternalLink, TbEdit } from "react-icons/tb";
 import { createClient } from "@/utils/supabase/client";
 
-// --- rövidítés max karakterszámra ---
 const MAX_DESC = 120;
 function truncateText(s, max = MAX_DESC) {
   if (!s) return "";
@@ -21,11 +20,11 @@ export default function AdminBlogTagsList({ tags }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
 
-  // saját state + prop szinkron
   const [rows, setRows] = useState(tags || []);
-  useEffect(() => { setRows(tags || []); }, [tags]);
+  useEffect(() => {
+    setRows(tags || []);
+  }, [tags]);
 
-  // refetch az adatbázisból
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("blog-tags")
@@ -34,25 +33,21 @@ export default function AdminBlogTagsList({ tags }) {
     if (!error) setRows(data || []);
   }, [supabase]);
 
-  // custom event figyelése
   useEffect(() => {
     const onChanged = () => refetch();
     window.addEventListener("admin:tags:changed", onChanged);
     return () => window.removeEventListener("admin:tags:changed", onChanged);
   }, [refetch]);
 
-  // keresés
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
-    return (rows || []).filter((c) => {
-      return (
-        c.id?.toString().toLowerCase().includes(term) ||
-        c.nev?.toLowerCase().includes(term) ||
-        c.slug?.toLowerCase().includes(term) ||
-        c.leiras?.toLowerCase().includes(term)
-      );
-    });
+    return rows.filter((c) =>
+      c.id?.toString().includes(term) ||
+      c.nev?.toLowerCase().includes(term) ||
+      c.slug?.toLowerCase().includes(term) ||
+      c.leiras?.toLowerCase().includes(term)
+    );
   }, [rows, searchTerm]);
 
   if (!rows || rows.length === 0) {
@@ -67,19 +62,39 @@ export default function AdminBlogTagsList({ tags }) {
 
   return (
     <>
-      {/* ====== Táblázat (md és fölötte) ====== */}
-      <div className="hidden md:block px-6">
-        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
-          <table className="w-full table-auto text-sm">
+      {/* ====== Táblázat (md+) ====== */}
+      <div className="hidden md:block px-3 md:px-6">
+        <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="min-w-full text-sm">
             <thead className="bg-[#f5f5f5] sticky top-0 z-10">
               <tr>
-                <th className="text-left font-semibold px-3 py-3 min-w-[260px]">Név</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[420px]">Leírás</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
-                <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
+                {/* Név – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Név
+                </th>
+
+                {/* Slug – lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Slug
+                </th>
+
+                {/* Leírás – xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Leírás
+                </th>
+
+                {/* Állapot – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Állapot
+                </th>
+
+                {/* Műveletek – fix szélesség */}
+                <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">
+                  Műveletek
+                </th>
               </tr>
             </thead>
+
             <tbody className="bg-white">
               {filtered.map((tag) => {
                 const href = `/blog/cimkek/${encodeURIComponent(tag.slug || "")}`;
@@ -91,23 +106,17 @@ export default function AdminBlogTagsList({ tags }) {
                   >
                     {/* Név + ID */}
                     <td className="px-3 py-3 align-middle">
-                      <div className="min-w-0">
-                        <div className="font-semibold truncate">{tag.nev}</div>
-                        <div className="text-xs text-gray-500 truncate">#{tag.id}</div>
-                      </div>
+                      <div className="font-semibold truncate">{tag.nev}</div>
+                      <div className="text-xs text-gray-500 truncate">#{tag.id}</div>
                     </td>
 
-                    {/* Slug */}
-                    <td className="px-3 py-3 align-middle">
-                      {tag.slug ? (
-                        <span className="font-medium">{tag.slug}</span>
-                      ) : (
-                        <span className="text-gray-500">—</span>
-                      )}
+                    {/* Slug – lg+ */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
+                      {tag.slug || <span className="text-gray-500">—</span>}
                     </td>
 
-                    {/* Leírás – max hossz, title-ben teljes szöveg */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Leírás – xl+ */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {tag.leiras ? (
                         <span title={tag.leiras}>{truncateText(tag.leiras)}</span>
                       ) : (
@@ -124,22 +133,20 @@ export default function AdminBlogTagsList({ tags }) {
                       )}
                     </td>
 
-                    {/* Műveletek – fél-fél kattintható terület */}
-                    <td className="pl-3 align-middle">
+                    {/* Műveletek */}
+                    <td className="pl-3 align-middle w-[140px] min-w-[140px]">
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
                           href={href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label="Megnyitás új lapon"
-                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                          className="flex items-center justify-center w-1/2 hover:bg-white"
                         >
                           <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
                         </Link>
                         <Link
                           href={`/admin/blogcimkek/${tag.id}`}
-                          aria-label="Szerkesztés"
-                          className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                          className="flex items-center justify-center w-1/2 hover:bg-white"
                         >
                           <TbEdit className="w-5 h-auto" />
                         </Link>
@@ -153,34 +160,24 @@ export default function AdminBlogTagsList({ tags }) {
         </div>
       </div>
 
-      {/* ====== Kártyás nézet (mobil, md alatt) ====== */}
+      {/* ====== Mobil kártyanézet ====== */}
       <div className="md:hidden px-3 space-y-2">
         {filtered.map((tag) => {
           const href = `/blog/cimkek/${encodeURIComponent(tag.slug || "")}`;
 
           return (
-            <div
-              key={tag.id}
-              className="border border-[var(--border)] bg-white rounded-2xl p-3"
-            >
+            <div key={tag.id} className="border border-[var(--border)] bg-white rounded-2xl p-3">
               <div className="flex items-center gap-3">
                 <div className="min-w-0">
                   <div className="font-semibold">{tag.nev}</div>
                   <div className="text-xs text-gray-500">#{tag.id}</div>
                 </div>
+
                 <div className="ml-auto flex items-center gap-3">
-                  <Link
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Megnyitás új lapon"
-                  >
+                  <Link href={href} target="_blank">
                     <TbExternalLink className="text-[var(--pink)]" />
                   </Link>
-                  <Link
-                    href={`/admin/blogcimkek/${tag.id}`}
-                    aria-label="Szerkesztés"
-                  >
+                  <Link href={`/admin/blogcimkek/${tag.id}`}>
                     <TbEdit />
                   </Link>
                 </div>
@@ -189,12 +186,12 @@ export default function AdminBlogTagsList({ tags }) {
               <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
                 <div className="text-gray-500">Slug</div>
                 <div className="font-medium">
-                  {tag.slug || <span className="text-gray-500">—</span>}
+                  {tag.slug || "—"}
                 </div>
 
                 <div className="text-gray-500">Leírás</div>
                 <div className="font-medium" title={tag.leiras || ""}>
-                  {tag.leiras ? truncateText(tag.leiras) : <span className="text-gray-500">—</span>}
+                  {tag.leiras ? truncateText(tag.leiras) : "—"}
                 </div>
 
                 <div className="text-gray-500">Állapot</div>

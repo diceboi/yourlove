@@ -180,17 +180,39 @@ export default function AdminProductList({ products }) {
     <>
       {/* ====== 1) Táblázat (md és fölötte) ====== */}
       <div className="hidden md:block px-6">
-        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
-          <table className="w-full table-auto text-sm">
+        <div className="relative max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="min-w-full table-auto text-sm">
             <thead className="bg-[#f5f5f5] sticky top-0 z-10">
               <tr>
-                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Név</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[320px]">Kategória</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[200px]">Címkék</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Ár</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[120px]">Készlet</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
-                <th className="text-right font-semibold px-3 py-3 min-w-[120px]">Műveletek</th>
+                <th className="text-left font-semibold px-3 py-3">Név</th>
+
+                {/* Kategória csak lg-től felfelé */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Kategória
+                </th>
+
+                {/* Címkék csak xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Címkék
+                </th>
+
+                <th className="text-left font-semibold px-3 py-3">
+                  Ár
+                </th>
+
+                {/* Készlet lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Készlet
+                </th>
+
+                {/* Állapot xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Állapot
+                </th>
+
+                <th className="text-right font-semibold px-3 py-3 w-[120px] bg-[#f5f5f5]">
+                  Műveletek
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -205,6 +227,7 @@ export default function AdminProductList({ products }) {
                     key={product.id}
                     className="border-t border-[var(--border)] hover:bg-gray-50"
                   >
+                    {/* Név – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       <div className="flex items-center gap-3">
                         <Image
@@ -221,7 +244,8 @@ export default function AdminProductList({ products }) {
                       </div>
                     </td>
 
-                    <td className="px-3 py-3 align-middle">
+                    {/* Kategória – csak lg-től */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       {bcs.length ? (
                         <div className="flex flex-col">
                           {bcs.map((bc, i) => (
@@ -233,7 +257,8 @@ export default function AdminProductList({ products }) {
                       )}
                     </td>
 
-                    <td className="px-3 py-3 align-middle">
+                    {/* Címkék – csak xl-től */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {tagNames.length ? (
                         <span className="font-medium">{tagNames.join(", ")}</span>
                       ) : (
@@ -241,17 +266,20 @@ export default function AdminProductList({ products }) {
                       )}
                     </td>
 
+                    {/* Ár – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
-                      <span className="text-[var(--green)] font-bold">
+                      <span className="text-[var(--green)] font-bold min-w-fit">
                         {price(product)} Ft
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 align-middle">
+                    {/* Készlet – lg-től */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       <span className="font-semibold">{product.keszlet} db</span>
                     </td>
 
-                    <td className="px-3 py-3 align-middle">
+                    {/* Állapot – xl-től */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {product.kozzeteve ? (
                         <span className="font-bold text-[var(--green)]">Közzétéve</span>
                       ) : (
@@ -259,12 +287,11 @@ export default function AdminProductList({ products }) {
                       )}
                     </td>
 
-                    <td className="pl-3 align-middle">
+                    {/* Műveletek – sticky, fix szélesség */}
+                    <td className="pl-3 align-middle w-[120px] min-w-[120px] sticky right-0 z-20 bg-white">
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
-                          href={
-                            `/termekek/${product.canonical_path}/${product.seo_slug}`
-                          }
+                          href={`/termekek/${product.canonical_path}/${product.seo_slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="Megnyitás új lapon"
@@ -277,7 +304,7 @@ export default function AdminProductList({ products }) {
                           aria-label="Szerkesztés"
                           className="flex items-center justify-center hover:bg-white w-1/2 h-full"
                         >
-                          <TbEdit className="w-5 h-auto"/>
+                          <TbEdit className="w-5 h-auto" />
                         </Link>
                       </div>
                     </td>
@@ -285,6 +312,7 @@ export default function AdminProductList({ products }) {
                 );
               })}
             </tbody>
+
           </table>
         </div>
       </div>

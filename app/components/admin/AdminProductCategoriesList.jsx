@@ -12,11 +12,9 @@ export default function AdminProductCategoriesList({ categories }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
 
-  // saját state + prop szinkron
   const [rows, setRows] = useState(categories || []);
   useEffect(() => { setRows(categories || []); }, [categories]);
 
-  // refetch az adatbázisból
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("product-categories")
@@ -25,21 +23,18 @@ export default function AdminProductCategoriesList({ categories }) {
     if (!error) setRows(data || []);
   }, [supabase]);
 
-  // custom event figyelése
   useEffect(() => {
     const onChanged = () => refetch();
     window.addEventListener("admin:categories:changed", onChanged);
     return () => window.removeEventListener("admin:categories:changed", onChanged);
   }, [refetch]);
 
-  // id -> kategória map (a breadcrumbs-hoz)
   const byId = useMemo(() => {
     const m = new Map();
     (rows || []).forEach((c) => m.set(String(c.id), c));
     return m;
   }, [rows]);
 
-  // név alapú breadcrumb (szülők -> aktuális)
   const makeBreadcrumb = (cat) => {
     if (!cat) return "";
     const parents = [];
@@ -62,7 +57,6 @@ export default function AdminProductCategoriesList({ categories }) {
     return parents.join(" > ");
   };
 
-  // slug útvonal felépítése linkhez
   const buildSlugTrail = (cat) => {
     if (!cat) return [];
     const parts = [];
@@ -84,7 +78,6 @@ export default function AdminProductCategoriesList({ categories }) {
     return [...parts, cat.slug].filter(Boolean);
   };
 
-  // keresés
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
@@ -115,16 +108,35 @@ export default function AdminProductCategoriesList({ categories }) {
   return (
     <>
       {/* ====== Táblázat (md és fölötte) ====== */}
-      <div className="hidden md:block px-6">
-        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
-          <table className="w-full table-auto text-sm">
+      <div className="hidden md:block px-3 md:px-6">
+        <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="min-w-full text-sm">
             <thead className="bg-[#f5f5f5] sticky top-0 z-10">
               <tr>
-                <th className="text-left font-semibold px-3 py-3 min-w-[240px]">Név</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[420px]">Elérés</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
-                <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
+                {/* Név – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Név
+                </th>
+
+                {/* Slug – csak lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Slug
+                </th>
+
+                {/* Elérés (breadcrumb) – xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Elérés
+                </th>
+
+                {/* Állapot – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Állapot
+                </th>
+
+                {/* Műveletek – jobb oldalt, fix szélesség (nem sticky, csak keskeny) */}
+                <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">
+                  Műveletek
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -138,7 +150,7 @@ export default function AdminProductCategoriesList({ categories }) {
                     key={category.id}
                     className="border-t border-[var(--border)] hover:bg-gray-50"
                   >
-                    {/* Név + ID + kép */}
+                    {/* Név + ID + kép – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       <div className="flex items-center gap-3">
                         <Image
@@ -155,8 +167,8 @@ export default function AdminProductCategoriesList({ categories }) {
                       </div>
                     </td>
 
-                    {/* Slug */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Slug – csak lg-től */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       {category.slug ? (
                         <span className="font-medium">{category.slug}</span>
                       ) : (
@@ -164,8 +176,8 @@ export default function AdminProductCategoriesList({ categories }) {
                       )}
                     </td>
 
-                    {/* Elérés (breadcrumb) */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Elérés – xl-től */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {breadcrumb ? (
                         <span className="font-medium">{breadcrumb}</span>
                       ) : (
@@ -173,7 +185,7 @@ export default function AdminProductCategoriesList({ categories }) {
                       )}
                     </td>
 
-                    {/* Állapot */}
+                    {/* Állapot – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       {category.kozzeteve ? (
                         <span className="font-bold text-[var(--green)]">Közzétéve</span>
@@ -182,8 +194,8 @@ export default function AdminProductCategoriesList({ categories }) {
                       )}
                     </td>
 
-                    {/* Műveletek – fél-fél kattintható terület */}
-                    <td className="pl-3 align-middle">
+                    {/* Műveletek */}
+                    <td className="pl-3 align-middle w-[140px] min-w-[140px]">
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
                           href={href}

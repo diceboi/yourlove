@@ -22,7 +22,7 @@ export default function ProductInfoPanel({product}) {
   const sale = true;
 
   return (
-    <div className="lg:sticky relative lg:top-28 lg:left-0 flex flex-col gap-4">
+    <div className="lg:sticky relative lg:top-40 lg:left-0 flex flex-col gap-4">
       <div className="inline-flex gap-2">
         <TagButton
           title={"Akció"}

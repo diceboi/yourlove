@@ -2,19 +2,28 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { TbX, TbChevronLeft, TbSearch } from "react-icons/tb";
+import { TbX, TbChevronLeft, TbSearch, TbCheck } from "react-icons/tb";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import UploadImageButton from "../UI/Buttons/UploadImageButton";
 
 const BUCKET = "yourlove";
 
-export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
+export default function MediaLibraryModal({
+  isOpen,
+  onClose,
+  onSelect,
+  multiple = false,
+  initialSelected = []
+}) {
   const supabase = useMemo(() => createClient(), []);
   const [images, setImages] = useState([]); // { name, path, url }
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const fileInputRef = useRef(null);
+
+  // multiple módhoz kijelölések
+  const [selected, setSelected] = useState([]); // string[] (url-ek)
 
   const isImage = (name) => /\.(png|jpe?g|webp|gif|svg|bmp|avif)$/i.test(name);
 
@@ -43,7 +52,10 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
   };
 
   useEffect(() => {
-    if (isOpen) fetchImages();
+    if (isOpen) {
+      fetchImages();
+      setSelected(initialSelected); // nyitáskor ürítjük a kijelölést
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -65,6 +77,18 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
 
   if (typeof window === "undefined") return null;
 
+  const toggleSelect = (url) => {
+    setSelected((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
+    );
+  };
+
+  const handleConfirmMulti = () => {
+    if (!selected.length) return;
+    onSelect(selected); // tömbet ad vissza
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -84,6 +108,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
             transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* HEADER */}
             <div className="sticky top-0 bg-[#f5f5f5] flex flex-col justify-between items-start md:flex-row gap-4 z-1 border-b border-[var(--border)]">
               <div className="flex flex-col md:flex-row justify-between md:items-center w-full gap-0">
                 <div className="flex flex-nowrap items-center gap-2 border-b border-[var(--border)] md:border-none">
@@ -112,6 +137,8 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
                 </div>
               </div>
             </div>
+
+            {/* GRID */}
             <div className="flex-1 overflow-auto p-4 grid md:grid-cols-6 grid-cols-3 gap-3">
               {loading ? (
                 <div className="col-span-6 text-center text-sm text-gray-500">
@@ -122,39 +149,80 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }) {
                   Nincs találat.
                 </div>
               ) : (
-                filtered.map((img) => (
-                  <button
-                    key={img.path}
-                    onClick={() => {
-                      onSelect(img.url);
-                      onClose();
-                    }}
-                    className="relative w-full aspect-square cursor-pointer group"
-                    title={img.name}
-                  >
-                    <Image
-                      src={img.url}
-                      alt={img.name}
-                      fill
-                      sizes="150px"
-                      className="object-cover rounded-md group-hover:opacity-80 border border-[var(--border)]"
-                    />
-                  </button>
-                ))
+                filtered.map((img) => {
+                  const isSelected = selected.includes(img.url);
+                  return (
+                    <button
+                      key={img.path}
+                      onClick={() => {
+                        if (multiple) {
+                          toggleSelect(img.url);
+                        } else {
+                          onSelect(img.url); // single: string
+                          onClose();
+                        }
+                      }}
+                      className={`relative w-full aspect-square cursor-pointer group border rounded-md overflow-hidden ${
+                        multiple && isSelected
+                          ? "ring-2 ring-[var(--pink)]"
+                          : "border-[var(--border)]"
+                      }`}
+                      title={img.name}
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.name}
+                        fill
+                        sizes="150px"
+                        className="object-cover group-hover:opacity-80"
+                      />
+                      {multiple && (
+                        <div className="absolute top-1 left-1 bg-white/80 rounded-full p-1 shadow">
+                          <TbCheck
+                            className={
+                              isSelected
+                                ? "text-[var(--pink)]"
+                                : "text-gray-400"
+                            }
+                            size={14}
+                          />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
               )}
             </div>
 
-            <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-center items-center gap-2 w-full">
-              <UploadImageButton
-                onclick={handleUploadClick}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleUploadFile}
-              />
+            {/* FOOTER */}
+            <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-between items-center gap-2 w-full">
+              <div className="flex items-center gap-2">
+                <UploadImageButton onclick={handleUploadClick} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUploadFile}
+                />
+              </div>
+
+              {multiple && (
+                <button
+                  type="button"
+                  disabled={selected.length === 0}
+                  onClick={handleConfirmMulti}
+                  className={`px-7 h-[44px] cursor-pointer rounded-full text-sm font-medium border ${
+                    selected.length === 0
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-[var(--pink)] text-white border-[var(--pink)] hover:bg-[var(--pink-hover)] hover:border-[var(--pink-hover)]"
+                  }`}
+                >
+                  {selected.length === 0
+                    ? "Nincs kijelölt kép"
+                    : `Kijelöltek hozzáadása (${selected.length})`}
+                </button>
+              )}
             </div>
           </motion.div>
         </motion.section>

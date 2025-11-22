@@ -28,12 +28,18 @@ function parseIds(value) {
 }
 
 const parseJsonSafe = (v) => {
-  try { return JSON.parse(v); } catch { return null; }
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
 };
+
 const toNum = (n) => {
   const x = Number(n);
   return Number.isFinite(x) ? x : null;
 };
+
 const parseIdArray = (v) => {
   if (v == null) return [];
   const data = typeof v === "string" ? parseJsonSafe(v) ?? v : v;
@@ -41,7 +47,6 @@ const parseIdArray = (v) => {
   if (Array.isArray(data)) return data.map(toNum).filter(Boolean);
   if (typeof data === "number") return [data];
 
-  // fallback: "1,2,3" vagy vegyes string
   if (typeof data === "string") {
     const ids = data.match(/\d+/g)?.map(Number) || [];
     return ids.filter(Number.isFinite);
@@ -54,18 +59,15 @@ const parseCategoryPaths = (v, getPathIds) => {
   const data = typeof v === "string" ? parseJsonSafe(v) ?? v : v;
 
   if (Array.isArray(data)) {
-    // path-mátrix
     if (data.every((it) => Array.isArray(it))) {
       return data
         .map((path) => path.map(toNum).filter(Boolean))
         .filter((p) => p.length);
     }
-    // lapos id-tömb -> alakítsd path-á
     const ids = parseIdArray(data);
     return ids.map((leafId) => getPathIds(leafId)).filter((p) => p.length);
   }
 
-  // fallback: bármilyen más -> próbáld id-listává és path-á
   const ids = parseIdArray(v);
   return ids.map((leafId) => getPathIds(leafId)).filter((p) => p.length);
 };
@@ -74,11 +76,11 @@ export default function AdminBlogList({ blogs }) {
   const { searchTerm } = useContext(AdminMenuContext);
   const supabase = useMemo(() => createClient(), []);
 
-  // saját state + prop szinkron
   const [rows, setRows] = useState(blogs || []);
-  useEffect(() => { setRows(blogs || []); }, [blogs]);
+  useEffect(() => {
+    setRows(blogs || []);
+  }, [blogs]);
 
-  // refetch az adatbázisból
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("blogs")
@@ -87,7 +89,6 @@ export default function AdminBlogList({ blogs }) {
     if (!error) setRows(data || []);
   }, [supabase]);
 
-  // custom event figyelése
   useEffect(() => {
     const onChanged = () => refetch();
     window.addEventListener("admin:blogs:changed", onChanged);
@@ -101,7 +102,7 @@ export default function AdminBlogList({ blogs }) {
       .from("blog-categories")
       .select("id, nev, slug, szulo")
       .order("nev", { ascending: true })
-      .then(({ data, error }) => setCats(error ? [] : (data || [])));
+      .then(({ data, error }) => setCats(error ? [] : data || []));
   }, [supabase]);
 
   const catById = useMemo(() => {
@@ -110,45 +111,25 @@ export default function AdminBlogList({ blogs }) {
     return m;
   }, [cats]);
 
-  // id -> név (ha nincs, fallback)
-const nameOf = (id) => catById.get(String(id))?.nev || `#${id}`;
+  const nameOf = (id) => catById.get(String(id))?.nev || `#${id}`;
 
-// leafId -> [root,...,leaf] path
-const getPathIds = (leafId) => {
-  const path = [];
-  let cur = catById.get(String(leafId));
-  let depth = 0;
-  while (cur && depth < 32) {
-    path.push(cur.id);
-    cur = cur.szulo == null ? null : catById.get(String(cur.szulo));
-    depth++;
-  }
-  return path.reverse();
-};
-
-// path -> "A > B > C"
-const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
-
-
-  const makeCatBreadcrumb = (catId) => {
-    if (catId == null) return "";
-    const parts = [];
-    const seen = new Set();
-    let pid = Number(catId);
+  const getPathIds = (leafId) => {
+    const path = [];
+    let cur = catById.get(String(leafId));
     let depth = 0;
-
-    while (pid != null && depth < 12) {
-      const node = catById.get(String(pid));
-      if (!node) break;
-      parts.push(node.nev || `#${node.id}`);
-      if (node.szulo == null) break;
-      const key = String(node.szulo);
-      if (seen.has(key)) break;
-      seen.add(key);
-      pid = Number(node.szulo);
+    while (cur && depth < 32) {
+      path.push(cur.id);
+      cur = cur.szulo == null ? null : catById.get(String(cur.szulo));
       depth++;
     }
-    return parts.reverse().join(" > ");
+    return path.reverse();
+  };
+
+  const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
+
+  const blogCategoryTexts = (blog) => {
+    const paths = parseCategoryPaths(blog.kategoria ?? blog.kategoriak, getPathIds);
+    return paths.map((p) => breadcrumbFromPath(p));
   };
 
   const [blogTags, setBlogTags] = useState([]);
@@ -157,7 +138,7 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
       .from("blog-tags")
       .select("id, nev, slug")
       .order("nev", { ascending: true })
-      .then(({ data, error }) => setBlogTags(error ? [] : (data || [])));
+      .then(({ data, error }) => setBlogTags(error ? [] : data || []));
   }, [supabase]);
 
   const tagById = useMemo(() => {
@@ -166,20 +147,11 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
     return m;
   }, [blogTags]);
 
-  const blogCategoryTexts = (blog) => {
-  // 'kategoria' oszlop: lehet [[...],[...]] vagy lapos id-lista/JSON
-  const paths = parseCategoryPaths(blog.kategoria ?? blog.kategoriak, getPathIds);
-  return paths.map((p) => breadcrumbFromPath(p));
-};
-
-
   const blogTagNames = (blog) => {
-  const ids = parseIdArray(blog.cimke ?? blog.cimkek ?? blog.tags);
-  return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
-};
+    const ids = parseIdArray(blog.cimke ?? blog.cimkek ?? blog.tags);
+    return ids.map((id) => tagById.get(String(id))?.nev).filter(Boolean);
+  };
 
-
-  // keresés
   const filtered = useMemo(() => {
     if (!searchTerm) return rows;
     const term = searchTerm.toLowerCase();
@@ -188,8 +160,8 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
       const tagsTxt = blogTagNames(b).join(" ; ").toLowerCase();
       return (
         b.id?.toString().toLowerCase().includes(term) ||
-        b.cim?.toLowerCase().includes(term) ||          // blog cím
-        b.nev?.toLowerCase().includes(term) ||          // ha nálad "nev"-ként van
+        b.cim?.toLowerCase().includes(term) ||
+        b.nev?.toLowerCase().includes(term) ||
         b.slug?.toLowerCase().includes(term) ||
         b.kivonat?.toLowerCase().includes(term) ||
         b.leiras?.toLowerCase().includes(term) ||
@@ -209,23 +181,45 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
     );
   }
 
-  // kép mező becslés (borítókép)
   const getCover = (b) => b.kep || b.og_image || b.cover || "/default.png";
 
   return (
     <>
       {/* ====== Táblázat (md és fölötte) ====== */}
-      <div className="hidden md:block px-6">
-        <div className="w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
-          <table className="w-full table-auto text-sm">
+      <div className="hidden md:block px-3 md:px-6">
+        <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
+          <table className="min-w-full text-sm">
             <thead className="bg-[#f5f5f5] sticky top-0 z-10">
               <tr>
-                <th className="text-left font-semibold px-3 py-3 min-w-[260px]">Cím</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[220px]">Slug</th>
-                <th className="text-left font-semibold px-3 py-3">Kategória</th>
-                <th className="text-left font-semibold px-3 py-3">Címkék</th>
-                <th className="text-left font-semibold px-3 py-3 min-w-[140px]">Állapot</th>
-                <th className="text-right font-semibold px-3 py-3 min-w-[140px]">Műveletek</th>
+                {/* Cím – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Cím
+                </th>
+
+                {/* Slug – lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Slug
+                </th>
+
+                {/* Kategória – lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Kategória
+                </th>
+
+                {/* Címkék – xl-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">
+                  Címkék
+                </th>
+
+                {/* Állapot – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Állapot
+                </th>
+
+                {/* Műveletek – fix szélesség */}
+                <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">
+                  Műveletek
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -239,7 +233,7 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
                     key={blog.id}
                     className="border-t border-[var(--border)] hover:bg-gray-50"
                   >
-                    {/* Cím + ID + kép */}
+                    {/* Cím + ID + kép – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       <div className="flex items-center gap-3">
                         <Image
@@ -250,14 +244,18 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
                           className="rounded-md flex-none object-cover"
                         />
                         <div className="min-w-0">
-                          <div className="font-semibold truncate">{blog.cim || blog.nev}</div>
-                          <div className="text-xs text-gray-500 truncate">#{blog.id}</div>
+                          <div className="font-semibold truncate">
+                            {blog.cim || blog.nev}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            #{blog.id}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Slug */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Slug – lg+ */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       {blog.slug ? (
                         <span className="font-medium">{blog.slug}</span>
                       ) : (
@@ -265,12 +263,14 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
                       )}
                     </td>
 
-                    {/* Kategória(ák) */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Kategória – lg+ */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
                       {catsTxt.length ? (
                         <div className="flex flex-col">
                           {catsTxt.map((t, i) => (
-                            <span key={i} className="font-medium line-clamp-2">{t}</span>
+                            <span key={i} className="font-medium line-clamp-2">
+                              {t}
+                            </span>
                           ))}
                         </div>
                       ) : (
@@ -278,26 +278,32 @@ const breadcrumbFromPath = (path) => path.map((id) => nameOf(id)).join(" > ");
                       )}
                     </td>
 
-                    {/* Címkék */}
-                    <td className="px-3 py-3 align-middle">
+                    {/* Címkék – xl+ */}
+                    <td className="px-3 py-3 align-middle hidden xl:table-cell">
                       {tagsTxt.length ? (
-                        <span className="font-medium line-clamp-2">{tagsTxt.join(", ")}</span>
+                        <span className="font-medium line-clamp-2">
+                          {tagsTxt.join(", ")}
+                        </span>
                       ) : (
                         <span className="text-gray-500">—</span>
                       )}
                     </td>
 
-                    {/* Állapot */}
+                    {/* Állapot – mindig látszik */}
                     <td className="px-3 py-3 align-middle">
                       {blog.kozzeteve ? (
-                        <span className="font-bold text-[var(--green)]">Közzétéve</span>
+                        <span className="font-bold text-[var(--green)]">
+                          Közzétéve
+                        </span>
                       ) : (
-                        <span className="font-bold text-[var(--warning)]">Vázlat</span>
+                        <span className="font-bold text-[var(--warning)]">
+                          Vázlat
+                        </span>
                       )}
                     </td>
 
-                    {/* Műveletek – fél-fél kattintható terület */}
-                    <td className="pl-3 align-middle">
+                    {/* Műveletek */}
+                    <td className="pl-3 align-middle w-[140px] min-w-[140px]">
                       <div className="flex items-center justify-end gap-0 h-[72px]">
                         <Link
                           href={href}
