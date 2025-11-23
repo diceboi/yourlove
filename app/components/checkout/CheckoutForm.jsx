@@ -1,3 +1,5 @@
+// app/components/checkout/CheckoutForm.jsx
+
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -7,7 +9,7 @@ import { TbCheck } from "react-icons/tb"
 import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-export default function CheckoutStepper() {
+export default function CheckoutStepper({ initialProfile, savedAddresses = [], defaultAddress }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [pending, setPending] = useState(false)
@@ -15,13 +17,18 @@ export default function CheckoutStepper() {
   const [cityOptions, setCityOptions] = useState([])
   const [zipLoading, setZipLoading] = useState(false)
   const [dial, setDial] = useState('+36')
-  const [touched, setTouched] = useState({}) // hibaszövegekhez
+  const [touched, setTouched] = useState({})
 
-  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const PHONE_REGEX = /^\+?\d{2,3}[\s]?\d{1,2}[\s]?\d{3}[\s]?\d{3,4}$/;
-  const HUNGARIAN_PHONE_REGEX = /^\+36\s?(1|20|21|30|31|50|70|71|72|73|75|76|77|78|79)\s?\d{3}\s?\d{3,4}$/;
-  // Általános fallback nemzetközi számokra (+43, +49 stb.)
-  const GENERIC_PHONE_REGEX = /^\+\d{2,3}\s?\d{6,12}$/;
+  // számlázási cím állapot
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true)
+  const [saveShippingAddress, setSaveShippingAddress] = useState(false)
+
+  // MENTETT CÍM VÁLASZTÁS: id vagy 'custom'
+  const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || 'custom')
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const HUNGARIAN_PHONE_REGEX = /^\+36\s?(1|20|21|30|31|50|70|71|72|73|75|76|77|78|79)\s?\d{3}\s?\d{3,4}$/
+  const GENERIC_PHONE_REGEX = /^\+\d{2,3}\s?\d{6,12}$/
 
   const [form, setForm] = useState({
     firstname: '',
@@ -32,6 +39,10 @@ export default function CheckoutStepper() {
     city: '',
     address: '',
     address_extra: '',
+    billing_zip: '',
+    billing_city: '',
+    billing_address: '',
+    billing_address_extra: '',
     notes: '',
     shipping: '',
     payment: ''
@@ -40,7 +51,54 @@ export default function CheckoutStepper() {
   const update = (k, v) => setForm(s => ({ ...s, [k]: v }))
   const markTouched = (k) => setTouched(s => ({ ...s, [k]: true }))
 
-  // --- ZIP autokitöltés
+  // --- Telefonszám parse a DB-ből (06, +36, stb. levágás) ---
+  function parsePhoneFromDB(phone) {
+    if (!phone) return { dial: '+36', local: '' }
+    let raw = phone.trim()
+    const clean = raw.replace(/[^+\d]/g, '')
+
+    if (clean.startsWith('+36')) return { dial: '+36', local: clean.slice(3) }
+    if (clean.startsWith('0036')) return { dial: '+36', local: clean.slice(4) }
+    if (clean.startsWith('06')) return { dial: '+36', local: clean.slice(2) }
+    if (clean.startsWith('36') && clean.length >= 10) return { dial: '+36', local: clean.slice(2) }
+
+    if (clean.startsWith('+')) {
+      const match = clean.match(/^(\+\d{2,3})(\d*)$/)
+      if (match) return { dial: match[1], local: match[2] || '' }
+    }
+    return { dial: '+36', local: clean }
+  }
+
+  // --- PREFILL: user_profiles ---
+  useEffect(() => {
+    if (!initialProfile) return
+    const { firstname, lastname, email, phone } = initialProfile
+    const ph = parsePhoneFromDB(phone)
+
+    setDial(ph.dial)
+    setForm(s => ({
+      ...s,
+      firstname: firstname || '',
+      lastname: lastname || '',
+      email: email || '',
+      phone: ph.local || '',
+    }))
+  }, [initialProfile])
+
+  // --- PREFILL: defaultAddress szállítási cím + selectedAddressId inicializálás ---
+  useEffect(() => {
+    if (!defaultAddress) return
+    setSelectedAddressId(defaultAddress.id)
+    setForm(s => ({
+      ...s,
+      zip: s.zip || defaultAddress.zip || '',
+      city: s.city || defaultAddress.city || '',
+      address: s.address || defaultAddress.line1 || '',
+      // address_extra marad, mert a line1-ben lehet minden
+    }))
+  }, [defaultAddress])
+
+  // --- ZIP autokitöltés ---
   useEffect(() => {
     const zip = (form.zip || '').replace(/\D/g, '')
     if (zip.length !== 4) { setCityOptions([]); return }
@@ -62,45 +120,89 @@ export default function CheckoutStepper() {
     return () => { stop = true }
   }, [form.zip])
 
-  // --- Telefon formázás
-  function formatPhone(local, dial) {
-    const digits = (local || '').replace(/\D/g, '')
-
-    if (dial === '+36') {
-      if (digits.length <= 2) return digits
-      if (digits.length <= 5)
-        return `${digits.slice(0, 2)} ${digits.slice(2)}`
-      if (digits.length <= 8)
-        return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`
-      return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 9)}`
-    }
-
-    // egyéb országkódok: csak csoportosítva, de egyszerűen
-    if (digits.length > 4) {
-      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
-    }
-    return digits
+  // --- cím normalizálás + összehasonlítás mentett címekkel ---
+  function normalizeAddress(addr) {
+    if (!addr) return ''
+    const parts = [
+      addr.zip,
+      addr.city,
+      addr.address,
+      addr.address_extra,
+    ]
+      .map(x => (x || '').trim().toLowerCase())
+      .filter(Boolean)
+    return parts.join('|')
   }
 
-  // --- VALIDATION szabályok
-  const required = {
-    1: ['lastname', 'firstname', 'email', 'phone'],
-    2: ['shipping'],
-    3: ['zip', 'city', 'address'],
+  const hasMatchingSavedAddress = useMemo(() => {
+    if (!savedAddresses || !savedAddresses.length) return false
+    const current = {
+      zip: form.zip,
+      city: form.city,
+      address: form.address,
+      address_extra: form.address_extra,
+    }
+    const normCurrent = normalizeAddress(current)
+    if (!normCurrent) return false
+    return savedAddresses.some(a =>
+      normalizeAddress({
+        zip: a.zip,
+        city: a.city,
+        address: a.line1,
+        address_extra: '',
+      }) === normCurrent
+    )
+  }, [savedAddresses, form.zip, form.city, form.address, form.address_extra])
+
+  // ha már létező cím, ne legyen bekapcsolva a mentés
+  useEffect(() => {
+    if (hasMatchingSavedAddress && saveShippingAddress) {
+      setSaveShippingAddress(false)
+    }
+  }, [hasMatchingSavedAddress, saveShippingAddress])
+
+  // --- MENTETT CÍM VÁLASZTÓ LOGIKA ---
+  function applySavedAddress(addr) {
+    if (!addr) return
+    setForm(s => ({
+      ...s,
+      zip: addr.zip || '',
+      city: addr.city || '',
+      address: addr.line1 || '',
+      address_extra: '',
+    }))
   }
 
+  function handleSelectAddress(id) {
+    setSelectedAddressId(id)
+    const addr = savedAddresses.find(a => a.id === id)
+    if (addr) {
+      applySavedAddress(addr)
+    }
+  }
+
+  // --- VALIDATION ---
   function validateStep(s) {
-    const req = required[s] || []
-    const invalid = req.filter(f => !form[f]?.trim())
+    let requiredFields = []
+    if (s === 1) {
+      requiredFields = ['lastname', 'firstname', 'email', 'phone']
+    } else if (s === 2) {
+      requiredFields = ['shipping']
+    } else if (s === 3) {
+      if (billingSameAsShipping) {
+        requiredFields = ['zip', 'city', 'address']
+      } else {
+        requiredFields = ['zip', 'city', 'address', 'billing_zip', 'billing_city', 'billing_address']
+      }
+    }
 
-    // alap üres mezők
+    const invalid = requiredFields.filter(f => !form[f]?.trim())
     if (invalid.length > 0) {
       invalid.forEach(markTouched)
       toast.error('Kérjük, töltsd ki a kötelező mezőket!')
       return false
     }
 
-    // extra regex validálás (email, telefon)
     if (s === 1) {
       if (!EMAIL_REGEX.test(form.email.trim())) {
         markTouched('email')
@@ -122,7 +224,6 @@ export default function CheckoutStepper() {
     return true
   }
 
-
   const next = () => {
     if (validateStep(step)) setStep(s => Math.min(4, s + 1))
   }
@@ -138,8 +239,10 @@ export default function CheckoutStepper() {
 
       const res = await createOrderFromCart({
         ...form,
-        name: fullName, // ha a backend 'name'-et vár
-        phone: fullPhone
+        name: fullName,
+        phone: fullPhone,
+        billingDifferent: !billingSameAsShipping,
+        saveShippingAddress,
       })
 
       if (!res?.ok) throw new Error(res?.message || 'Hiba történt a rendelés leadása során.')
@@ -151,15 +254,24 @@ export default function CheckoutStepper() {
     }
   }
 
-
-  // --- SEGÉDFÜGGVÉNY a hibákhoz
   const errorText = (field) => {
     if (!touched[field]) return ''
 
     const val = form[field]?.trim() || ''
-    if (!val) return 'A mező kitöltése kötelező'
 
-    if (field === 'email' && !EMAIL_REGEX.test(val)) {
+    const alwaysRequired = ['lastname', 'firstname', 'email', 'phone', 'shipping']
+    const shippingRequired = ['zip', 'city', 'address']
+    const billingRequired = ['billing_zip', 'billing_city', 'billing_address']
+
+    const isBillingField = billingRequired.includes(field)
+    const isRequired =
+      alwaysRequired.includes(field) ||
+      shippingRequired.includes(field) ||
+      (!billingSameAsShipping && isBillingField)
+
+    if (!val && isRequired) return 'A mező kitöltése kötelező'
+
+    if (field === 'email' && val && !EMAIL_REGEX.test(val)) {
       return 'Érvénytelen e-mail formátum'
     }
 
@@ -168,14 +280,15 @@ export default function CheckoutStepper() {
       const ok = dial === '+36'
         ? HUNGARIAN_PHONE_REGEX.test(full)
         : GENERIC_PHONE_REGEX.test(full)
-      if (!ok) return dial === '+36'
-        ? 'Érvénytelen magyar telefonszám formátum'
-        : 'Érvénytelen telefonszám formátum'
+      if (!ok) {
+        return dial === '+36'
+          ? 'Érvénytelen magyar telefonszám formátum'
+          : 'Érvénytelen telefonszám formátum'
+      }
     }
 
     return ''
   }
-
 
   return (
     <div className="lg:w-2/3 w-full mx-auto bg-white rounded-2xl p-6 border border-[var(--border)]">
@@ -202,7 +315,7 @@ export default function CheckoutStepper() {
         })}
       </div>
 
-      {/* STEP CONTENT */}
+      {/* STEP 1 – ELÉRHETŐSÉG */}
       {step === 1 && (
         <div className="grid gap-3">
           {/* Vezetéknév + Keresztnév */}
@@ -246,73 +359,70 @@ export default function CheckoutStepper() {
           </div>
 
           {/* Telefon */}
-            <div>
-              <label className="text-sm font-medium text-gray-700">Telefonszám*</label>
-              <div className="grid grid-cols-3 gap-3 mt-1">
-                <select
-                  className="input min-w-[100px]"
-                  value={dial}
-                  onChange={(e) => setDial(e.target.value)}
-                  aria-label="Országkód"
-                >
-                  <option value="+36">🇭🇺 +36</option>
-                  <option value="+43">🇦🇹 +43</option>
-                  <option value="+421">🇸🇰 +421</option>
-                  <option value="+40">🇷🇴 +40</option>
-                  <option value="+49">🇩🇪 +49</option>
-                </select>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Telefonszám*</label>
+            <div className="grid grid-cols-3 gap-3 mt-1">
+              <select
+                className="input min-w-[100px]"
+                value={dial}
+                onChange={(e) => setDial(e.target.value)}
+                aria-label="Országkód"
+              >
+                <option value="+36">🇭🇺 +36</option>
+                <option value="+43">🇦🇹 +43</option>
+                <option value="+421">🇸🇰 +421</option>
+                <option value="+40">🇷🇴 +40</option>
+                <option value="+49">🇩🇪 +49</option>
+              </select>
 
-                <input
-                  className={`input col-span-2 ${errorText('phone') ? 'border-red-500' : ''}`}
-                  placeholder={dial === '+36' ? '30 123 4567 vagy 1 234 5678' : 'Telefonszám'}
-                  value={form.phone}
-                  onChange={(e) => {
-                    let raw = e.target.value.replace(/\D/g, '').slice(0, 9)
-                    let formatted = raw
+              <input
+                className={`input col-span-2 ${errorText('phone') ? 'border-red-500' : ''}`}
+                placeholder={dial === '+36' ? '30 123 4567 vagy 1 234 5678' : 'Telefonszám'}
+                value={form.phone}
+                onChange={(e) => {
+                  let raw = e.target.value.replace(/\D/g, '').slice(0, 9)
+                  let formatted = raw
 
-                    if (dial === '+36') {
-                      // Magyar formázás
-                      if (raw.startsWith('1')) {
-                        // vezetékes (8 számjegy)
-                        if (raw.length <= 1) formatted = raw
-                        else if (raw.length <= 4) formatted = `1 ${raw.slice(1)}`
-                        else if (raw.length <= 7)
-                          formatted = `1 ${raw.slice(1, 4)} ${raw.slice(4)}`
-                        else formatted = `1 ${raw.slice(1, 4)} ${raw.slice(4, 8)}`
-                      } else {
-                        // mobil (9 számjegy)
-                        if (raw.length <= 2) formatted = raw
-                        else if (raw.length <= 5)
-                          formatted = `${raw.slice(0, 2)} ${raw.slice(2)}`
-                        else if (raw.length <= 8)
-                          formatted = `${raw.slice(0, 2)} ${raw.slice(2, 5)} ${raw.slice(5)}`
-                        else formatted = `${raw.slice(0, 2)} ${raw.slice(2, 5)} ${raw.slice(5, 9)}`
-                      }
+                  if (dial === '+36') {
+                    if (raw.startsWith('1')) {
+                      if (raw.length <= 1) formatted = raw
+                      else if (raw.length <= 4) formatted = `1 ${raw.slice(1)}`
+                      else if (raw.length <= 7)
+                        formatted = `1 ${raw.slice(1, 4)} ${raw.slice(4)}`
+                      else formatted = `1 ${raw.slice(1, 4)} ${raw.slice(4, 8)}`
                     } else {
-                      // Külföldi számoknál csak alap csoportosítás
-                      if (raw.length > 3)
-                        formatted = `${raw.slice(0, 3)} ${raw.slice(3, 6)} ${raw.slice(6)}`
+                      if (raw.length <= 2) formatted = raw
+                      else if (raw.length <= 5)
+                        formatted = `${raw.slice(0, 2)} ${raw.slice(2)}`
+                      else if (raw.length <= 8)
+                        formatted = `${raw.slice(0, 2)} ${raw.slice(2, 5)} ${raw.slice(5)}`
+                      else formatted = `${raw.slice(0, 2)} ${raw.slice(2, 5)} ${raw.slice(5, 9)}`
                     }
+                  } else {
+                    if (raw.length > 3)
+                      formatted = `${raw.slice(0, 3)} ${raw.slice(3, 6)} ${raw.slice(6)}`
+                  }
 
-                    update('phone', formatted.trim())
-                  }}
-                  onBlur={() => markTouched('phone')}
-                  inputMode="tel"
-                />
-              </div>
-
-              <p className="text-xs text-gray-500 mt-1">
-                Teljes szám: <span className="font-medium">{`${dial} ${form.phone}`}</span>
-              </p>
-
-              {errorText('phone') && (
-                <p className="text-red-500 text-xs mt-1">{errorText('phone')}</p>
-              )}
+                  update('phone', formatted.trim())
+                }}
+                onBlur={() => markTouched('phone')}
+                inputMode="tel"
+              />
             </div>
 
+            <p className="text-xs text-gray-500 mt-1">
+              Teljes szám: <span className="font-medium">{`${dial} ${form.phone}`}</span>
+            </p>
+
+            {errorText('phone') && (
+              <p className="text-red-500 text-xs mt-1">{errorText('phone')}</p>
+            )}
           </div>
+
+        </div>
       )}
 
+      {/* STEP 2 – SZÁLLÍTÁS */}
       {step === 2 && (
         <div className="grid gap-3">
           {[
@@ -330,9 +440,61 @@ export default function CheckoutStepper() {
         </div>
       )}
 
+      {/* STEP 3 – CÍMEK + MENTETT CÍM VÁLASZTÁS */}
       {step === 3 && (
-        <div className='flex flex-col gap-3'>
-          <h3 className="font-semibold text-gray-700 mt-4">Számlázási cím</h3>
+        <div className="flex flex-col gap-4">
+          <h3 className="font-semibold text-gray-700 mt-1">Szállítási cím</h3>
+
+          {/* Mentett cím választó */}
+          {savedAddresses.length > 0 && (
+            <div className="mb-2 space-y-2">
+              <p className="text-sm font-medium text-gray-800">Mentett címeid</p>
+              <div className="space-y-1">
+                {savedAddresses.map(addr => (
+                  <label
+                    key={addr.id}
+                    className={`flex items-start gap-2 p-2 rounded-xl border cursor-pointer text-sm
+                      ${selectedAddressId === addr.id ? 'border-[var(--pink)] bg-pink-50' : 'border-[var(--border)]'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="saved-address"
+                      className="mt-1"
+                      value={addr.id}
+                      checked={selectedAddressId === addr.id}
+                      onChange={() => handleSelectAddress(addr.id)}
+                    />
+                    <div>
+                      <div className="font-semibold">
+                        {addr.label || 'Mentett cím'}
+                      </div>
+                      <div className="text-xs text-[var(--tertiary-text)]">
+                        {addr.zip} {addr.city}, {addr.line1}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+
+                {/* Új cím opció */}
+                <label
+                  className={`flex items-center gap-2 p-2 rounded-xl border cursor-pointer text-sm
+                    ${selectedAddressId === 'custom' ? 'border-[var(--pink)] bg-pink-50' : 'border-[var(--border)]'}`}
+                >
+                  <input
+                    type="radio"
+                    name="saved-address"
+                    className=""
+                    value="custom"
+                    checked={selectedAddressId === 'custom'}
+                    onChange={() => setSelectedAddressId('custom')}
+                  />
+                  <span>Másik cím megadása</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Szállítási cím mezők */}
           <div className="grid lg:grid-cols-3 grid-cols-1 gap-3 w-full">
             <div className='w-full'>
               <input
@@ -389,16 +551,119 @@ export default function CheckoutStepper() {
               onChange={e => update('address_extra', e.target.value)}
             />
           </div>
+
+          {/* cím mentése */}
+          <div className="flex flex-col gap-1 mt-2">
+            {hasMatchingSavedAddress ? (
+              <p className="text-xs text-green-700">
+                Ez a cím már el van mentve a fiókodban.
+              </p>
+            ) : (
+              <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={saveShippingAddress}
+                  onChange={e => setSaveShippingAddress(e.target.checked)}
+                />
+                <span>Elmentem ezt a szállítási címet későbbi rendeléshez</span>
+              </label>
+            )}
+          </div>
+
+          {/* számlázási cím pipa */}
+          <div className="mt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-800 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={billingSameAsShipping}
+                onChange={e => setBillingSameAsShipping(e.target.checked)}
+              />
+              <span>A számlázási cím megegyezik a szállítási címmel</span>
+            </label>
+          </div>
+
+          {/* eltérő számlázási cím */}
+          {!billingSameAsShipping && (
+            <div className="mt-3 flex flex-col gap-3 border-t border-[var(--border)] pt-3">
+              <h3 className="font-semibold text-gray-700">Számlázási cím</h3>
+              <div className="grid lg:grid-cols-3 grid-cols-1 gap-3 w-full">
+                <div className='w-full'>
+                  <input
+                    className={`input ${errorText('billing_zip') ? 'border-red-500' : ''} w-full`}
+                    placeholder="Irányítószám"
+                    value={form.billing_zip}
+                    onChange={e=>update('billing_zip', e.target.value.replace(/\D/g, '').slice(0,4))}
+                    inputMode="numeric"
+                    onBlur={()=>markTouched('billing_zip')}
+                  />
+                  {errorText('billing_zip') && <p className="text-red-500 text-xs mt-1">{errorText('billing_zip')}</p>}
+                </div>
+
+                <input
+                  className={`input col-span-2 ${errorText('billing_city') ? 'border-red-500' : ''}`}
+                  placeholder="Város"
+                  value={form.billing_city}
+                  onChange={e=>update('billing_city', e.target.value)}
+                  onBlur={()=>markTouched('billing_city')}
+                />
+                {errorText('billing_city') && <p className="text-red-500 text-xs mt-1 col-span-3">{errorText('billing_city')}</p>}
+              </div>
+
+              <div>
+                <input
+                  className={`input ${errorText('billing_address') ? 'border-red-500' : ''} w-full`}
+                  placeholder="Cím (utca, házszám)"
+                  value={form.billing_address}
+                  onChange={e=>update('billing_address', e.target.value)}
+                  onBlur={()=>markTouched('billing_address')}
+                />
+                {errorText('billing_address') && <p className="text-red-500 text-xs mt-1">{errorText('billing_address')}</p>}
+              </div>
+
+              <div>
+                <input
+                  className="input w-full"
+                  placeholder="Emelet, ajtó (opcionális)"
+                  value={form.billing_address_extra}
+                  onChange={e => update('billing_address_extra', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* STEP 4 – ÖSSZEGZÉS */}
       {step === 4 && (
-        <div className="text-sm text-gray-700">
+        <div className="text-sm text-gray-700 space-y-2">
           <p><strong>Név:</strong> {form.lastname} {form.firstname}</p>
           <p><strong>E-mail:</strong> {form.email}</p>
           <p><strong>Telefon:</strong> {`${dial} ${form.phone}`}</p>
-          <p><strong>Szállítás:</strong> {form.shipping}</p>
-          <p><strong>Cím:</strong> {form.zip} {form.city}, {form.address} {form.address_extra && `, ${form.address_extra}`}</p>
+          <p><strong>Szállítási mód:</strong> {form.shipping || '–'}</p>
+
+          <div className="mt-3">
+            <p className="font-semibold">Szállítási cím</p>
+            <p>{form.zip} {form.city}</p>
+            <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
+          </div>
+
+          <div className="mt-3">
+            <p className="font-semibold">Számlázási cím</p>
+            {billingSameAsShipping ? (
+              <>
+                <p>{form.zip} {form.city}</p>
+                <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
+              </>
+            ) : (
+              <>
+                <p>{form.billing_zip} {form.billing_city}</p>
+                <p>{form.billing_address}{form.billing_address_extra && `, ${form.billing_address_extra}`}</p>
+              </>
+            )}
+          </div>
+
           <textarea
             className="input mt-3 w-full"
             placeholder="Megjegyzés"

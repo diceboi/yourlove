@@ -4,7 +4,7 @@ import { TbBrandFacebook, TbBrandYoutube, TbBrandTiktok } from "react-icons/tb"
 
 export default function TopMenu() {
   return (
-    <div className="bg-[var(--black)]">
+    <div className="bg-[var(--black)] z-[999]">
       <div className="flex flex-nowrap min-h-8 items-center justify-between w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto">
         <div className="flex flex-nowrap gap-4 min-w-fit">
           <div className="flex flex-nowrap gap-2">

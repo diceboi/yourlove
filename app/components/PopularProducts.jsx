@@ -20,8 +20,8 @@ export default async function PopularProducts() {
       <ProductList
         products={products}
         slidesPerView640={1.5}
-        slidesPerView768={2.5}
-        slidesPerView1024={3}
+        slidesPerView768={3.5}
+        slidesPerView1024={4}
         slidesPerView1280={4}
         slidesPerView1440={5}
       />

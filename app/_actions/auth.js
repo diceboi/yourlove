@@ -38,7 +38,7 @@ export async function signUp(formData) {
 
   if (error) {
     return {
-      status: error.message,
+      status: "Erősítd meg az email címedet az email fiókodba kapott linkre kattintva.",
       user: null,
     };
   }
@@ -80,8 +80,19 @@ export async function singIn(formData) {
   });
 
   if (error) {
+    let customMessage = "Sikertelen bejelentkezés. Kérjük, próbáld újra.";
+
+    // Példák – ezek az `error.message`-ből jöhetnek (angolul):
+    if (error.message.includes("Invalid login credentials")) {
+      customMessage = "Hibás e-mail cím vagy jelszó.";
+    } else if (error.message.includes("Email not confirmed")) {
+      customMessage = "Még nem erősítetted meg az e-mail címed. Kérjük, ellenőrizd a postafiókodat.";
+    } else if (error.message.includes("Email not found")) {
+      customMessage = "Ezzel az e-mail címmel nem található felhasználó.";
+    }
+
     return {
-      status: error.message,
+      status: customMessage, // ← Ezt fogod kiírni a komponensben
       user: null,
     };
   }
@@ -89,6 +100,7 @@ export async function singIn(formData) {
   revalidatePath("/", "layout");
   return { status: "success", user: data?.user };
 }
+
 
 export async function signOut() {
   const supabase = await createClient();

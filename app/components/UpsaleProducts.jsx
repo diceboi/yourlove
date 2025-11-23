@@ -9,7 +9,6 @@ export default function UpsaleProducts({products}) {
   return (
     <div id="upsale" className="flex flex-col gap-4 w-full">
       <div className="flex flex-nowrap items-center gap-4">
-        <TbShoppingCartPlus className="text-[var(--pink)] w-10 h-10" />
         <div className="flex flex-col gap-2">
           <H3>Dobj még valamit a kosárba!</H3>
         </div>

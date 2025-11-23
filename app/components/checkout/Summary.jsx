@@ -34,7 +34,7 @@ export default async function Summary() {
         <div className="p-4 border-t border-[var(--border)] bg-white">
           {items?.length ? (
             <>
-              <ul className="divide-y">
+              <ul className="">
                 {items.map((it) => {
                   const name =
                     [it?.product?.fo_cim, it?.product?.alcim]
@@ -42,7 +42,7 @@ export default async function Summary() {
                       .join(' ') || 'Termék'
                   const img = it?.product?.termekkep || null
                   return (
-                    <li key={it.id} className="py-3 flex gap-3">
+                    <li key={it.id} className="py-3 flex gap-3 border-b border-white">
                       {img ? (
                         <Image
                           src={img}
@@ -88,7 +88,7 @@ export default async function Summary() {
           <div className="text-sm text-gray-600">A kosarad üres.</div>
         ) : (
           <>
-            <ul className="divide-y">
+            <ul className="">
               {items.map((it) => {
                 const name =
                   [it?.product?.fo_cim, it?.product?.alcim]
@@ -96,7 +96,7 @@ export default async function Summary() {
                     .join(' ') || 'Termék'
                 const img = it?.product?.termekkep || null
                 return (
-                  <li key={it.id} className="py-3 flex gap-3">
+                  <li key={it.id} className="py-3 flex gap-3 border-b border-white">
                     {img ? (
                       <Image
                         src={img}

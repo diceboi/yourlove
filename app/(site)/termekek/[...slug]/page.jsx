@@ -15,12 +15,35 @@ import ButtonText from "@/app/components/UI/Texts/ButtonText";
 import ProductsInfinite from "@/app/components/products/ProductsInfinite";
 import ProductsPaginated from "@/app/components/products/ProductsPaginated";
 import Link from 'next/link'
+import ProductImageGallerySwiper from "@/app/components/ProductImageGallerySwiper";
+import ProductFAQ from "@/app/components/products/ProductFAQ";
+import H3 from "@/app/components/UI/Texts/H3";
 
 
 /* ---------- Segédfüggvények ---------- */
 
 function safeParseJSON(s) {
   try { return JSON.parse(s) } catch { return null }
+}
+
+function parseGyikString(gyikStr) {
+  if (!gyikStr || typeof gyikStr !== "string") return [];
+
+  // split pontosvesszőkre
+  const parts = gyikStr
+    .split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  const items = [];
+  for (let i = 0; i < parts.length; i += 2) {
+    const q = parts[i];
+    const a = parts[i + 1];
+    if (q && a) {
+      items.push({ q, a });
+    }
+  }
+  return items;
 }
 
 // a products.kategoria (string JSON) -> ID útvonalak tömbje
@@ -138,6 +161,20 @@ export default async function Page({ params, searchParams }) {
     const { slugs: catSlugs, names: catNames } = idsPathToSlugsAndNames(picked, catsById);
     const categoryPath = catSlugs.join("/"); // pl. "noik/fehernemu/melltarto"
 
+    const extraImages = (product.kepgaleria || "")
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+    // első legyen a főkép, utána a galéria
+    const galleryImages = Array.from(
+      new Set(
+        [product.termekkep, ...extraImages].filter(Boolean)
+      )
+    );
+
+    const faqItems = parseGyikString(product.gyik);
+
     return (
       <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
@@ -159,23 +196,33 @@ export default async function Page({ params, searchParams }) {
             <div className="flex lg:flex-row flex-col lg:gap-16 gap-8 w-full">
               <div className="flex flex-col lg:gap-16 gap-8 lg:w-3/5 w-full">
                 {/* képgaléria (rövidített) */}
-                <div className="flex lg:flex-row flex-col-reverse gap-4 w-full">
-                  <div className="relative w-full lg:h-[70vh] h-[40vh]">
-                    <Image
-                      src={product.termekkep}
-                      fill
-                      style={{ objectFit: "contain", objectPosition: "center" }}
-                      alt={product.fo_cim || "Termék kép"}
-                    />
-                  </div>
-                </div>
+                <ProductImageGallerySwiper images={galleryImages} />
 
                 <div className="block lg:hidden">
                   <ProductInfoPanel product={product} />
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <Paragraph>{/* leírás / content */}</Paragraph>
+                  <Paragraph>{product.termekleiras}</Paragraph>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {faqItems.length > 0 && <ProductFAQ items={faqItems} />}
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <H3>Tisztítás</H3>
+                  <Paragraph>{product.tisztitas}</Paragraph>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <H3>Tárolás</H3>
+                  <Paragraph>{product.tarolas}</Paragraph>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <H3>Garancia</H3>
+                  <Paragraph>{product.garancia} év</Paragraph>
                 </div>
 
                 <UpsaleProducts products={productsUnderFreeShipping} />

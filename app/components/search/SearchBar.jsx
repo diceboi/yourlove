@@ -181,7 +181,7 @@ export default function SearchBar() {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute z-50 mt-2 w-full rounded-xl border border-[var(--border)] bg-white shadow-xl"
+            className="absolute z-10 mt-2 w-full rounded-xl border border-[var(--border)] bg-white shadow-xl"
           >
             {/* gyors link a teljes keresésre */}
             {q && (

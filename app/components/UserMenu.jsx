@@ -108,8 +108,8 @@ export default function UserMenu() {
             ) : (
               <TbUser className="xl:min-w-5 xl:min-h-5 min-w-6 min-h-6 text-[var(--pink)]" />
             )}
-            <Paragraph className="xl:flex hidden min-w-fit">
-              {`Szia, ${displayName}`}
+            <Paragraph classname="xl:flex hidden min-w-fit">
+              {`Szia ${displayName}`}
             </Paragraph>
           </>
         )}

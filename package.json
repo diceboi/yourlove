@@ -11,6 +11,8 @@
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.17.6",
     "@next/third-parties": "^15.3.2",
+    "@react-email/components": "^1.0.1",
+    "@react-email/html": "^0.0.11",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.2",
     "@tiptap/extension-color": "^3.4.1",
@@ -43,15 +45,17 @@
     "react-hook-form": "^7.56.3",
     "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",
-    "resend": "^4.5.1",
+    "resend": "^4.8.0",
     "swiper": "^11.2.6",
     "yet-another-react-lightbox": "^3.23.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@react-email/preview-server": "^5.0.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.0.4",
     "@types/react": "^19.1.8",
+    "esbuild": "^0.27.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",

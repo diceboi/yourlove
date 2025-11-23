@@ -72,7 +72,7 @@ export default function MainNav() {
           <div className="flex flex-row w-full justify-between gap-8 z-50 xl:pt-4 pt-2 bg-white">
             <div
               id="desktop-search-logo"
-              className="xl:flex hidden flex-row w-full gap-12 items-center justify-start "
+              className="xl:flex hidden flex-row w-full gap-12 items-center justify-start"
             >
               <Logo />
               <ContactUsMenu/>
@@ -104,16 +104,16 @@ export default function MainNav() {
       <motion.div
         id="mobile-search"
         className="flex xl:hidden bg-white py-2"
-        initial={{ y: 0 }}
-        animate={{ y: isVisible ? 0 : -175 }}
+        initial={{ y: 0, opacity: 1 }}
+        animate={{ y: isVisible ? -8 : -64, opacity: isVisible ? 1 : 0 }}
         transition={{ duration: 0.3 }}
       >
         <div className="w-[calc(100%-32px)] mx-auto py-0">
           <SearchBar />
         </div>
-        <MobileMenuDrawer />
       </motion.div>
     </div>
+    <MobileMenuDrawer />
     </>
   );
 }

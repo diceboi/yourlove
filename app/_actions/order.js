@@ -2,7 +2,11 @@
 
 import { cookies } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
-import { getOrCreateCart } from '@/app/_actions/cart' // már létezik nálad
+import { getOrCreateCart } from '@/app/_actions/cart'
+import { Resend } from "resend"
+import OrderConfirmationEmail from '../../emails/OrderConfirmationEmail'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 function toInt(x) {
   if (x == null) return null
@@ -10,44 +14,126 @@ function toInt(x) {
   return Number.isFinite(n) ? Math.round(n) : null
 }
 
+// cím összehasonlításhoz pici helper
+function normalizeAddress(zip, city, line1) {
+  return [zip, city, line1]
+    .map(v => (v || '').trim().toLowerCase())
+    .filter(Boolean)
+    .join('|')
+}
+
+/* -------------------------------------------------
+   EMAIL KÜLDÉS Resend-del
+-------------------------------------------------- */
+export async function sendOrderEmail({
+  to,
+  name,
+  orderId,
+  items,
+  total,
+  orderDate,
+  billingName,
+  billingZip,
+  billingCity,
+  billingAddress,
+  shippingMethod,
+}) {
+  await resend.emails.send({
+    from: "Rendelés visszaigazolás <info@yourlove.hu>",
+    to,
+    subject: `Rendelés visszaigazolás – #${orderId}`,
+    react: OrderConfirmationEmail({
+      name,
+      orderId,
+      items,
+      total,
+      orderDate,
+      billingName,
+      billingZip,
+      billingCity,
+      billingAddress,
+      shippingMethod,
+    }),
+  })
+}
+
+
+/* -------------------------------------------------
+   FŐ MŰVELET: Rendelés létrehozása a kosárból
+   + számlázási cím logika
+   + user_addresses mentés
+-------------------------------------------------- */
 export async function createOrderFromCart(payload) {
   const sb = await createClient()
 
-  // 1) user beolvasása (ha van session)
+  // 1) user session
   const { data: { user } } = await sb.auth.getUser().catch(() => ({ data: { user: null }}))
 
-  // 2) aktív kosár (cookie alapján)
+  // 2) kosár
   const cart = await getOrCreateCart()
 
-  // ha bejelentkezett és még nincs hozzákötve a kosár:
   if (user && !cart.user_id) {
     await sb.from('carts')
       .update({ user_id: user.id })
       .eq('id', cart.id)
-      .is('user_id', null) // csak ha tényleg null
+      .is('user_id', null)
   }
 
   // 3) kosár tételek
   const { data: items, error: ciErr } = await sb
     .from('cart_items')
-    .select('id, product_id, qty, unit_price_huf')
+    .select(`
+      id,
+      product_id,
+      qty,
+      unit_price_huf,
+      product:products ( fo_cim, alcim )
+    `)
     .eq('cart_id', cart.id)
 
   if (ciErr) return { ok: false, message: ciErr.message }
   if (!items?.length) return { ok: false, message: 'A kosár üres.' }
 
+  // 4) összegzés és line item-ek
   const lines = items.map(it => ({
     product_id: it.product_id,
+    product_name: [it.product?.fo_cim, it.product?.alcim].filter(Boolean).join(" "),
     qty: toInt(it.qty) || 1,
     unit_price_huf: toInt(it.unit_price_huf) || 0,
     line_total_huf: (toInt(it.unit_price_huf) || 0) * (toInt(it.qty) || 1),
   }))
+
   const order_total = lines.reduce((s, l) => s + l.line_total_huf, 0)
 
-  // 4) rendelés létrehozása
+  // --- Címek összerakása (szállítási + számlázási) ---
+
+  // szállítási cím sor
+  const shippingAddressLine = [payload.address, payload.address_extra]
+    .filter(Boolean)
+    .join(', ')
+
+  // ha a frontend küld billingDifferent-et és billing_* mezőket:
+  let billing_zip, billing_city, billing_address
+
+  if (payload.billingDifferent) {
+    billing_zip = payload.billing_zip || payload.zip
+    billing_city = payload.billing_city || payload.city
+    billing_address = [
+      payload.billing_address,
+      payload.billing_address_extra,
+    ]
+      .filter(Boolean)
+      .join(', ') || shippingAddressLine
+  } else {
+    billing_zip = payload.zip
+    billing_city = payload.city
+    billing_address = shippingAddressLine
+  }
+
+  // 5) rendelés beszúrás
   const orderRow = {
     user_id: user?.id ?? null,
-    cart_id: cart.id,                           // << új
+    cart_id: cart.id,
     status: 'processing',
     currency: 'HUF',
     email: payload.email,
@@ -55,38 +141,100 @@ export async function createOrderFromCart(payload) {
     customer_lastname: payload.lastname,
     customer_firstname: payload.firstname,
     shipping_method: payload.shipping || null,
-    billing_zip: payload.zip,
-    billing_city: payload.city,
-    billing_address: [payload.address, payload.address_extra].filter(Boolean).join(', '),
+
+    // FONTOS: itt már a fenti billing_* kerül az orders táblába
+    billing_zip,
+    billing_city,
+    billing_address,
+
     notes: payload.notes || null,
     total_huf: order_total,
-  };
+  }
 
   const { data: created, error: oErr } = await sb
     .from('orders')
     .insert(orderRow)
-    .select('id') // vissza az id
+    .select('id')
     .single()
 
   if (oErr) return { ok: false, message: oErr.message }
 
-  // 5) order_items beszúrás
+  // 6) order_items beszúrás
   const oiRows = lines.map(l => ({
     order_id: created.id,
     product_id: l.product_id,
     qty: l.qty,
     unit_price_huf: l.unit_price_huf,
-    vat_rate: 27,                    // ha van rá meződ; állítsd, amire kell
+    vat_rate: 27,
   }))
 
   const { error: oiErr } = await sb.from('order_items').insert(oiRows)
   if (oiErr) return { ok: false, message: oiErr.message }
 
-  // 6) kosár lezárása
-  await sb.from('carts').update({ status: 'converted' }).eq('id', cart.id); // << 'ordered' helyett
-  await sb.from('cart_items').delete().eq('cart_id', cart.id);
+  // 7) kosár lezárása
+  await sb.from('carts').update({ status: 'converted' }).eq('id', cart.id)
+  await sb.from('cart_items').delete().eq('cart_id', cart.id)
 
-  // (opcionális) rendelés szám generálás, e-mail, stb…
+  // 8) cím mentése user_addresses-be, ha kérte és be van jelentkezve
+  try {
+    if (user && payload.saveShippingAddress) {
+      const line1 = shippingAddressLine
+
+      // meglévő címek betöltése userhez
+      const { data: existing, error: addrErr } = await sb
+        .from('user_addresses')
+        .select('id, zip, city, line1')
+        .eq('user_id', user.id)
+
+      if (!addrErr) {
+        const currentNorm = normalizeAddress(payload.zip, payload.city, line1)
+        const already = existing?.some(a =>
+          normalizeAddress(a.zip, a.city, a.line1) === currentNorm
+        )
+
+        if (!already) {
+          const hasAny = existing && existing.length > 0
+          await sb.from('user_addresses').insert({
+            user_id: user.id,
+            label: 'Pénztárból mentett cím',
+            firstname: payload.firstname,
+            lastname: payload.lastname,
+            country: 'Magyarország',
+            zip: payload.zip,
+            city: payload.city,
+            line1,
+            phone: payload.phone,
+            is_default: hasAny ? false : true,
+          })
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Cím mentése sikertelen:', e)
+    // nem dobunk hibát, az order attól még sikeres marad
+  }
+
+  /* -------------------------------------------------
+     9) EMAIL KÜLDÉS – immár a végleges billing címmel
+  -------------------------------------------------- */
+  await sendOrderEmail({
+    to: payload.email,
+    name: `${payload.lastname} ${payload.firstname}`,
+    orderId: created.id,
+    items: lines.map((l) => ({
+      id: l.product_id,
+      name: l.product_name,
+      qty: l.qty,
+      price: l.unit_price_huf,
+    })),
+    total: order_total,
+    orderDate: new Date().toLocaleString("hu-HU"),
+    billingName: `${payload.lastname} ${payload.firstname}`,
+    billingZip: billing_zip,
+    billingCity: billing_city,
+    billingAddress: billing_address,
+    shippingMethod: payload.shipping,
+  })
 
   return { ok: true, orderId: created.id }
 }

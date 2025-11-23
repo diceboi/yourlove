@@ -17,6 +17,7 @@ import AddToCartButtonMain from "@/app/components/UI/Buttons/AddToCartButtonMain
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import UpsaleProducts from "@/app/components/UpsaleProducts";
 import ProductNameTextSmall from "./UI/Texts/ProductNameTextSmall";
+import SKUText from "./UI/Texts/SKUText";
 
 export default function ProductInfoPanel({product}) {
   const sale = true;
@@ -49,7 +50,8 @@ export default function ProductInfoPanel({product}) {
           hoverbgcolor={"hover:bg-[var(--border)]"}
         />
       </div>
-      <div className="flex flex-col gap-4 py-2">
+      <div className="flex flex-col gap-2 py-2">
+        <SKUText>{product.cikkszam}</SKUText>
         <ManufacturerText>{""}</ManufacturerText>
         <ProductNameTextBig>{product.fo_cim}</ProductNameTextBig>
         <ProductNameTextSmall>{product.alcim}</ProductNameTextSmall>
