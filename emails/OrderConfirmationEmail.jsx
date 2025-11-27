@@ -11,235 +11,370 @@ import {
   Img,
   Link,
 } from "@react-email/components";
+import { Tailwind } from "@react-email/tailwind";
+import React from "react";
+
+/* -------------------------------------------------
+   ÉLES EMAIL TEMPLATE – csak struktúra, props-ból
+-------------------------------------------------- */
 
 export default function OrderConfirmationEmail({
-  name,               // pl. "Kiss Anna"
-  orderId,            // pl. 123
-  items = [],         // [{ id, name, qty, price }]
-  total,              // pl. 8190
-  orderDate,          // pl. "2025. 02. 20. 14:32"
-  billingName,        // pl. "Kiss Anna"
-  billingZip,         // pl. "1111"
-  billingCity,        // pl. "Budapest"
-  billingAddress,     // pl. "Szerelem utca 12. 4/15"
-  shippingMethod,     // pl. "GLS házhozszállítás"
+  name,
+  orderId,
+  items = [],
+  total,
+  orderDate,
+  billingName,
+  billingZip,
+  billingCity,
+  billingAddress,
+  shippingMethod,
+  shippingZip,
+  shippingCity,
+  shippingAddress,
+  wantsInvoice,
+  companyName,
+  companyTaxNumber,
 }) {
+  const safeTotal =
+    typeof total === "number"
+      ? total
+      : items.reduce((sum, it) => sum + it.price * it.qty, 0);
+
   return (
     <Html>
       <Head />
-      <Preview>Köszönjük rendelésed – #{orderId}</Preview>
+      <Preview>Köszönjük rendelésed – #{orderId || "———"}</Preview>
 
-      <Body style={main}>
-        <Container style={container}>
-          {/* LOGÓ */}
-          <Img
-            src="https://yourlove-six.vercel.app/yourlove-logo.svg"
-            width="120"
-            alt="YourLove"
-            style={{ margin: "0 auto 20px" }}
-          />
+      <Tailwind>
+        <Body className="bg-[#f5f5f5] p-5">
+          <Container className="bg-white p-6 rounded-xl font-[system-ui] max-w-xl mx-auto">
 
-          {/* CÍM */}
-          <Heading style={h1}>Köszönjük a rendelésed, {name}!</Heading>
-
-          {/* Rendelés meta adatok */}
-          <Section style={infoSection}>
-            <Text style={labelRow}>
-              <span>Rendelés azonosító:</span>
-              <strong>#{orderId}</strong>
-            </Text>
-            {orderDate && (
-              <Text style={labelRow}>
-                <span>Rendelés dátuma:</span>
-                <strong>{orderDate}</strong>
-              </Text>
-            )}
-            {shippingMethod && (
-              <Text style={labelRow}>
-                <span>Szállítási mód:</span>
-                <strong>{shippingMethod}</strong>
-              </Text>
-            )}
-          </Section>
-
-          {/* TERMÉKLISTA */}
-          {items.length > 0 && (
-            <Section style={box}>
-              {items.map((it) => (
-                <div key={it.id} style={itemRow}>
-                  <span>{it.name}</span>
-                  <span>{it.qty} db</span>
-                  <span>{it.price.toLocaleString("hu-HU")} Ft</span>
-                </div>
-              ))}
-              <Hr />
-              <div style={{ ...itemRow, fontWeight: "bold" }}>
-                <span>Összesen</span>
-                <span></span>
-                <span>{total.toLocaleString("hu-HU")} Ft</span>
-              </div>
+            {/* LOGÓ */}
+            <Section className="text-center mb-5">
+              <Img
+                src="https://yourlove-six.vercel.app/yourlove-logo.svg"
+                width="150"
+                alt="YourLove"
+                className="mx-auto mb-5"
+              />
             </Section>
-          )}
 
-          {/* Számlázási adatok */}
-          <Section style={box}>
-            <Heading as="h2" style={h2}>
-              Számlázási adatok
-            </Heading>
-            <Text style={text}>
-              {billingName && <>{billingName}<br /></>}
-              {billingZip && billingCity && (
-                <>
-                  {billingZip} {billingCity}
-                  <br />
-                </>
-              )}
-              {billingAddress && <>{billingAddress}</>}
-            </Text>
-          </Section>
+            {/* CÍM */}
+            <Section className="text-center mb-4">
+              <Heading className="text-[32px] font-bold text-[#b60c3f] m-0 mb-3">
+                Köszönjük a rendelésed, {name || "Kedves Vásárló"}!
+              </Heading>
+            </Section>
 
-          {/* Info a rendelés megtekintéséről */}
-          <Section style={box}>
-            <Text style={text}>
-              Rendelésedet bármikor megtekintheted, ha bejelentkezel a
-              fiókodba, majd a <strong>„Rendeléseim”</strong> menüpontra
-              kattintasz.
-            </Text>
-          </Section>
+            {/* Rendelés meta – TÁBLÁZATTAL, hogy Gmailben is stabil legyen */}
+            <Section className="mt-2 mb-2">
+              <table
+                width="100%"
+                cellPadding="0"
+                cellSpacing="0"
+                style={{ borderCollapse: "collapse", fontSize: "16px" }}
+              >
+                <tbody>
+                  <tr>
+                    <td style={{ color: "#767676", padding: "2px 0" }}>
+                      Rendelés azonosító:
+                    </td>
+                    <td
+                      style={{
+                        color: "#111111",
+                        padding: "2px 0",
+                        textAlign: "right",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      #{orderId || "———"}
+                    </td>
+                  </tr>
 
-          {/* --- FOOTER --- */}
-          <Section style={footerSection}>
-            {/* Social ikon sor */}
-            <div style={socialRow}>
-              <Link href="https://instagram.com" style={iconLink}>
-                <span style={iconCircle}>IG</span>
-              </Link>
-              <Link href="https://tiktok.com" style={iconLink}>
-                <span style={iconCircle}>TT</span>
-              </Link>
-              <Link href="https://facebook.com" style={iconLink}>
-                <span style={iconCircle}>f</span>
-              </Link>
-            </div>
+                  {orderDate && (
+                    <tr>
+                      <td style={{ color: "#767676", padding: "2px 0" }}>
+                        Rendelés dátuma:
+                      </td>
+                      <td
+                        style={{
+                          color: "#111111",
+                          padding: "2px 0",
+                          textAlign: "right",
+                          fontWeight: 600,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {orderDate}
+                      </td>
+                    </tr>
+                  )}
 
-            {/* Céginfó */}
-            <Text style={footerText}>
-              Ha kérdésed van, egyszerűen válaszolj erre az üzenetre, és
-              hamarosan felvesszük veled a kapcsolatot 🙌 YourLove Kft. – 1111 Budapest, Szerelem
-              utca 12.
-            </Text>
+                  {shippingMethod && (
+                    <tr>
+                      <td style={{ color: "#767676", padding: "2px 0" }}>
+                        Szállítási mód:
+                      </td>
+                      <td
+                        style={{
+                          color: "#111111",
+                          padding: "2px 0",
+                          textAlign: "right",
+                          fontWeight: 600,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {shippingMethod}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </Section>
 
-            {/* Leiratkozás */}
-            {/*<Link href="https://yourlove.hu/unsubscribe" style={unsubscribeLink}>
-              Leiratkozás
-            </Link>*/}
-          </Section>
-        </Container>
-      </Body>
+            {/* TERMÉKLISTA – szintén TÁBLÁZATTAL */}
+            {items.length > 0 && (
+              <Section className="mt-5">
+                <table
+                  width="100%"
+                  cellPadding="0"
+                  cellSpacing="0"
+                  style={{ borderCollapse: "collapse", fontSize: "16px" }}
+                >
+                  <tbody>
+                    {items.map((it, index) => (
+                      <tr
+                        key={it.id || index}
+                        style={{
+                          borderTop: "1px solid #dfdfdf",
+                        }}
+                      >
+                        <td
+                          style={{
+                            padding: "8px 4px 8px 0",
+                            color: "#111111",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {it.name}
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 4px",
+                            color: "#111111",
+                            fontWeight: 600,
+                            textAlign: "center",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {it.qty} db
+                        </td>
+                        <td
+                          style={{
+                            padding: "8px 0 8px 4px",
+                            color: "#b60c3f",
+                            fontWeight: 600,
+                            textAlign: "right",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {Number(it.price).toLocaleString("hu-HU")} Ft
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Zöld elválasztó */}
+                    <tr>
+                      <td colSpan={3} style={{ padding: "0", height: "1px" }}>
+                        <Hr
+                          className="mb-3 border border-[#9ec775]"
+                          style={{ margin: 0, borderColor: "#9ec775" }}
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Összesen sor */}
+                    <tr>
+                      <td
+                        style={{
+                          padding: "8px 4px 0 0",
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          color: "#111111",
+                        }}
+                      >
+                        Összesen
+                      </td>
+                      <td style={{ paddingTop: "8px" }} />
+                      <td
+                        style={{
+                          padding: "8px 0 0 4px",
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          textAlign: "right",
+                          color: "#b60c3f",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {Number(safeTotal).toLocaleString("hu-HU")} Ft
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </Section>
+            )}
+
+            {/* SZÁMLÁZÁSI ADATOK */}
+            <Section className="mt-4 mb-5">
+              <Heading className="text-[16px] font-semibold text-[#111] m-0 mb-2">
+                Számlázási adatok
+              </Heading>
+              <Text className="text-[14px] leading-5 text-[#484848] m-0">
+                {/* Cégnév / adószám – csak ha megadta */}
+                {wantsInvoice && companyName && (
+                  <>
+                    {companyName}
+                    <br />
+                  </>
+                )}
+                {wantsInvoice && companyTaxNumber && (
+                  <>
+                    Adószám: {companyTaxNumber}
+                    <br />
+                  </>
+                )}
+
+                {/* Név + cím */}
+                {billingName && (
+                  <>
+                    {billingName}
+                    <br />
+                  </>
+                )}
+                {(billingZip || billingCity) && (
+                  <>
+                    {billingZip} {billingCity}
+                    <br />
+                  </>
+                )}
+                {billingAddress}
+              </Text>
+            </Section>
+
+            {/* SZÁLLÍTÁSI ADATOK */}
+            <Section className="mt-8 mb-5">
+              <Heading className="text-[16px] font-semibold text-[#111] m-0 mb-2">
+                Szállítási adatok
+              </Heading>
+              <Text className="text-[14px] leading-5 text-[#484848] m-0">
+                {billingName && (
+                  <>
+                    {billingName}
+                    <br />
+                  </>
+                )}
+                {(shippingZip || shippingCity) && (
+                  <>
+                    {shippingZip} {shippingCity}
+                    <br />
+                  </>
+                )}
+                {shippingAddress}
+              </Text>
+            </Section>
+
+            {/* Megtekintés info */}
+            <Section className="mt-5 mb-5">
+              <Text className="text-[14px] leading-5 text-[#484848] m-0">
+                Rendelésedet bármikor megtekintheted, ha bejelentkezel a
+                fiókodba, majd a <strong>„Rendeléseim”</strong> menüpontra
+                kattintasz.
+              </Text>
+            </Section>
+
+            {/* FOOTER */}
+            <Section className="mt-7 pt-6 border-t border-[#dfdfdf] text-center">
+
+              <div className="flex justify-center gap-3 mb-3">
+                <Link href="https://instagram.com" className="no-underline">
+                  <span className="w-8 h-8 rounded-full bg-[#111] text-white flex items-center justify-center text-[14px] font-bold">
+                    IG
+                  </span>
+                </Link>
+                <Link href="https://tiktok.com" className="no-underline">
+                  <span className="w-8 h-8 rounded-full bg-[#111] text-white flex items-center justify-center text-[14px] font-bold">
+                    TT
+                  </span>
+                </Link>
+                <Link href="https://facebook.com" className="no-underline">
+                  <span className="w-8 h-8 rounded-full bg-[#111] text-white flex items-center justify-center text-[14px] font-bold">
+                    f
+                  </span>
+                </Link>
+              </div>
+
+              <Text className="text-[12px] leading-[18px] text-[#767676] m-0">
+                Ha kérdésed van, egyszerűen válaszolj erre az üzenetre, és
+                hamarosan felvesszük veled a kapcsolatot 🙌
+              </Text>
+
+              <Text className="text-[12px] leading-[18px] text-[#767676] m-0">
+                YourLove Kft. – 1111 Budapest, Szerelem utca 12.
+              </Text>
+
+            </Section>
+          </Container>
+        </Body>
+      </Tailwind>
     </Html>
   );
 }
 
-/* --- STÍLUSOK --- */
+/* --------------------------------------------------
+   DUMMY PREVIEW VERZIÓ
+-------------------------------------------------- */
 
-const main = {
-  backgroundColor: "#f5f5f5",   // --grey-bg
-  padding: "20px",
-};
+const dummyItems = [
+  {
+    id: "item-1",
+    name: "Luxus vibrátor – rózsaszín",
+    qty: 1,
+    price: 14990,
+  },
+  {
+    id: "item-2",
+    name: "Síkosító (100 ml)",
+    qty: 2,
+    price: 2990,
+  },
+];
 
-const container = {
-  backgroundColor: "#ffffff",
-  padding: "24px",
-  borderRadius: "12px",
-  fontFamily: "Arial, sans-serif",
-};
+const dummyTotal = dummyItems.reduce(
+  (sum, it) => sum + it.price * it.qty,
+  0
+);
 
-const h1 = {
-  color: "#b60c3f",             // --pink
-  fontSize: "20px",
-  marginBottom: "12px",
-  textAlign: "center",
-};
-
-const h2 = {
-  fontSize: "16px",
-  marginBottom: "8px",
-  color: "#111111",             // --black
-};
-
-const text = {
-  fontSize: "14px",
-  lineHeight: "20px",
-  color: "#484848",              // --secondary-text
-};
-
-const infoSection = {
-  marginTop: "10px",
-  marginBottom: "10px",
-};
-
-const labelRow = {
-  fontSize: "13px",
-  color: "#767676",              // --tertiary-text
-  display: "flex",
-  justifyContent: "space-between",
-};
-
-const box = {
-  marginTop: "20px",
-  marginBottom: "20px",
-};
-
-const itemRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  fontSize: "13px",
-  padding: "4px 0",
-  color: "#111111",              // --black
-};
-
-/* --- FOOTER --- */
-
-const footerSection = {
-  marginTop: "28px",
-  paddingTop: "24px",
-  borderTop: "1px solid #dfdfdf", // --border
-  textAlign: "center",
-};
-
-const socialRow = {
-  display: "flex",
-  justifyContent: "center",
-  gap: "12px",
-  marginBottom: "12px",
-};
-
-const iconLink = {
-  textDecoration: "none",
-};
-
-const iconCircle = {
-  width: "32px",
-  height: "32px",
-  borderRadius: "9999px",
-  backgroundColor: "#111111",    // --black
-  color: "#ffffff",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  fontSize: "14px",
-  fontWeight: "bold",
-};
-
-const footerText = {
-  fontSize: "12px",
-  lineHeight: "18px",
-  color: "#767676",              // --tertiary-text
-  marginBottom: "10px",
-};
-
-const unsubscribeLink = {
-  fontSize: "12px",
-  color: "#767676",
-  textDecoration: "underline",
-};
+export function OrderConfirmationEmailPreview() {
+  return (
+    <OrderConfirmationEmail
+      name="Szász Szabolcs"
+      orderId={123456}
+      orderDate="2025. 02. 20. 14:32"
+      shippingMethod="GLS házhozszállítás"
+      billingName="Kiss Anna"
+      billingZip="1111"
+      billingCity="Budapest"
+      billingAddress="Szerelmem utca 12. 4/15"
+      shippingZip="7400"
+      shippingCity="Kaposvár"
+      shippingAddress="Egyenes út 101."
+      items={dummyItems}
+      total={dummyTotal}
+      wantsInvoice={true}
+      companyName="YourLove Kft."
+      companyTaxNumber="12345678-1-12"
+    />
+  );
+}

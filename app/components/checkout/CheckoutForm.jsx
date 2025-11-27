@@ -23,12 +23,16 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true)
   const [saveShippingAddress, setSaveShippingAddress] = useState(false)
 
+  // Áfás számla állapot
+  const [wantsInvoice, setWantsInvoice] = useState(false)
+
   // MENTETT CÍM VÁLASZTÁS: id vagy 'custom'
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddress?.id || 'custom')
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const HUNGARIAN_PHONE_REGEX = /^\+36\s?(1|20|21|30|31|50|70|71|72|73|75|76|77|78|79)\s?\d{3}\s?\d{3,4}$/
   const GENERIC_PHONE_REGEX = /^\+\d{2,3}\s?\d{6,12}$/
+  const HUNGARIAN_TAX_REGEX = /^\d{8}-\d-\d{2}$/
 
   const [form, setForm] = useState({
     firstname: '',
@@ -45,8 +49,11 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
     billing_address_extra: '',
     notes: '',
     shipping: '',
-    payment: ''
+    payment: '',
+    company_name: '',          // ÚJ
+    company_tax_number: '',    // ÚJ
   })
+
 
   const update = (k, v) => setForm(s => ({ ...s, [k]: v }))
   const markTouched = (k) => setTouched(s => ({ ...s, [k]: true }))
@@ -194,6 +201,11 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
       } else {
         requiredFields = ['zip', 'city', 'address', 'billing_zip', 'billing_city', 'billing_address']
       }
+
+      // ha áfás számlát kér, kötelező a cégnév + adószám
+      if (wantsInvoice) {
+        requiredFields.push('company_name', 'company_tax_number')
+      }
     }
 
     const invalid = requiredFields.filter(f => !form[f]?.trim())
@@ -243,6 +255,7 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
         phone: fullPhone,
         billingDifferent: !billingSameAsShipping,
         saveShippingAddress,
+        wantsInvoice,
       })
 
       if (!res?.ok) throw new Error(res?.message || 'Hiba történt a rendelés leadása során.')
@@ -262,6 +275,7 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
     const alwaysRequired = ['lastname', 'firstname', 'email', 'phone', 'shipping']
     const shippingRequired = ['zip', 'city', 'address']
     const billingRequired = ['billing_zip', 'billing_city', 'billing_address']
+    const invoiceRequired = ['company_name', 'company_tax_number']
 
     const isBillingField = billingRequired.includes(field)
     const isRequired =
@@ -285,6 +299,10 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
           ? 'Érvénytelen magyar telefonszám formátum'
           : 'Érvénytelen telefonszám formátum'
       }
+    }
+
+    if (field === 'company_tax_number' && val && !HUNGARIAN_TAX_REGEX.test(val)) {
+      return 'Érvénytelen adószám formátum (pl. 12345678-1-12)'
     }
 
     return ''
@@ -552,6 +570,54 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
             />
           </div>
 
+          {/* ÁFÁS SZÁMLA KÉRÉSE */}
+          <div className="mt-4 border-t border-[var(--border)] pt-3">
+            <label className="flex items-center gap-2 text-sm text-gray-800 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={wantsInvoice}
+                onChange={e => setWantsInvoice(e.target.checked)}
+              />
+              <span>Áfás számlát kérek cég részére</span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              Ha céges számlát szeretnél, add meg a cégnevét és adószámát. A számlázási cím a fenti
+              mezők alapján kerül kiállításra.
+            </p>
+
+            {wantsInvoice && (
+              <div className="mt-3 flex flex-col gap-3">
+                <div>
+                  <input
+                    className={`input w-full ${errorText('company_name') ? 'border-red-500' : ''}`}
+                    placeholder="Cégnév*"
+                    value={form.company_name}
+                    onChange={e => update('company_name', e.target.value)}
+                    onBlur={() => markTouched('company_name')}
+                  />
+                  {errorText('company_name') && (
+                    <p className="text-red-500 text-xs mt-1">{errorText('company_name')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    className={`input w-full ${errorText('company_tax_number') ? 'border-red-500' : ''}`}
+                    placeholder="Adószám (pl. 12345678-1-12)*"
+                    value={form.company_tax_number}
+                    onChange={e => update('company_tax_number', e.target.value)}
+                    onBlur={() => markTouched('company_tax_number')}
+                  />
+                  {errorText('company_tax_number') && (
+                    <p className="text-red-500 text-xs mt-1">{errorText('company_tax_number')}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+
           {/* cím mentése */}
           <div className="flex flex-col gap-1 mt-2">
             {hasMatchingSavedAddress ? (
@@ -650,19 +716,27 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
           </div>
 
           <div className="mt-3">
-            <p className="font-semibold">Számlázási cím</p>
-            {billingSameAsShipping ? (
-              <>
-                <p>{form.zip} {form.city}</p>
-                <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
-              </>
-            ) : (
-              <>
-                <p>{form.billing_zip} {form.billing_city}</p>
-                <p>{form.billing_address}{form.billing_address_extra && `, ${form.billing_address_extra}`}</p>
-              </>
-            )}
-          </div>
+          <p className="font-semibold">Számlázási adatok</p>
+          {wantsInvoice && form.company_name && (
+            <p><strong>Cégnév:</strong> {form.company_name}</p>
+          )}
+          {wantsInvoice && form.company_tax_number && (
+            <p><strong>Adószám:</strong> {form.company_tax_number}</p>
+          )}
+
+          {billingSameAsShipping ? (
+            <>
+              <p>{form.zip} {form.city}</p>
+              <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
+            </>
+          ) : (
+            <>
+              <p>{form.billing_zip} {form.billing_city}</p>
+              <p>{form.billing_address}{form.billing_address_extra && `, ${form.billing_address_extra}`}</p>
+            </>
+          )}
+        </div>
+
 
           <textarea
             className="input mt-3 w-full"

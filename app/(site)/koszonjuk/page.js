@@ -1,7 +1,10 @@
 import Link from 'next/link'
 
-export default function ThankYou({ searchParams }) {
-  const orderId = searchParams?.order
+export default async function ThankYou({ searchParams }) {
+  
+  const params = await searchParams
+  const orderId = params?.order ?? '—'
+
   return (
     <div className="mx-auto p-6 text-center w-full xl:pt-28 pt-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <h1 className="text-2xl font-semibold mb-2">Köszönjük a rendelést!</h1>

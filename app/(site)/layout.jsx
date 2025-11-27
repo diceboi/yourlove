@@ -24,7 +24,7 @@ export default function SiteLayout({ children }) {
       <body className={`${sora.className}`}>
         <CartUIProvider>
         <ToastContainer
-          position="bottom-right"
+          position="top-center"
           autoClose={3000}
           hideProgressBar={false}
           newestOnTop={false}

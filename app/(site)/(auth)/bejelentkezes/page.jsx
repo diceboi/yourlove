@@ -29,7 +29,8 @@ export default function LoginPage() {
       toast.success("Sikeres bejelentkezés!");
       window.location.href = "/";
     } else {
-      setError(result.status);
+      // 🔥 Itt a lényeg: message-et írd ki, ne a status-t
+      setError(result.message || "Sikertelen bejelentkezés. Kérjük, próbáld újra.");
     }
 
     setLoading(false);

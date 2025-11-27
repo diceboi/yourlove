@@ -23,7 +23,6 @@ export async function signUp(formData) {
   const lastname = formData.get("vezeteknev")?.toString() ?? "";
   const phone = formData.get("telefonszam")?.toString() ?? "";
 
-  // 1️⃣ Supabase Auth regisztráció
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -36,27 +35,43 @@ export async function signUp(formData) {
     },
   });
 
+  // 1️⃣ Ha a Supabase dob hibát
   if (error) {
+    console.error("Supabase signUp error:", error);
+
+    const raw = (error.message || "").toLowerCase();
+    let message = "Sikertelen regisztráció. Kérjük, próbáld újra.";
+
+    if (raw.includes("user already registered") || raw.includes("already registered")) {
+      // Tipikus Supabase hiba, ha az e-mail már foglalt
+      message = "Ezzel az e-mail címmel már létezik felhasználó. Ha nem te regisztráltál, kérj jelszó-visszaállítást.";
+    } else if (raw.includes("password")) {
+      message = "A jelszónak legalább 6 karakter hosszúnak kell lennie.";
+    } else if (raw.includes("rate limit")) {
+      message = "Túl sok próbálkozás történt rövid időn belül. Kérjük, próbáld meg később.";
+    }
+
     return {
-      status: "Erősítd meg az email címedet az email fiókodba kapott linkre kattintva.",
-      user: null,
+      status: "error",
+      message,
+      supabaseMessage: error.message,
     };
   }
 
+  // 2️⃣ Ha nincs error, de az email már be van regisztrálva -> Supabase trükk:
+  // ilyenkor data.user létezik, de identities üres.
   if (data?.user?.identities?.length === 0) {
     return {
-      status: "Ezzel az email címmel már létezik felhasználó",
-      user: null,
+      status: "error",
+      message: "Ezzel az e-mail címmel már regisztráltak. Ha te voltál, kérj új jelszót vagy lépj be.",
     };
   }
 
-  // 2️⃣ Legfontosabb rész: user ID a válaszból
   const userId = data.user.id;
 
-  // 3️⃣ Insert a saját user_profiles táblába
   await supabase.from("user_profiles").insert([
     {
-      id: userId, // ha van uuid meződ
+      id: userId,
       email,
       firstname,
       lastname,
@@ -80,20 +95,20 @@ export async function singIn(formData) {
   });
 
   if (error) {
+    console.error("Supabase signIn error:", error);
+
+    const raw = (error.message || "").toLowerCase();
     let customMessage = "Sikertelen bejelentkezés. Kérjük, próbáld újra.";
 
-    // Példák – ezek az `error.message`-ből jöhetnek (angolul):
-    if (error.message.includes("Invalid login credentials")) {
+    if (raw.includes("invalid login credentials")) {
       customMessage = "Hibás e-mail cím vagy jelszó.";
-    } else if (error.message.includes("Email not confirmed")) {
+    } else if (raw.includes("email not confirmed") || raw.includes("email address not confirmed")) {
       customMessage = "Még nem erősítetted meg az e-mail címed. Kérjük, ellenőrizd a postafiókodat.";
-    } else if (error.message.includes("Email not found")) {
-      customMessage = "Ezzel az e-mail címmel nem található felhasználó.";
     }
 
     return {
-      status: customMessage, // ← Ezt fogod kiírni a komponensben
-      user: null,
+      status: "error",
+      message: customMessage,
     };
   }
 

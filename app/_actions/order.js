@@ -37,6 +37,12 @@ export async function sendOrderEmail({
   billingCity,
   billingAddress,
   shippingMethod,
+  shippingZip,
+  shippingCity,
+  shippingAddress,
+  wantsInvoice,
+  companyName,
+  companyTaxNumber,
 }) {
   await resend.emails.send({
     from: "Rendelés visszaigazolás <info@yourlove.hu>",
@@ -53,10 +59,15 @@ export async function sendOrderEmail({
       billingCity,
       billingAddress,
       shippingMethod,
+      shippingZip,
+      shippingCity,
+      shippingAddress,
+      wantsInvoice,
+      companyName,
+      companyTaxNumber,
     }),
   })
 }
-
 
 /* -------------------------------------------------
    FŐ MŰVELET: Rendelés létrehozása a kosárból
@@ -149,12 +160,16 @@ export async function createOrderFromCart(payload) {
 
     notes: payload.notes || null,
     total_huf: order_total,
+
+    company_name: payload.company_name || null,
+    company_tax_number: payload.company_tax_number || null,
+    wants_vat_invoice: !!payload.wantsInvoice,
   }
 
   const { data: created, error: oErr } = await sb
     .from('orders')
     .insert(orderRow)
-    .select('id')
+    .select('id, order_number')
     .single()
 
   if (oErr) return { ok: false, message: oErr.message }
@@ -217,10 +232,13 @@ export async function createOrderFromCart(payload) {
   /* -------------------------------------------------
      9) EMAIL KÜLDÉS – immár a végleges billing címmel
   -------------------------------------------------- */
+
+  const displayOrderId = String(created.order_number).padStart(6, '0')
+
   await sendOrderEmail({
     to: payload.email,
     name: `${payload.lastname} ${payload.firstname}`,
-    orderId: created.id,
+    orderId: displayOrderId,
     items: lines.map((l) => ({
       id: l.product_id,
       name: l.product_name,
@@ -234,7 +252,13 @@ export async function createOrderFromCart(payload) {
     billingCity: billing_city,
     billingAddress: billing_address,
     shippingMethod: payload.shipping,
+    shippingZip: payload.zip,
+    shippingCity: payload.city,
+    shippingAddress: shippingAddressLine,
+    wantsInvoice: !!payload.wantsInvoice,
+    companyName: payload.company_name || null,
+    companyTaxNumber: payload.company_tax_number || null,
   })
 
-  return { ok: true, orderId: created.id }
+  return { ok: true, orderId: displayOrderId }
 }

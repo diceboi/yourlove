@@ -7,6 +7,7 @@ import { signUp } from "@/app/_actions/auth"
 import GoogleButton from "@/app/components/auth/GoogleButton";
 import H2 from "@/app/components/UI/Texts/H2";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
 
@@ -24,8 +25,9 @@ export default function LoginPage() {
 
     if (result.status === "success") {
       router.push("/bejelentkezes");
+      toast.success("Sikeres regisztráció! Kérjük erősítsd meg az email címedet, az oda küldött linkre kattintva.");
     } else {
-      setError(result.status);
+      setError(result.message || "Sikertelen regisztráció. Kérjük, próbáld újra.");
     }
 
     setLoading(false);
