@@ -27,7 +27,7 @@ function getCategoryPathsFromProduct(product) {
 // ha több útvonal is van, válaszd a leghosszabbat (legmélyebb)
 function pickBestPath(paths) {
   if (!paths.length) return null
-  return paths.slice().sort((a,b)=>b.length-a.length)[0]
+  return paths.slice().sort((a, b) => b.length - a.length)[0]
 }
 
 // adott kategória teljes slug-útvonala gyökerétől
@@ -45,7 +45,7 @@ function buildCategorySlugPath(catId, catsById) {
 /* ---------- Page ---------- */
 export default async function Page({ searchParams }) {
   const supabase = await createClient()
-  const sp = searchParams
+  const sp = await searchParams
 
   const get = (k) => {
     const v = sp?.[k]
@@ -53,29 +53,29 @@ export default async function Page({ searchParams }) {
   }
 
   // Query paramok
-  const arrange      = get("arrange")
-  const color        = get("color")
-  const childSlug    = get("category")
-  const stock        = get("stock")
-  const warranty     = get("warranty")
-  const priceRange   = get("pricerange")
-  const size         = get("size")
-  const weightrange  = get("weightrange")
-  const material     = get("material")
-  const charging     = get("charging")
+  const arrange = get("arrange")
+  const color = get("color")
+  const childSlug = get("category")
+  const stock = get("stock")
+  const warranty = get("warranty")
+  const priceRange = get("pricerange")
+  const size = get("size")
+  const weightrange = get("weightrange")
+  const material = get("material")
+  const charging = get("charging")
   const chargingtime = get("chargingtime")
-  const noise        = get("noise")
-  const waterproof   = get("waterproof")
-  const usetime      = get("usetime")
-  const modes        = get("modes")
-  const speed        = get("speed")
-  const controll     = get("controll")
-  const app          = get("app")
+  const noise = get("noise")
+  const waterproof = get("waterproof")
+  const usetime = get("usetime")
+  const modes = get("modes")
+  const speed = get("speed")
+  const controll = get("controll")
+  const app = get("app")
 
   // ⬇️ Kategóriák (a főkategória boxokhoz + termék útvonal feloldáshoz)
   const { data: allCats = [] } = await supabase
-  .from('product-categories')
-  .select('id, slug, nev, szulo, kozzeteve, icon, kep')
+    .from('product-categories')
+    .select('id, slug, nev, szulo, kozzeteve, icon, kep')
 
   const catsByIdObj = Object.fromEntries(allCats.map(c => [c.id, c]))
   const rootCats = allCats.filter(c =>
@@ -156,11 +156,11 @@ export default async function Page({ searchParams }) {
 
   // Rendezés
   if (arrange === "price-low-to-high") {
-    products.sort((a,b)=> (a.eladasi_ar_brutto ?? 0) - (b.eladasi_ar_brutto ?? 0))
+    products.sort((a, b) => (a.eladasi_ar_brutto ?? 0) - (b.eladasi_ar_brutto ?? 0))
   } else if (arrange === "price-high-to-low") {
-    products.sort((a,b)=> (b.eladasi_ar_brutto ?? 0) - (a.eladasi_ar_brutto ?? 0))
+    products.sort((a, b) => (b.eladasi_ar_brutto ?? 0) - (a.eladasi_ar_brutto ?? 0))
   } else if (arrange === "newest") {
-    products.sort((a,b)=> new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    products.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
   }
 
   return (
@@ -186,7 +186,7 @@ export default async function Page({ searchParams }) {
                              transition-colors whitespace-nowrap text-ellipsis min-w-fit"
                   title={c.nev}
                 >
-                  { (c.kep || c.icon) && <Image src={c.kep || c.icon} alt={c.nev} width={50} height={50} className="rounded" /> }
+                  {(c.kep || c.icon) && <Image src={c.kep || c.icon} alt={c.nev} width={50} height={50} className="rounded" />}
                   {c.nev}
                 </Link>
               ))}

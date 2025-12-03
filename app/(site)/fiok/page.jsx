@@ -5,6 +5,10 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { addToCart as addToCartAction } from '@/app/_actions/cart'
 import H2 from "@/app/components/UI/Texts/H2";
+import H3 from "@/app/components/UI/Texts/H3";
+import H4 from "@/app/components/UI/Texts/H4";
+import { TbShoppingCartShare, TbShoppingCart } from "react-icons/tb"
+import AccountPageSkeleton from "@/app/components/UI/AccountPageSkeleton";
 
 export default function AccountPage() {
   const [section, setSection] = useState("fiokadatok");
@@ -91,8 +95,8 @@ export default function AccountPage() {
       setProfile({
         vezeteknev: fresh.lastname || "",
         keresztnev: fresh.firstname || "",
-        email:      fresh.email || "",
-        telefon:    fresh.phone || "",
+        email: fresh.email || "",
+        telefon: fresh.phone || "",
       })
     }
     // itt jöhet toast/alert: Mentve!
@@ -139,10 +143,11 @@ export default function AccountPage() {
   async function logout() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    window.dispatchEvent(new Event('auth:changed'));
     window.location.href = "/bejelentkezes";
   }
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Betöltés...</div>;
+  if (loading) return <AccountPageSkeleton />;
 
   return (
     <div className="flex flex-col gap-8 w-full xl:py-28 py-20 xl:pb-8 pb-4 px-4 xl:px-12">
@@ -284,7 +289,7 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
       setSaving(true)
       const r = await fetch('/api/account/addresses/default', {
         method: 'POST',
-        headers: { 'Content-Type':'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       })
       if (!r.ok) throw new Error('Nem sikerült alapértelmezetté tenni.')
@@ -331,14 +336,14 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
         if (a._new) {
           const r = await fetch('/api/account/addresses', {
             method: 'POST',
-            headers: { 'Content-Type':'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
           if (!r.ok) throw new Error('Mentési hiba (új cím).')
         } else {
           const r = await fetch(`/api/account/addresses/${a.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type':'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           })
           if (!r.ok) throw new Error('Mentési hiba (frissítés).')
@@ -358,7 +363,7 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
       <div className="flex flex-col gap-4">
         {addresses.map((a) => (
           <div key={a.id} className="rounded-xl border border-gray-200 p-4 opacity-100">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-2 justify-between mb-3">
               <input
                 className="text-base font-medium w-1/2 border border-[var(--border)] p-2 rounded-lg"
                 value={a.nev}
@@ -418,36 +423,37 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
 function OrdersView({ orders, onRebuy }) {
   if (!orders.length) return <p>Még nincs rendelésed.</p>;
 
+  console.log(orders)
+
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4">Korábbi rendelések</h2>
       <div className="flex flex-col gap-4">
         {orders.map((o) => (
-          <div key={o.id} className="rounded-xl border border-gray-200 p-4">
+          <div key={o.id} className="rounded-xl border border-gray-200 p-4 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="text-sm">
-                <div className="font-medium">Rendelés {o.number}</div>
-                <div className="text-gray-600">
-                  {new Date(o.created_at).toLocaleString()} · {formatHuf(o.total)} · {statusLabel(o.status)}
-                </div>
-              </div>
-                <button
-                    className="rounded-lg border px-3 py-1 text-sm hover:bg-gray-50"
-                    onClick={async () => {
-                      for (const it of o.items) {
-                        const pid = it.product_id ?? it.productId;   // <= itt
-                        console.log('rebuy all ->', pid);
-                        await onRebuy(pid, it.qty);
-                      }
-                    }}
+                <H4 className="font-medium">#{o.order_number}</H4>
+                <div className="text-gray-600 flex flex-wrap items-center gap-2">
+                  <span>{new Date(o.created_at).toLocaleString()}</span>
+                  <span>•</span>
+                  <span>{formatHuf(o.total)}</span>
+                  <span
+                    className={
+                      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium " +
+                      statusColor(o.status)
+                    }
                   >
-                    Újravásárlás (összes)
-                  </button>
+                    {statusLabel(o.status)}
+                  </span>
+                </div>
+
+              </div>
             </div>
 
-            <ul className="divide-y">
+            <ul className="">
               {o.items.map((it) => (
-                <li key={it.id} className="py-3 flex items-center justify-between gap-3">
+                <li key={it.id} className="py-3 flex items-center justify-between gap-3 border-b border-[var(--border)]">
                   <div className="min-w-0">
                     <div className="text-sm font-medium truncate">{it.name}</div>
                     <div className="text-xs text-gray-600">
@@ -455,18 +461,32 @@ function OrdersView({ orders, onRebuy }) {
                     </div>
                   </div>
                   <button
-                    className="rounded-lg border px-3 py-1 text-sm hover:bg-gray-50 shrink-0"
+                    className="flex flex-nowrap gap-2 items-center rounded-lg px-3 py-1 text-sm bg-[var(--green)] hover:bg-[var(--green-hover)] cursor-pointer shrink-0"
                     onClick={() => {
                       const pid = it.product_id ?? it.productId;     // <= itt
                       console.log('rebuy one ->', pid);
                       onRebuy(pid, it.qty);
                     }}
                   >
+                    <TbShoppingCart />
                     Kosárba újra
                   </button>
                 </li>
               ))}
             </ul>
+            <button
+              className="flex flex-nowrap gap-2 items-center place-self-end rounded-lg px-3 py-1 text-sm text-white bg-[var(--pink)] hover:bg-[var(--pink-hover)] cursor-pointer"
+              onClick={async () => {
+                for (const it of o.items) {
+                  const pid = it.product_id ?? it.productId;   // <= itt
+                  console.log('rebuy all ->', pid);
+                  await onRebuy(pid, it.qty);
+                }
+              }}
+            >
+              <TbShoppingCartShare />
+              Kosárba az összeset
+            </button>
           </div>
         ))}
       </div>
@@ -480,20 +500,34 @@ function FavoritesView({ favorites, onAddToCart }) {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4">Kedvencek</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <ul className="space-y-2">
         {favorites.map((p) => (
-          <div key={p.id} className="rounded-xl border border-gray-200 p-3">
-            <div className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{p.name}</div>
-            <div className="text-sm text-gray-700 mt-1">{formatHuf(p.price)}</div>
+          <li key={p.id} className="py-3 flex items-center justify-between gap-3 border-b border-[var(--border)]">
+            <div className="flex items-center gap-3 min-w-0">
+              {p.image && (
+                <div className="relative w-12 h-12 shrink-0 rounded overflow-hidden">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{p.name}</div>
+                <div className="text-xs text-gray-600">{formatHuf(p.price)}</div>
+              </div>
+            </div>
             <button
               onClick={() => onAddToCart(p.id)}
-              className="mt-3 w-full rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+              className="flex flex-nowrap gap-2 items-center rounded-lg px-3 py-1 text-sm bg-[var(--pink)] text-white hover:bg-[var(--pink-hover)] cursor-pointer shrink-0"
             >
+              <TbShoppingCart />
               Kosárba
             </button>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -536,17 +570,52 @@ function ReturnInfoView() {
 function formatHuf(v) {
   return new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(v);
 }
-function statusLabel(s) {
-  return (
-    {
-      paid: "Fizetve",
-      shipped: "Feladva",
-      delivered: "Kézbesítve",
-      cancelled: "Törölve",
-      processing: "Feldolgozás alatt",
-    }[s] || s
-  );
+function statusLabel(value) {
+  switch (value) {
+    case "draft":
+      return "Piszkozat"
+    case "neworder":
+      return "Új rendelés"
+    case "processing":
+      return "Feldolgozás alatt"
+    case "pending_payment":
+      return "Fizetésre vár"
+    case "paid":
+      return "Fizetve"
+    case "shipped":
+      return "Kiszállítva"
+    case "delivered":
+      return "Futárnak átadva"
+    case "cancelled":
+      return "Törölve"
+    default:
+      return value || "Ismeretlen"
+  }
 }
+
+function statusColor(value) {
+  switch (value) {
+    case "draft":
+      return "bg-gray-200 text-gray-700"
+    case "neworder":
+      return "bg-[var(--pink)] text-white"
+    case "processing":
+      return "bg-blue-100 text-blue-700"
+    case "pending_payment":
+      return "bg-amber-100 text-amber-700"
+    case "paid":
+      return "bg-emerald-100 text-emerald-700"
+    case "shipped":
+      return "bg-indigo-100 text-indigo-700"
+    case "delivered":
+      return "bg-green-100 text-green-800"
+    case "cancelled":
+      return "bg-red-100 text-red-700"
+    default:
+      return "bg-gray-100 text-gray-700"
+  }
+}
+
 function cryptoRandomId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return Math.random().toString(36).slice(2);

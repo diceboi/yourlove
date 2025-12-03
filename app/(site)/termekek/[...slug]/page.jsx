@@ -119,7 +119,7 @@ function buildCategorySlugPath(catId, catsById) {
 /* ---------- Page ---------- */
 
 export default async function Page({ params, searchParams }) {
-  const { slug } = params;
+  const { slug } = await params;
   const sp = await searchParams;
   const leaf = slug?.[slug.length - 1];
 
@@ -162,9 +162,9 @@ export default async function Page({ params, searchParams }) {
     const categoryPath = catSlugs.join("/"); // pl. "noik/fehernemu/melltarto"
 
     const extraImages = (product.kepgaleria || "")
-    .split(";")
-    .map((s) => s.trim())
-    .filter(Boolean);
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     // első legyen a főkép, utána a galéria
     const galleryImages = Array.from(
@@ -407,7 +407,7 @@ export default async function Page({ params, searchParams }) {
                                 transition-colors whitespace-nowrap text-ellipsis min-w-fit"
                       title={c.nev}
                     >
-                      { (c.kep || c.icon) && <Image src={c.kep || c.icon} alt={c.nev} width={50} height={50} className="rounded" /> }
+                      {(c.kep || c.icon) && <Image src={c.kep || c.icon} alt={c.nev} width={50} height={50} className="rounded" />}
                       {c.nev}
                     </Link>
                   )
@@ -420,30 +420,30 @@ export default async function Page({ params, searchParams }) {
       </div>
 
       <div className="flex md:flex-row flex-col md:gap-16 h-full">
-      <div className="md:sticky top-40 h-full">
-        <FilterDrawerProvider>
-          {/* mobil felső sor: csak a gomb */}
-          <div className="flex items-center justify-end md:hidden mt-4">
-            <FilterToggleButton />
-          </div>
-
-          <div className="md:mt-8 flex gap-6 max-h-[65vh] overflow-y-auto pr-4">
-            {/* DESKTOP oldalsáv */}
-            <div className="hidden md:block w-64 shrink-0">
-              <Suspense fallback={<div>Betöltés...</div>}>
-                <FilterSection slug={category.slug} />
-              </Suspense>
+        <div className="md:sticky top-40 h-full">
+          <FilterDrawerProvider>
+            {/* mobil felső sor: csak a gomb */}
+            <div className="flex items-center justify-end md:hidden mt-4">
+              <FilterToggleButton />
             </div>
-          </div>
 
-          {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
-          <FilterDrawer>
-            <FilterSection slug={category.slug} />
-          </FilterDrawer>
-        </FilterDrawerProvider>
-      </div>
+            <div className="md:mt-8 flex gap-6 max-h-[65vh] overflow-y-auto pr-4">
+              {/* DESKTOP oldalsáv */}
+              <div className="hidden md:block w-64 shrink-0">
+                <Suspense fallback={<div>Betöltés...</div>}>
+                  <FilterSection slug={category.slug} />
+                </Suspense>
+              </div>
+            </div>
 
-      <ProductsPaginated catsByIdObj={catsByIdObj} categoryId={category.id} />
+            {/* MOBIL DRAWER tartalma (ugyanaz a FilterSection) */}
+            <FilterDrawer>
+              <FilterSection slug={category.slug} />
+            </FilterDrawer>
+          </FilterDrawerProvider>
+        </div>
+
+        <ProductsPaginated catsByIdObj={catsByIdObj} categoryId={category.id} />
       </div>
     </div>
   );

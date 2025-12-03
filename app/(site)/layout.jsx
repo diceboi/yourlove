@@ -3,6 +3,10 @@ import "./globals.css";
 import MenuContextProvider from "../MenuContext";
 import { CartUIProvider } from "../components/cart/CartUIProvider";
 import CartDrawer from "../components/cart/CartDrawer";
+import { FavoritesUIProvider } from "../components/favorites/FavoritesUIProvider";
+import FavoritesDrawer from "../components/favorites/FavoritesDrawer";
+import { CompareUIProvider } from "../components/compare/CompareUIProvider";
+import CompareDrawer from "../components/compare/CompareDrawer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bounce } from "react-toastify";
@@ -18,30 +22,36 @@ export const metadata = {
 };
 
 export default function SiteLayout({ children }) {
-  
+
   return (
     <html lang="en">
       <body className={`${sora.className}`}>
         <CartUIProvider>
-        <ToastContainer
-          position="top-center"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick={false}
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          theme="light"
-          transition={Bounce}
-        />
-        <MenuContextProvider>
-          <MainNav />
-        </MenuContextProvider>
-        {children}
-        <Footer/>
-        <CartDrawer />
-        <ScrollToTopButton />
+          <FavoritesUIProvider>
+            <CompareUIProvider>
+              <ToastContainer
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme="light"
+                transition={Bounce}
+              />
+              <MenuContextProvider>
+                <MainNav />
+              </MenuContextProvider>
+              {children}
+              <Footer />
+              <CartDrawer />
+              <FavoritesDrawer />
+              <CompareDrawer />
+              <ScrollToTopButton />
+            </CompareUIProvider>
+          </FavoritesUIProvider>
         </CartUIProvider>
       </body>
     </html>

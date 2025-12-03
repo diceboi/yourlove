@@ -9,7 +9,7 @@ export async function GET() {
   // Orders (minimál mezők: id, user_id, created_at, status, total_huf vagy számoljuk sorokból)
   const { data: orders, error: e1 } = await supabase
     .from("orders")
-    .select("id, created_at, status")
+    .select("id, created_at, status, order_number")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -31,6 +31,7 @@ export async function GET() {
     byOrder.set(o.id, {
       id: o.id,
       number: o.number || o.id,     // ha nincs number, mutatjuk az id-t
+      order_number: o.order_number,
       created_at: o.created_at,
       status: o.status || "processing",
       items: [],

@@ -35,15 +35,15 @@ export default function CartButton() {
     <div className="relative">
       <button
         onClick={toggle}
-        className="xl:w-[44px] w-[40px] xl:h-[44px] h-[40px] rounded-full hover:bg-[var(--border)] flex items-center justify-center"
+        className="xl:w-[44px] w-[40px] xl:h-[44px] h-[40px] rounded-full hover:bg-[var(--border)] flex items-center justify-center cursor-pointer"
         aria-label="Kosár"
       >
-        <TbShoppingCart className="w-6 h-6 text-[var(--pink)]"/>
+        <TbShoppingCart className="w-6 h-6 text-[var(--pink)]" />
       </button>
 
       {count > 0 && (
         <span
-          className="absolute top-1 -right-1 min-w-[18px] h-[18px] px-1
+          className="absolute top-0 -right-0 min-w-[18px] h-[18px] px-1
                      rounded-full bg-[var(--pink)] text-white text-[10px]
                      font-semibold flex items-center justify-center shadow"
           aria-label={`Kosárban ${count} tétel`}

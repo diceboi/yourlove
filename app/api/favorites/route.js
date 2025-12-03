@@ -1,5 +1,6 @@
 // app/api/favorites/route.js
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { requireUser } from '../_utils/auth'
 
 function toInt(v) {
@@ -27,13 +28,11 @@ function computeUnitPrice(p) {
 
 export async function GET() {
   const { user, supabase, resp } = await requireUser()
-  if (!user) return resp
+  // if (!user) return resp // REMOVED for guest support
 
-  // favorites + products join
-  const { data, error } = await supabase
+  let query = supabase
     .from('favorites')
     .select(`
-      id,
       product_id,
       created_at,
       products:product_id (
@@ -43,11 +42,23 @@ export async function GET() {
         eladasi_ar_brutto,
         akcios_ar_brutto,
         akcio_szazalek,
-        akcio_ar
+        akcio_ar,
+        termekkep
       )
     `)
-    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+
+  if (user) {
+    query = query.eq('user_id', user.id)
+  } else {
+    // Guest check
+    const jar = await cookies()
+    const token = jar.get('favorites_token')?.value
+    if (!token) return NextResponse.json([])
+    query = query.eq('session_token', token)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })
@@ -61,6 +72,7 @@ export async function GET() {
       id: p.id || row.product_id,
       name,
       price,
+      image: p.termekkep,
     }
   })
 

@@ -46,6 +46,7 @@
     "react-hook-form": "^7.56.3",
     "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.5.1",
     "resend": "^4.8.0",
     "swiper": "^11.2.6",
     "yet-another-react-lightbox": "^3.23.1"

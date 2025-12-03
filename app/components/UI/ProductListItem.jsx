@@ -82,8 +82,8 @@ export default function ProductListItem({
             product={{ name: product.name, price_huf: product.price_huf, image_url: product.image_url }}
           />
           <div className="flex flex-row gap-2">
-            <FavouriteButton />
-            <CompareButton />
+            <FavouriteButton productId={product.id} />
+            <CompareButton productId={id} />
           </div>
         </div>
 
