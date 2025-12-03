@@ -44,11 +44,12 @@ function formatMoneyHuf(value) {
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Piszkozat" },
+  { value: "neworder", label: "Új rendelés" },
   { value: "processing", label: "Feldolgozás alatt" },
   { value: "pending_payment", label: "Fizetésre vár" },
   { value: "paid", label: "Fizetve" },
   { value: "shipped", label: "Kiszállítva" },
-  { value: "delivered", label: "Átadva" },
+  { value: "delivered", label: "Futárnak átadva" },
   { value: "cancelled", label: "Törölve" },
 ];
 
@@ -56,6 +57,8 @@ function statusColor(value) {
   switch (value) {
     case "draft":
       return "bg-gray-200 text-gray-700";
+    case "neworder":
+      return "bg-[var(--pink)] text-white";
     case "processing":
       return "bg-blue-100 text-blue-700";
     case "pending_payment":
@@ -74,23 +77,23 @@ function statusColor(value) {
 }
 
 export default function AdminOrderEdit({ orders }) {
-  const order = orders; // csak átnevezés kényelemre
+  const order = orders;
   const router = useRouter();
   const supabase = createClient();
 
   if (!order) {
     return (
       <div className="p-6">
-        <p className="text-sm text-red-600">
-          Nem található ilyen rendelés.
-        </p>
+        <p className="text-sm text-red-600">Nem található ilyen rendelés.</p>
       </div>
     );
   }
 
   const [form, setForm] = useState(order);
   const [saving, setSaving] = useState(false);
-  const [statusSaving, setStatusSaving] = useState(false);
+
+  // Eredeti státusz, hogy tudjuk, mentéskor változott-e
+  const [originalStatus, setOriginalStatus] = useState(order.status);
 
   const [items, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -136,60 +139,19 @@ export default function AdminOrderEdit({ orders }) {
     }));
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (newStatus === form.status || statusSaving) return;
-
-    setStatusSaving(true);
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", form.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Status update error", error);
-        toast.error("Hiba történt a státusz frissítésekor.");
-        setStatusSaving(false);
-        return;
-      }
-
-      setForm(data);
-      window.dispatchEvent(new CustomEvent("admin:orders:changed"));
-      toast.success("Státusz frissítve.");
-
-      // Itt hívhatod az emailküldő API-dat
-      try {
-        await fetch("/api/admin/orders/status-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            order_id: data.id,
-            order_number: data.order_number,
-            status: data.status,
-            email: data.email,
-          }),
-        });
-      } catch (err) {
-        console.error("Status email error", err);
-      }
-    } finally {
-      setStatusSaving(false);
-    }
+  // ⬇️ Státusz gomb: csak local state-ben változtat, nem ír DB-be
+  const handleStatusClick = (newStatus) => {
+    setForm((prev) => ({
+      ...prev,
+      status: newStatus,
+    }));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const {
-        id,
-        order_number,
-        created_at,
-        cart_id,
-        user_id,
-        ...updatable
-      } = form;
+      const { id, order_number, created_at, cart_id, user_id, ...updatable } =
+        form;
 
       const { data, error } = await supabase
         .from("orders")
@@ -209,6 +171,28 @@ export default function AdminOrderEdit({ orders }) {
       window.dispatchEvent(new CustomEvent("admin:orders:changed"));
       toast.success("Rendelés mentve.");
       router.refresh();
+
+      // ⬇️ Ha a státusz változott az eredetihez képest, küldj emailt
+      if (data.status !== originalStatus) {
+        try {
+          await fetch("/api/admin/orders/status-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              order_id: data.id,
+              order_number: data.order_number,
+              status: data.status,
+              email: data.email,
+              name:
+                `${data.customer_firstname || ""} ${data.customer_lastname || ""}`.trim() ||
+                "Kedves Vásárló",
+            }),
+          });
+        } catch (err) {
+          console.error("Status email error", err);
+        }
+        setOriginalStatus(data.status);
+      }
     } finally {
       setSaving(false);
     }
@@ -218,13 +202,12 @@ export default function AdminOrderEdit({ orders }) {
     `${form.customer_firstname || ""} ${form.customer_lastname || ""}`.trim() ||
     "Vendég";
 
-  // Jelenleg shipping cím = billing cím (külön shipping mezők hiányában)
   const shippingDisplay = {
     name: fullName,
     zip: form.shipping_zip || form.billing_zip,
     city: form.shipping_city || form.billing_city,
     address: form.shipping_address || form.billing_address,
-    };
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -306,12 +289,12 @@ export default function AdminOrderEdit({ orders }) {
               />
 
               <div className="flex items-center justify-between pt-2">
-                <Label classname="font-bold text-xs">
-                  ÁFA-s számla igény?
-                </Label>
+                <Label classname="font-bold text-xs">ÁFA-s számla igény?</Label>
                 <ToggleSwitch
                   checked={!!form.wants_vat_invoice}
                   onChange={handleVatToggle}
+                  firstlabel={"Nem"}
+                  secondlabel={"Igen"}
                 />
               </div>
 
@@ -345,19 +328,19 @@ export default function AdminOrderEdit({ orders }) {
                 name="shipping_zip"
                 value={form.shipping_zip || ""}
                 handleChange={handleFieldChange}
-                />
-                <SmallTextInput
+              />
+              <SmallTextInput
                 legend="Szállítási város"
                 name="shipping_city"
                 value={form.shipping_city || ""}
                 handleChange={handleFieldChange}
-                />
-                <SmallTextInput
+              />
+              <SmallTextInput
                 legend="Szállítási cím"
                 name="shipping_address"
                 value={form.shipping_address || ""}
                 handleChange={handleFieldChange}
-                />
+              />
             </div>
 
             {/* Számlázási cím */}
@@ -440,8 +423,7 @@ export default function AdminOrderEdit({ orders }) {
               </div>
 
               <Paragraph classname="text-xs text-gray-500">
-                Jelenleg a szállítási cím megegyezik a számlázási címmel (külön
-                shipping mezők nélkül).
+                Szállítási cím az alábbi adatok alapján:
               </Paragraph>
 
               <div className="mt-2 text-sm space-y-1">
@@ -527,11 +509,13 @@ export default function AdminOrderEdit({ orders }) {
               )}
             </div>
 
-            {/* Státuszváltó */}
+            {/* Státuszváltó (csak local state) */}
             <div className="space-y-3 border border-[var(--border)] rounded-2xl p-4 bg-white">
               <H3>Rendelés státusza</H3>
               <Paragraph classname="text-xs text-gray-500">
-                Kattints egy státuszra a módosításhoz. A váltás és az ügyfélnek szánt értesítő email is azonnal kiküldére kerül.
+                Válaszd ki a helyes státuszt. A változás akkor lép életbe és az
+                ügyfélnek szóló értesítő email is akkor megy ki, amikor a{" "}
+                <strong>Mentés</strong> gombra kattintasz.
               </Paragraph>
 
               <div className="flex flex-wrap gap-2 mt-2">
@@ -541,8 +525,8 @@ export default function AdminOrderEdit({ orders }) {
                     <button
                       key={s.value}
                       type="button"
-                      disabled={statusSaving}
-                      onClick={() => handleStatusChange(s.value)}
+                      disabled={saving}
+                      onClick={() => handleStatusClick(s.value)}
                       className={[
                         "px-3 py-1.5 rounded-full text-xs font-medium border transition",
                         isActive

@@ -21,7 +21,6 @@ export default async function BlogCategoriesPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminHero />
           <AdminBlogCategoriesEdit category={category} />
         </div>
       </div>

@@ -21,7 +21,6 @@ export default async function BlogTagsPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminHero />
           <AdminBlogTagsEdit tags={tags} />
         </div>
       </div>

@@ -147,10 +147,10 @@ export default function AccountPage() {
   return (
     <div className="flex flex-col gap-8 w-full xl:py-28 py-20 xl:pb-8 pb-4 px-4 xl:px-12">
       <H2 className="text-2xl font-semibold mb-4">Fiók</H2>
-      <div className="w-full flex flex-col lg:flex-row-reverse gap-6">
+      <div className="w-full flex flex-col-reverse lg:flex-row-reverse gap-6">
         {/* Tartalom */}
         <main className="lg:w-2/3 w-full">
-          <div className="rounded-2xl border border-[var(--border)] p-4 lg:p-6 ">
+          <div className="">
             {section === "fiokadatok" && (
               profile ? (
                 <AccountForm value={profile} onChange={setProfile} onSave={() => saveAccount(profile)} />
@@ -179,8 +179,8 @@ export default function AccountPage() {
         </main>
 
         {/* Sidebar */}
-        <aside className="lg:w-1/3 w-full">
-          <nav className="space-y-2">
+        <aside className="lg:w-1/3 w-full ">
+          <nav className="bg-[var(--grey-bg)] rounded-2xl p-2">
             <MenuButton active={section === "fiokadatok"} onClick={() => setSection("fiokadatok")} label="Fiókadatok" />
             <MenuButton active={section === "cimek"} onClick={() => setSection("cimek")} label="Címadatok" />
             <MenuButton active={section === "rendelesek"} onClick={() => setSection("rendelesek")} label="Korábbi rendelések" />
@@ -190,7 +190,7 @@ export default function AccountPage() {
             <MenuButton active={section === "visszakuldes"} onClick={() => setSection("visszakuldes")} label="Termék visszaküldés" />
             <button
               onClick={logout}
-              className="mt-3 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-left text-sm hover:bg-[var(--pink)] hover:text-white"
+              className="mt-3 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-left text-sm hover:bg-[var(--pink)] hover:text-white cursor-pointer"
             >
               Kijelentkezés
             </button>
@@ -360,7 +360,7 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
           <div key={a.id} className="rounded-xl border border-gray-200 p-4 opacity-100">
             <div className="flex items-center justify-between mb-3">
               <input
-                className="text-base font-medium border-none outline-none w-1/2"
+                className="text-base font-medium w-1/2 border border-[var(--border)] p-2 rounded-lg"
                 value={a.nev}
                 onChange={(e) => update(a.id, { nev: e.target.value })}
                 disabled={saving}
@@ -370,7 +370,7 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
                   <button
                     onClick={() => setDefault(a.id)}
                     disabled={saving}
-                    className="text-xs rounded-lg border px-2 py-1 hover:bg-gray-50"
+                    className="text-xs rounded-lg px-2 py-1 border border-[var(--green)] hover:bg-[var(--green)] cursor-pointer transition-all"
                     title="Legyen alapértelmezett"
                   >
                     Alapértelmezetté tesz
@@ -381,7 +381,7 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
                 <button
                   onClick={() => remove(a.id)}
                   disabled={saving}
-                  className="text-xs rounded-lg border px-2 py-1 hover:bg-gray-50"
+                  className="text-xs rounded-lg px-2 py-1 bg-[var(--error)] hover:bg-[var(--error-hover)] text-white cursor-pointer transition-all"
                 >
                   Törlés
                 </button>
@@ -402,8 +402,8 @@ function AddressManager({ addresses, onChange, onSave, onReload }) {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button onClick={add} disabled={saving} className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-50">+ Új cím</button>
-        <button onClick={save} disabled={saving} className="rounded-xl bg-black text-white px-4 py-2 text-sm hover:bg-black/90">
+        <button onClick={add} disabled={saving} className="rounded-xl px-4 py-2 text-sm bg-[var(--green)] hover:bg-[var(--green-hover)] cursor-pointer">+ Új cím</button>
+        <button onClick={save} disabled={saving} className="rounded-xl text-white px-4 py-2 text-sm bg-[var(--pink)] hover:bg-[var(--pink-hover)] cursor-pointer">
           {saving ? 'Mentés…' : 'Címek mentése'}
         </button>
       </div>

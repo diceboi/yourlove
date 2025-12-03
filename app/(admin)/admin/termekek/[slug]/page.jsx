@@ -21,7 +21,6 @@ export default async function ProductPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminHero />
           <AdminProductEdit product={product} />
         </div>
       </div>
