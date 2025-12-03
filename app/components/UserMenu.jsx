@@ -71,13 +71,13 @@ export default function UserMenu() {
   };
 
   const firstWord = (s) =>
-  (s ?? '').trim().split(/\s+/)[0] || '';
+    (s ?? '').trim().split(/\s+/)[0] || '';
 
   const displayName =
-  userProfile?.firstname
-  || firstWord(user?.user_metadata?.name)
-  || firstWord((user?.email || '').split('@')[0])  // végső fallback
-  || 'Felhasználó';
+    userProfile?.firstname
+    || firstWord(user?.user_metadata?.name)
+    || firstWord((user?.email || '').split('@')[0])  // végső fallback
+    || 'Felhasználó';
 
   return (
     <div
@@ -118,15 +118,15 @@ export default function UserMenu() {
       {dropdownOpen && user && (
         <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full min-w-fit rounded-xl bg-white border border-[var(--border)] overflow-hidden p-2">
           <button
-            onClick={() => router.push("/admin")}
+            onClick={() => router.push("/admin/vezerlopult")}
             className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg"
           >
             <Label>Admin felület</Label>
           </button>
-          <button 
+          <button
             onClick={() => router.push("/fiok")}
             className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
-              <Label>Fiók</Label>
+            <Label>Fiók</Label>
           </button>
           <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
             <Label>Rendelések</Label>
