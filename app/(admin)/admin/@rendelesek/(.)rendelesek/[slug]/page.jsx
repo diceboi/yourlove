@@ -73,7 +73,7 @@ export default function OrdersModal() {
 
   return (
     <Modal openstate={true} onClose={() => router.back()} closeButton={false}>
-      <AdminOrderEdit orders={order} />
+      <AdminOrderEdit order={order} />
     </Modal>
   );
 }
