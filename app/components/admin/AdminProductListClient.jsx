@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import AdminOrderList from './AdminOrderList'
 import { createClient } from '@/utils/supabase/client'
+import AdminProductList from './AdminProductList'
 
 export default function AdminProductListClient() {
   const [products, setProducts] = useState([])
@@ -20,5 +20,5 @@ export default function AdminProductListClient() {
     fetchProducts()
   }, [])
 
-  return <AdminOrderList products={products} loading={loading} />
+  return <AdminProductList products={products} loading={loading} />
 }
