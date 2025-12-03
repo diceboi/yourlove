@@ -76,8 +76,8 @@ function statusColor(value) {
   }
 }
 
-export default function AdminOrderEdit({ orders }) {
-  const order = orders;
+export default function AdminOrderEdit({ order }) {
+  // const order = orders; // Removed redundant assignment
   const router = useRouter();
   const supabase = createClient();
 

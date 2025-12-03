@@ -21,7 +21,7 @@ export default async function OrdersPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminOrderEdit orders={order} />
+          <AdminOrderEdit order={order} />
         </div>
       </div>
     </div>
