@@ -8,6 +8,8 @@ export default function ToggleSwitch({
   checked = false,
   onChange,
   classname = "",
+  firstlabel,
+  secondlabel
 }) {
   return (
     <fieldset className={`flex flex-col h-fit ${classname}`}>
@@ -17,7 +19,7 @@ export default function ToggleSwitch({
         </legend>
       )}
       <div className="flex items-center justify-between rounded-lg p-1 text-sm font-semibold gap-2">
-        <p className='text-xs'>Vázlat</p>
+        <p className='text-xs'>{firstlabel}</p>
         
         <div
           className={`w-12 h-[22px] rounded-full cursor-pointer relative shadow-inner ${checked ? 'bg-[#99fe3480]' : 'bg-[#3499fe81]'}`}
@@ -36,7 +38,7 @@ export default function ToggleSwitch({
           />
         </div>
 
-        <p className='text-xs'>Közzétéve</p>
+        <p className='text-xs'>{secondlabel}</p>
       </div>
     </fieldset>
   )

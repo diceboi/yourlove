@@ -92,15 +92,20 @@ export async function createOrderFromCart(payload) {
 
   // 3) kosár tételek
   const { data: items, error: ciErr } = await sb
-    .from('cart_items')
-    .select(`
-      id,
-      product_id,
-      qty,
-      unit_price_huf,
-      product:products ( fo_cim, alcim )
-    `)
-    .eq('cart_id', cart.id)
+  .from('cart_items')
+  .select(`
+    id,
+    product_id,
+    qty,
+    unit_price_huf,
+    product:products (
+      fo_cim,
+      alcim,
+      termekkep
+    )
+  `)
+  .eq('cart_id', cart.id)
+
 
   if (ciErr) return { ok: false, message: ciErr.message }
   if (!items?.length) return { ok: false, message: 'A kosár üres.' }
@@ -108,40 +113,44 @@ export async function createOrderFromCart(payload) {
   // 4) összegzés és line item-ek
   const lines = items.map(it => ({
     product_id: it.product_id,
-    product_name: [it.product?.fo_cim, it.product?.alcim].filter(Boolean).join(" "),
+    product_name: [it.product?.fo_cim, it.product?.alcim]
+      .filter(Boolean)
+      .join(" "),
+    product_image: it.product?.termekkep || null,  // <-- ÚJ
     qty: toInt(it.qty) || 1,
     unit_price_huf: toInt(it.unit_price_huf) || 0,
     line_total_huf: (toInt(it.unit_price_huf) || 0) * (toInt(it.qty) || 1),
   }))
 
+
   const order_total = lines.reduce((s, l) => s + l.line_total_huf, 0)
 
   // --- Címek összerakása (szállítási + számlázási) ---
 
-  // szállítási cím sor
-  const shippingAddressLine = [payload.address, payload.address_extra]
+  const shipping_zip = payload.zip || null
+  const shipping_city = payload.city || null
+  const shipping_address = [payload.address, payload.address_extra]
     .filter(Boolean)
-    .join(', ')
+    .join(', ') || null
 
-  // ha a frontend küld billingDifferent-et és billing_* mezőket:
+  // számlázási cím logika, ahogy eddig is
   let billing_zip, billing_city, billing_address
 
   if (payload.billingDifferent) {
-    billing_zip = payload.billing_zip || payload.zip
-    billing_city = payload.billing_city || payload.city
+    billing_zip = payload.billing_zip || shipping_zip
+    billing_city = payload.billing_city || shipping_city
     billing_address = [
       payload.billing_address,
       payload.billing_address_extra,
     ]
       .filter(Boolean)
-      .join(', ') || shippingAddressLine
+      .join(', ') || shipping_address
   } else {
-    billing_zip = payload.zip
-    billing_city = payload.city
-    billing_address = shippingAddressLine
+    billing_zip = shipping_zip
+    billing_city = shipping_city
+    billing_address = shipping_address
   }
 
-  // 5) rendelés beszúrás
   const orderRow = {
     user_id: user?.id ?? null,
     cart_id: cart.id,
@@ -153,14 +162,18 @@ export async function createOrderFromCart(payload) {
     customer_firstname: payload.firstname,
     shipping_method: payload.shipping || null,
 
-    // FONTOS: itt már a fenti billing_* kerül az orders táblába
+    // ÚJ: szállítási cím snapshot
+    shipping_zip,
+    shipping_city,
+    shipping_address,
+
+    // Számlázási cím snapshot
     billing_zip,
     billing_city,
     billing_address,
 
     notes: payload.notes || null,
     total_huf: order_total,
-
     company_name: payload.company_name || null,
     company_tax_number: payload.company_tax_number || null,
     wants_vat_invoice: !!payload.wantsInvoice,
@@ -178,10 +191,13 @@ export async function createOrderFromCart(payload) {
   const oiRows = lines.map(l => ({
     order_id: created.id,
     product_id: l.product_id,
+    name: l.product_name,  
+    image_url: l.product_image, 
     qty: l.qty,
     unit_price_huf: l.unit_price_huf,
     vat_rate: 27,
   }))
+
 
   const { error: oiErr } = await sb.from('order_items').insert(oiRows)
   if (oiErr) return { ok: false, message: oiErr.message }
@@ -252,9 +268,9 @@ export async function createOrderFromCart(payload) {
     billingCity: billing_city,
     billingAddress: billing_address,
     shippingMethod: payload.shipping,
-    shippingZip: payload.zip,
-    shippingCity: payload.city,
-    shippingAddress: shippingAddressLine,
+    shippingZip: shipping_zip,
+    shippingCity: shipping_city,
+    shippingAddress: shipping_address,
     wantsInvoice: !!payload.wantsInvoice,
     companyName: payload.company_name || null,
     companyTaxNumber: payload.company_tax_number || null,

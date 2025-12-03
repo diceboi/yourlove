@@ -1,7 +1,7 @@
 import * as React from "react";
 import AdminSideMenu from "@/app/components/admin/AdminSideMenu";
 import AdminHero from "@/app/components/admin/AdminHero";
-import AdminProductEdit from "@/app/components/admin/AdminProductEdit";
+import AdminOrderEdit from "@/app/components/admin/AdminOrderEdit";
 import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 0
@@ -21,8 +21,7 @@ export default async function OrdersPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminHero />
-          <AdminProductEdit product={product} />
+          <AdminOrderEdit orders={order} />
         </div>
       </div>
     </div>

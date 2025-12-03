@@ -12,7 +12,7 @@ export default function AdminOrderListClient() {
 
   useEffect(() => {
     async function fetchOrders() {
-      const { data, error } = await supabase.from('orders').select('*')
+      const { data, error } = await supabase.from('orders').select('*').order("created_at", { ascending: false });
       if (data) setOrders(data)
       setLoading(false)
     }

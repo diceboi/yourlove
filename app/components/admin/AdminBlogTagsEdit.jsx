@@ -135,7 +135,7 @@ export default function AdminBlogTagsEdit({ tags }) {
         </div>
 
         <div className="sticky bottom-0 bg-[#f5f5f5] border-t border-[var(--border)] p-2 flex md:flex-row flex-col justify-between items-center gap-2 w-full">
-          <ToggleSwitch checked={published} onChange={setPublished} />
+          <ToggleSwitch checked={published} onChange={setPublished} firstlabel={"Vázlat"} secondlabel={"Közzétéve"}/>
           <div className="flex gap-2">
             <AdminCancelButton title="Mégse" onclick={handleClose} buttonicon="TbX" />
             <AdminDeleteButton title="Törlés" onconfirm={handleDelete} buttonicon="TbTrash" />

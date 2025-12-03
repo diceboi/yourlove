@@ -21,7 +21,6 @@ export default async function ProductTagsPage({ params }) {
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
-          <AdminHero />
           <AdminProductTagsEdit tags={tags} />
         </div>
       </div>

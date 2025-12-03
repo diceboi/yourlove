@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import AdminOrderList from './AdminOrderList'
 import { createClient } from '@/utils/supabase/client'
 import AdminProductList from './AdminProductList'
 

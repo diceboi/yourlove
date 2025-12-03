@@ -34,6 +34,8 @@ function statusLabel(status) {
   switch (status) {
     case "draft":
       return { text: "Piszkozat", className: "text-gray-500" };
+    case "neworder":
+      return { text: "Új rendelés", className: "text-purple-500" };
     case "processing":
       return { text: "Feldolgozás alatt", className: "text-blue-600" };
     case "pending_payment":
@@ -43,13 +45,37 @@ function statusLabel(status) {
     case "shipped":
       return { text: "Kiszállítva", className: "text-indigo-600" };
     case "delivered":
-      return { text: "Átadva", className: "text-emerald-700" };
+      return { text: "Futárnak átadva", className: "text-emerald-700" };
     case "cancelled":
       return { text: "Törölve", className: "text-red-600" };
     default:
       return { text: status || "Ismeretlen", className: "text-gray-600" };
   }
 }
+
+function statusRowBg(status) {
+  switch (status) {
+    case "draft":
+      return "border-l-4 border-white";
+    case "neworder":
+      return "border-l-4 border-purple-500 bg-gradient-to-r from-purple-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "processing":
+      return "border-l-4 border-blue-500 bg-gradient-to-r from-blue-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "pending_payment":
+      return "border-l-4 border-amber-500 bg-gradient-to-r from-amber-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "paid":
+      return "border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "shipped":
+      return "border-l-4 border-indigo-500 bg-gradient-to-r from-indigo-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "delivered":
+      return "border-l-4 border-green-500 bg-gradient-to-r from-green-100 from-0% via-transparent via-20% to-transparent to-90%";
+    case "cancelled":
+      return "border-l-4 border-red-500 bg-gradient-to-r from-red-100 from-0% via-transparent via-20% to-transparent to-90%";
+    default:
+      return "bg-white";
+  }
+}
+
 
 export default function AdminOrderList({ orders }) {
   const { searchTerm } = useContext(AdminMenuContext);
@@ -132,6 +158,11 @@ export default function AdminOrderList({ orders }) {
                 <th className="text-left font-semibold px-3 py-3">
                   Rendelés
                 </th>
+                
+                {/* Státusz – mindig látszik */}
+                <th className="text-left font-semibold px-3 py-3">
+                  Státusz
+                </th>
 
                 {/* Dátum – mindig látszik */}
                 <th className="text-left font-semibold px-3 py-3">
@@ -151,11 +182,6 @@ export default function AdminOrderList({ orders }) {
                 {/* Összeg – mindig látszik */}
                 <th className="text-left font-semibold px-3 py-3">
                   Összeg
-                </th>
-
-                {/* Státusz – mindig látszik */}
-                <th className="text-left font-semibold px-3 py-3">
-                  Státusz
                 </th>
 
                 {/* Műveletek – fix szélesség */}
@@ -190,10 +216,12 @@ export default function AdminOrderList({ orders }) {
 
                 const hrefAdmin = `/admin/rendelesek/${order.order_number}`;
 
+                const rowBg = statusRowBg(order.status);
+
                 return (
                   <tr
                     key={order.id}
-                    className="border-t border-[var(--border,#e5e7eb)] hover:bg-gray-50"
+                    className={`${rowBg} hover:bg-gray-100`}
                   >
                     {/* Rendelés (szám + ID) */}
                     <td className="px-3 py-3 align-middle">
@@ -202,6 +230,13 @@ export default function AdminOrderList({ orders }) {
                           #{order.order_number}
                         </span>
                       </div>
+                    </td>
+
+                    {/* Státusz */}
+                    <td className="px-3 py-3 align-middle">
+                      <span className={`font-semibold ${statusClass}`}>
+                        {statusText}
+                      </span>
                     </td>
 
                     {/* Dátum */}
@@ -230,13 +265,6 @@ export default function AdminOrderList({ orders }) {
                     <td className="px-3 py-3 align-middle">
                       <span className="text-[var(--green)] font-bold">
                         {formatMoneyHuf(order.total_huf)}
-                      </span>
-                    </td>
-
-                    {/* Státusz */}
-                    <td className="px-3 py-3 align-middle">
-                      <span className={`font-semibold ${statusClass}`}>
-                        {statusText}
                       </span>
                     </td>
 
@@ -295,10 +323,12 @@ export default function AdminOrderList({ orders }) {
                 }`.trim()
               : "";
 
+          const rowBg = statusRowBg(order.status);
+
           return (
             <div
               key={order.id}
-              className="border border-[var(--border,#e5e7eb)] bg-white rounded-2xl p-3"
+              className={`ring ring-[var(--border,#e5e7eb)] rounded-2xl p-3 ${rowBg}`}
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-0">
