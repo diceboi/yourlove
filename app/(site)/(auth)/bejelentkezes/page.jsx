@@ -13,13 +13,15 @@ import Link from "next/link";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [error, setError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setError(null);
+    setEmailError(null);
+    setPasswordError(null);
 
     const formData = new FormData(event.currentTarget);
 
@@ -30,8 +32,17 @@ export default function LoginPage() {
       window.dispatchEvent(new Event('auth:changed'));
       window.location.href = "/";
     } else {
-      // 🔥 Itt a lényeg: message-et írd ki, ne a status-t
-      setError(result.message || "Sikertelen bejelentkezés. Kérjük, próbáld újra.");
+      // Determine which field has the error
+      const errorMessage = result.message || "Sikertelen bejelentkezés. Kérjük, próbáld újra.";
+      
+      if (errorMessage.toLowerCase().includes("email") || errorMessage.toLowerCase().includes("e-mail")) {
+        setEmailError(errorMessage);
+      } else if (errorMessage.toLowerCase().includes("jelszó") || errorMessage.toLowerCase().includes("password")) {
+        setPasswordError(errorMessage);
+      } else {
+        // If we can't determine, show on password field (last field)
+        setPasswordError(errorMessage);
+      }
     }
 
     setLoading(false);
@@ -65,6 +76,8 @@ export default function LoginPage() {
                 className="mt-1 w-full px-4 p-2 h-10 rounded-md border border-gray-200 bg-white text-sm text-gray-700"
               />
             </div>
+            {emailError && <p className="text-red-500 text-sm mt-1 text-center">{emailError}</p>}
+            {passwordError && <p className="text-red-500 text-sm mt-1 text-center">{passwordError}</p>}
             <div className="mt-4 space-y-4">
               <AuthButton type="Bejelentkezés" loading={loading} />
               <div className="relative w-full flex flex-nowrap items-center justify-center gap-2 py-4">
@@ -78,8 +91,10 @@ export default function LoginPage() {
               <Link href={"/regisztracio"} className="w-full text-center">
                 <Paragraph classname={"text-[var(--pink)] underline"}>Regisztráció</Paragraph>
               </Link>
+              <Link href={"/elfelejtett-jelszo"} className="w-full text-center">
+                <Paragraph classname={"text-[var(--pink)] underline"}>Elfelejtett jelszó?</Paragraph>
+              </Link>
             </div>
-            {error && <p className="text-red-500">{error}</p>}
           </form>
         </div>
       </div>

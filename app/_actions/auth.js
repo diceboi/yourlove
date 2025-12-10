@@ -23,6 +23,8 @@ export async function signUp(formData) {
   const lastname = formData.get("vezeteknev")?.toString() ?? "";
   const phone = formData.get("telefonszam")?.toString() ?? "";
 
+  console.log("📝 Registration data:", { email, firstname, lastname, phone: phone || "(empty)" });
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -69,7 +71,8 @@ export async function signUp(formData) {
 
   const userId = data.user.id;
 
-  await supabase.from("user_profiles").insert([
+  // Use upsert instead of insert to handle duplicate emails (e.g., Google login)
+  const { error: profileError } = await supabase.from("user_profiles").upsert(
     {
       id: userId,
       email,
@@ -77,7 +80,15 @@ export async function signUp(formData) {
       lastname,
       phone,
     },
-  ]);
+    { onConflict: "id" }
+  );
+
+  if (profileError) {
+    console.error("user_profiles upsert error:", profileError);
+    // Don't fail registration if profile upsert fails, user can update later
+  } else {
+    console.log("✅ Profile upserted successfully:", { userId, firstname, lastname, phone });
+  }
 
   revalidatePath("/", "layout");
   return { status: "success", user: data.user };

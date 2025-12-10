@@ -9,6 +9,10 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "react-toastify";
 import Label from "./UI/Texts/Label";
+import { motion, AnimatePresence } from "framer-motion";
+import { Caveat } from "next/font/google";
+
+const caveat = Caveat({ subsets: ["latin"], weight: ["400", "700"] });
 
 export default function UserMenu() {
   const router = useRouter();
@@ -16,6 +20,7 @@ export default function UserMenu() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [showWave, setShowWave] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -25,17 +30,17 @@ export default function UserMenu() {
       const authUser = data?.user ?? null;
       setUser(authUser);
 
-      if (authUser?.email) {
-        // 2️⃣ PROFILE betöltése külön táblából
+      if (authUser?.id) {
+        // 2️⃣ PROFILE betöltése ID alapján
         const { data: profile, error } = await supabase
           .from("user_profiles")
           .select("*")
-          .eq("email", authUser.email)
-          .single();
+          .eq("id", authUser.id)
+          .maybeSingle();
 
-        if (!error) {
+        if (!error && profile) {
           setUserProfile(profile);
-        } else {
+        } else if (error) {
           console.error("Profile fetch error:", error);
         }
       }
@@ -53,6 +58,20 @@ export default function UserMenu() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // Wave animation cycle
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      setShowWave(true);
+      setTimeout(() => {
+        setShowWave(false);
+      }, 2500); // Wave stays for 2.5s then goes away
+    }, 8000); // Every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleMouseEnter = () => {
     if (user) setDropdownOpen(true);
@@ -88,7 +107,7 @@ export default function UserMenu() {
     >
       <button
         onClick={!user ? () => router.push("/bejelentkezes") : null}
-        className="flex flex-nowrap gap-2 items-center justify-center xl:px-6 xl:py-2 hover:bg-[var(--border)] xl:h-[44px] h-[40px] xl:w-auto w-[40px] rounded-full cursor-pointer"
+        className="flex flex-nowrap gap-2 items-center justify-center xl:px-6 xl:py-2 hover:bg-[var(--border)] xl:h-[44px] h-[40px] xl:w-auto w-[40px] rounded-full cursor-pointer overflow-hidden"
       >
         {!user ? (
           <>
@@ -97,19 +116,58 @@ export default function UserMenu() {
           </>
         ) : (
           <>
-            {user.user_metadata?.avatar_url ? (
-              <Image
-                src={user.user_metadata?.avatar_url}
-                alt={`${user.email} profilképe`}
-                width={20}
-                height={20}
-                className="rounded-full"
-              />
-            ) : (
-              <TbUser className="xl:min-w-5 xl:min-h-5 min-w-6 min-h-6 text-[var(--pink)]" />
-            )}
-            <Paragraph classname="xl:flex hidden min-w-fit">
-              {`Szia ${displayName}`}
+            <div className="relative xl:w-6 xl:h-6 w-6 h-6">
+              <AnimatePresence mode="wait">
+                {!showWave ? (
+                  <motion.div
+                    key="icon"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className="absolute inset-0"
+                  >
+                    {user.user_metadata?.avatar_url ? (
+                      <Image
+                        src={user.user_metadata?.avatar_url}
+                        alt={`${user.email} profilképe`}
+                        width={30}
+                        height={30}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <TbUser className="w-full h-full text-[var(--pink)]" />
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="wave"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ 
+                      y: 0, 
+                      opacity: 1,
+                      rotate: [0, 0, 20, -10, 25, 0] // Smoother waving with more keyframes
+                    }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ 
+                      y: { duration: 0.5, ease: "easeInOut" },
+                      opacity: { duration: 0.5 },
+                      rotate: { 
+                        duration: 1.4,
+                        times: [0, 0.36, 0.5, 0.64, 0.78, 0.86, 0.93, 1], // More gradual timing
+                        ease: [0.4, 0, 0.2, 1] // Custom smooth easing
+                      }
+                    }}
+                    className="absolute inset-0 flex items-center justify-center text-xl"
+                    style={{ transformOrigin: '50% 85%' }} // Rotation point at palm
+                  >
+                    🖐️
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <Paragraph classname={`${caveat.className} xl:flex items-center hidden min-w-fit text-xl font-bold`}>
+              Szia <span className={`ml-1 text-[var(--pink)] `}>{displayName}</span>
             </Paragraph>
           </>
         )}

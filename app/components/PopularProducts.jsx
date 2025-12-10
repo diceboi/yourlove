@@ -8,6 +8,7 @@ export default async function PopularProducts() {
   const { data: products, error } = await supabase
     .from("products")
     .select("*")
+    .eq("kozzeteve", true)
     .order("kattintasok", { ascending: false })
     .limit(8);
     
