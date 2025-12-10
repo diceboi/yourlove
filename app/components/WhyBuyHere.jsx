@@ -32,10 +32,10 @@ export default function WhyBuyHere() {
              </div>
           </div>
         </div>
-        <div className="w-full lg:w-1/2 relative h-[400px] rounded-2xl overflow-hidden shadow-lg">
+        <div className="w-full lg:w-1/2 relative h-[600px] rounded-2xl overflow-hidden shadow-lg">
            {/* Placeholder image - replace with actual lifestyle image */}
            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
-             <span className="text-xl">Lifestyle kép helye</span>
+             <Image src="/lifestyle.webp" alt="lifestyle" fill className="object-cover bottom-0" />
            </div>
         </div>
       </div>

@@ -3,21 +3,18 @@
 import { TbUser } from "react-icons/tb";
 import Paragraph from "./UI/Texts/Paragraph";
 import Image from "next/image";
-import MenuText from "./UI/Texts/MenuText";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { toast } from "react-toastify";
-import Label from "./UI/Texts/Label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Caveat } from "next/font/google";
+import { MenuContext } from "@/app/MenuContext";
 
 const caveat = Caveat({ subsets: ["latin"], weight: ["400", "700"] });
 
 export default function UserMenu() {
   const router = useRouter();
-  const menuRef = useRef(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { setActiveDrawer } = useContext(MenuContext);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [showWave, setShowWave] = useState(false);
@@ -73,22 +70,6 @@ export default function UserMenu() {
     return () => clearInterval(interval);
   }, [user]);
 
-  const handleMouseEnter = () => {
-    if (user) setDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (user) setDropdownOpen(false);
-  };
-
-  const doLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    toast.info("Sikeres kijelentkezés!");
-    router.push("/bejelentkezes"); // Refresh UI
-    setUser(null);
-  };
-
   const firstWord = (s) =>
     (s ?? '').trim().split(/\s+/)[0] || '';
 
@@ -99,14 +80,15 @@ export default function UserMenu() {
     || 'Felhasználó';
 
   return (
-    <div
-      ref={menuRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="relative z-50 lg:w-full"
-    >
+    <div className="relative z-50 lg:w-full">
       <button
-        onClick={!user ? () => router.push("/bejelentkezes") : null}
+        onClick={() => {
+          if (!user) {
+            router.push("/bejelentkezes");
+          } else {
+            setActiveDrawer('user');
+          }
+        }}
         className="flex flex-nowrap gap-2 items-center justify-center xl:px-6 xl:py-2 hover:bg-[var(--border)] xl:h-[44px] h-[40px] xl:w-auto w-[40px] rounded-full cursor-pointer overflow-hidden"
       >
         {!user ? (
@@ -172,34 +154,6 @@ export default function UserMenu() {
           </>
         )}
       </button>
-
-      {dropdownOpen && user && (
-        <div className="absolute flex flex-col mt-[44px] left-0 top-0 w-full min-w-fit rounded-xl bg-white border border-[var(--border)] overflow-hidden p-2">
-          <button
-            onClick={() => router.push("/admin/vezerlopult")}
-            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg"
-          >
-            <Label>Admin felület</Label>
-          </button>
-          <button
-            onClick={() => router.push("/fiok")}
-            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
-            <Label>Fiók</Label>
-          </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
-            <Label>Rendelések</Label>
-          </button>
-          <button className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg">
-            <Label>Kedvencek</Label>
-          </button>
-          <button
-            onClick={doLogout}
-            className="px-6 py-2 hover:bg-[var(--grey-bg)] group rounded-lg"
-          >
-            <Label>Kijelentkezés</Label>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

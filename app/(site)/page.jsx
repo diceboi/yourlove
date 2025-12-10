@@ -7,22 +7,22 @@ import PopularCategories from "../components/PopularCategories";
 import SaleProducts from "../components/SaleProducts";
 import LatestBlogs from "../components/LatestBlogs";
 import WhyBuyHere from "../components/WhyBuyHere";
-import ClubMembership from "../components/ClubMembership";
 import Reviews from "../components/Reviews";
+import MainCategories from "../components/MainCategories";
 
 export default function HomePage() {
   return (
     <>
       <HomeHero />
       <Benefits />
-      <PopularCategories />
+      <MainCategories />
       <PopularProducts />
       <SaleProducts />
-      <div className="py-16 px-4 xl:px-12 ">
+      <PopularCategories />
+      <div className="px-4 xl:px-12 ">
         <MainCta />
       </div>
       <NewProducts />
-      <ClubMembership />
       <WhyBuyHere />
       <Reviews />
       <LatestBlogs />

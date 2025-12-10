@@ -9,10 +9,10 @@ export default async function LatestBlogs() {
   const supabase = await createClient();
   
   const { data: posts, error } = await supabase
-    .from("blogok") // Guessing table name based on file paths
+    .from("blogs") 
     .select("*")
     .eq("kozzeteve", true)
-    .order("letrehozva", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(4);
 
   if (!posts || posts.length === 0) return null;

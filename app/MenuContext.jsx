@@ -10,7 +10,12 @@ export const MenuContext = createContext({
   cancelCloseSubmenu: () => {},
   scheduleCloseSubmenu: () => {},
 
-  // mobile drawer
+  // unified drawer system
+  activeDrawer: null, // null | 'mobile' | 'cart' | 'favorites' | 'compare' | 'user'
+  setActiveDrawer: () => {},
+  closeDrawer: () => {},
+
+  // backward compatibility for mobile drawer
   isMobileOpen: false,
   openMobileMenu: () => {},
   closeMobileMenu: () => {},
@@ -44,25 +49,30 @@ export default function MenuContextProvider({ children }) {
     }
   }, []);
 
-  // --- mobile drawer ---
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // --- unified drawer system ---
+  const [activeDrawer, setActiveDrawer] = useState(null);
 
-  const openMobileMenu = useCallback(() => setIsMobileOpen(true), []);
-  const closeMobileMenu = useCallback(() => setIsMobileOpen(false), []);
+  const closeDrawer = useCallback(() => setActiveDrawer(null), []);
 
-  // body scroll lock mobil menü alatt
+  // backward compat mappings
+  const isMobileOpen = activeDrawer === 'mobile';
+  const openMobileMenu = useCallback(() => setActiveDrawer('mobile'), []);
+  const closeMobileMenu = closeDrawer;
+
+  // body scroll lock for ANY active drawer
   useEffect(() => {
-    if (isMobileOpen) {
+    if (activeDrawer) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => { document.body.style.overflow = prev; };
     }
-  }, [isMobileOpen]);
+  }, [activeDrawer]);
 
   return (
     <MenuContext.Provider
       value={{
         subMenu, setSubMenu, scheduleCloseSubmenu, cancelCloseSubmenu,
+        activeDrawer, setActiveDrawer, closeDrawer,
         isMobileOpen, openMobileMenu, closeMobileMenu
       }}
     >

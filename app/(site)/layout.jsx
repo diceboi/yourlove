@@ -14,6 +14,8 @@ import MainNav from "../components/Mainnav";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import Footer from "@/app/components/Footer"
 
+import UserMenuDrawer from "../components/UserMenuDrawer";
+
 const sora = Sora({ subsets: ["latin"] });
 
 export const metadata = {
@@ -26,33 +28,34 @@ export default function SiteLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${sora.className}`}>
-        <CartUIProvider>
-          <FavoritesUIProvider>
-            <CompareUIProvider>
-              <ToastContainer
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick={false}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                theme="light"
-                transition={Bounce}
-              />
-              <MenuContextProvider>
+        <MenuContextProvider>
+          <CartUIProvider>
+            <FavoritesUIProvider>
+              <CompareUIProvider>
+                <ToastContainer
+                  position="top-center"
+                  autoClose={3000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick={false}
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  theme="light"
+                  transition={Bounce}
+                />
                 <MainNav />
-              </MenuContextProvider>
-              {children}
-              <Footer />
-              <CartDrawer />
-              <FavoritesDrawer />
-              <CompareDrawer />
-              <ScrollToTopButton />
-            </CompareUIProvider>
-          </FavoritesUIProvider>
-        </CartUIProvider>
+                {children}
+                <Footer />
+                <CartDrawer />
+                <FavoritesDrawer />
+                <CompareDrawer />
+                <UserMenuDrawer />
+                <ScrollToTopButton />
+              </CompareUIProvider>
+            </FavoritesUIProvider>
+          </CartUIProvider>
+        </MenuContextProvider>
       </body>
     </html>
   );

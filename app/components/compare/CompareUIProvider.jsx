@@ -1,11 +1,17 @@
 'use client'
 import { createContext, useContext, useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import { MenuContext } from '@/app/MenuContext'
 
 const CompareUIContext = createContext(null)
 
 export function CompareUIProvider({ children }) {
-    const [open, setOpen] = useState(false)
+    const { activeDrawer, setActiveDrawer } = useContext(MenuContext)
+
+    // Derived open state
+    const open = activeDrawer === 'compare'
+    const setOpen = (val) => val ? setActiveDrawer('compare') : setActiveDrawer(null)
+
     const [compareIds, setCompareIds] = useState([])
 
     // Load from localStorage on mount
@@ -51,7 +57,7 @@ export function CompareUIProvider({ children }) {
     const value = {
         open,
         setOpen,
-        toggle: () => setOpen(o => !o),
+        toggle: () => setOpen(!open),
         compareIds,
         addProduct,
         removeProduct,

@@ -1,11 +1,17 @@
 'use client'
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext } from 'react'
+import { MenuContext } from '@/app/MenuContext'
 
 const FavoritesUIContext = createContext(null)
 
 export function FavoritesUIProvider({ children }) {
-    const [open, setOpen] = useState(false)
-    const value = { open, setOpen, toggle: () => setOpen(o => !o) }
+    const { activeDrawer, setActiveDrawer } = useContext(MenuContext)
+
+    const open = activeDrawer === 'favorites'
+    const setOpen = (val) => val ? setActiveDrawer('favorites') : setActiveDrawer(null)
+    const toggle = () => open ? setOpen(false) : setOpen(true)
+
+    const value = { open, setOpen, toggle }
     return <FavoritesUIContext.Provider value={value}>{children}</FavoritesUIContext.Provider>
 }
 

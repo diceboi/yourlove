@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { toast } from "react-toastify";
 import GoogleButton from "@/app/components/auth/GoogleButton";
+import AppleButton from "@/app/components/auth/AppleButton";
 import H2 from "@/app/components/UI/Texts/H2";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import Link from "next/link";
@@ -88,6 +89,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <GoogleButton type={"/"} title={"Bejelentkezés Google-lel"} />
+              {/*<AppleButton type={"/"} title={"Bejelentkezés Apple-lel"} />*/}
               <Link href={"/regisztracio"} className="w-full text-center">
                 <Paragraph classname={"text-[var(--pink)] underline"}>Regisztráció</Paragraph>
               </Link>

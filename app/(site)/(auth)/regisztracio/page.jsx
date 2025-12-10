@@ -5,6 +5,7 @@ import AuthButton from "@/app/components/UI/Buttons/AuthButton";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/app/_actions/auth"
 import GoogleButton from "@/app/components/auth/GoogleButton";
+import AppleButton from "@/app/components/auth/AppleButton";
 import H2 from "@/app/components/UI/Texts/H2";
 import Paragraph from "@/app/components/UI/Texts/Paragraph";
 import { toast } from "react-toastify";
@@ -189,6 +190,7 @@ export default function LoginPage() {
             </div>
           </div>
           <GoogleButton type={"/"} title={"Bejelentkezés Google-lel"}/>
+          {/*<AppleButton type={"/"} title={"Bejelentkezés Apple-lel"}/>*/}
         </div>
       </form>
       </div>
