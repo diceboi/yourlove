@@ -21,7 +21,8 @@ import {
   NotebookPen,
   Minus,
   Layout,
-  Images
+  Images,
+  Megaphone
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -60,6 +61,7 @@ export default function AdminSideMenu() {
     { id: "blogcimkek", label: "Blog cimkék", icon: Minus },
     { id: "oldalkeszito", label: "Oldalak", icon: Layout },
     { id: "sliderek", label: "Sliderek", icon: Images },
+    { id: "hirdetesek", label: "Hirdetések", icon: Megaphone },
     { id: "rendelesek", label: "Rendelések", icon: ShoppingCart },
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
