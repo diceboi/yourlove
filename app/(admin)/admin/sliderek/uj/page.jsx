@@ -1,4 +1,3 @@
-```
 import AdminSideMenu from "@/app/components/admin/AdminSideMenu"
 import AdminSliderCreate from "@/app/components/admin/AdminSliderCreate"
 
@@ -14,4 +13,3 @@ export default function NewSliderPage() {
     </div>
   )
 }
-```
