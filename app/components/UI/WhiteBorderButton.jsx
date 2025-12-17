@@ -18,7 +18,7 @@ export default function WhiteBorderButton({
       bgcolor={"bg-transparent"}
       bordercolor={"border-white"}
       hoverbgcolor={"hover:bg-white"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={onclick}
       beforeicon={null}
       aftericon={
         IconComponent ? (

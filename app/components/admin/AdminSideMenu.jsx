@@ -20,7 +20,8 @@ import {
   Bookmark,
   NotebookPen,
   Minus,
-  Layout
+  Layout,
+  Images
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -58,6 +59,7 @@ export default function AdminSideMenu() {
     { id: "blogkategoriak", label: "Blog kategóriák", icon: Minus },
     { id: "blogcimkek", label: "Blog cimkék", icon: Minus },
     { id: "oldalkeszito", label: "Oldalak", icon: Layout },
+    { id: "sliderek", label: "Sliderek", icon: Images },
     { id: "rendelesek", label: "Rendelések", icon: ShoppingCart },
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
@@ -84,11 +86,10 @@ export default function AdminSideMenu() {
               <button
                 key={item.id}
                 onClick={() => { router.push(`/admin/${item.id}`); setActiveMenu(item.id); }}
-                className={`w-54 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
-                  isActive
+                className={`w-54 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${isActive
                     ? "bg-[var(--border)] text-gray-900 font-medium"
                     : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="flex-1 text-left">{item.label}</span>
@@ -115,11 +116,10 @@ export default function AdminSideMenu() {
                 <SwiperSlide key={item.id}>
                   <button
                     onClick={() => { router.push(`/admin/${item.id}`); setActiveMenu(item.id); }}
-                    className={`w-44 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
-                      isActive
+                    className={`w-44 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${isActive
                         ? "bg-[var(--border)] text-gray-900 font-medium"
                         : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="flex-1 text-left">{item.label}</span>

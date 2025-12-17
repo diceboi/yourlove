@@ -18,7 +18,7 @@ export default function BlackBorderButton({
       bgcolor={"bg-transparent"}
       bordercolor={"border-[var(--black)]"}
       hoverbgcolor={"hover:bg-[var(--black)]"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={onclick}
       beforeicon={null}
       aftericon={
         IconComponent ? (

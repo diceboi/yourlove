@@ -28,17 +28,22 @@ export default function AdminCustomPagesList({ pages, loading }) {
     setFilteredPages(filtered)
   }, [searchTerm, pages])
 
-  if (loading) {
+  if (loading || !pages || pages.length === 0) {
     return (
-      <div className="p-6">
-        <p className="text-gray-500">Betöltés...</p>
+      <div className="flex flex-col gap-2 animate-pulse px-6">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="h-16 bg-[var(--border,#e5e7eb)] rounded-2xl w-full"
+          />
+        ))}
       </div>
     )
   }
 
   if (!filteredPages || filteredPages.length === 0) {
     return (
-      <div className="p-6">
+      <div className="px-6">
         <p className="text-gray-500">
           {searchTerm ? "Nincs találat a keresésre." : "Még nincsenek egyedi oldalak. Hozz létre egyet!"}
         </p>
@@ -47,91 +52,165 @@ export default function AdminCustomPagesList({ pages, loading }) {
   }
 
   return (
-    <div className="p-6">
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-[var(--border)]">
-            <tr>
-              <th className="text-left font-semibold px-4 py-3">Kép</th>
-              <th className="text-left font-semibold px-4 py-3">Cím</th>
-              <th className="text-left font-semibold px-4 py-3 hidden md:table-cell">Slug</th>
-              <th className="text-left font-semibold px-4 py-3 hidden lg:table-cell">Állapot</th>
-              <th className="text-left font-semibold px-4 py-3 hidden xl:table-cell">Létrehozva</th>
-              <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">Műveletek</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPages.map((page) => (
-              <tr
-                key={page.id}
-                className="border-b border-[var(--border)] hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-4 py-3">
-                  <div className="w-16 h-16 relative rounded overflow-hidden bg-gray-100">
-                    {page.fokep ? (
-                      <Image
-                        src={page.fokep}
-                        alt={page.fokep_alt || page.cim || "Oldal kép"}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                        Nincs kép
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="font-medium">{page.cim}</div>
-                  <div className="text-sm text-gray-500 md:hidden">{page.slug}</div>
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">/p/{page.slug}</code>
-                </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
-                  <div className="flex items-center gap-2">
-                    {page.kozzeteve ? (
-                      <>
-                        <TbEye className="text-green-600" />
-                        <span className="text-green-600 text-sm font-medium">Közzétéve</span>
-                      </>
-                    ) : (
-                      <>
-                        <TbEyeOff className="text-gray-400" />
-                        <span className="text-gray-500 text-sm">Vázlat</span>
-                      </>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600 hidden xl:table-cell">
-                  {page.created_at ? new Date(page.created_at).toLocaleDateString('hu-HU') : '-'}
-                </td>
-                <td className="pl-3 align-middle w-[140px] min-w-[140px]">
-                  <div className="flex items-center justify-end gap-0 h-[72px]">
-                    <Link
-                      href={`/p/${encodeURIComponent(page.slug || "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Megnyitás új lapon"
-                      className="flex items-center justify-center hover:bg-gray-100 w-1/2 h-full"
-                    >
-                      <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
-                    </Link>
-                    <Link
-                      href={`/admin/oldalkeszito/${page.id}`}
-                      aria-label="Szerkesztés"
-                      className="flex items-center justify-center hover:bg-gray-100 w-1/2 h-full"
-                    >
-                      <TbEdit className="w-5 h-auto" />
-                    </Link>
-                  </div>
-                </td>
+    <>
+      {/* ====== Táblázat (md és fölötte) ====== */}
+      <div className="hidden md:block px-3 md:px-6">
+        <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border,#e5e7eb)] rounded-2xl">
+          <table className="min-w-full text-sm">
+            <thead className="bg-[#f5f5f5] sticky top-0 z-10">
+              <tr>
+                <th className="text-left font-semibold px-3 py-3">Kép</th>
+                <th className="text-left font-semibold px-3 py-3">Cím</th>
+                <th className="text-left font-semibold px-3 py-3 hidden md:table-cell">Slug</th>
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">Állapot</th>
+                <th className="text-left font-semibold px-3 py-3 hidden xl:table-cell">Létrehozva</th>
+                <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">Műveletek</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white">
+              {filteredPages.map((page) => (
+                <tr
+                  key={page.id}
+                  className="border-t border-[var(--border,#e5e7eb)] hover:bg-gray-50"
+                >
+                  <td className="px-3 py-3 align-middle">
+                    <div className="w-12 h-12 relative rounded overflow-hidden bg-gray-50">
+                      {page.fokep ? (
+                        <Image
+                          src={page.fokep}
+                          alt={page.fokep_alt || page.cim || "Oldal kép"}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                          —
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 align-middle">
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{page.cim}</span>
+                      <span className="text-xs text-gray-500 md:hidden">{page.slug}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 align-middle hidden md:table-cell">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">/p/{page.slug}</code>
+                  </td>
+                  <td className="px-3 py-3 align-middle hidden lg:table-cell">
+                    <div className="flex items-center gap-2">
+                      {page.kozzeteve ? (
+                        <>
+                          <TbEye className="text-[var(--green)] w-4 h-4" />
+                          <span className="text-[var(--green)] font-semibold">Közzétéve</span>
+                        </>
+                      ) : (
+                        <>
+                          <TbEyeOff className="text-gray-400 w-4 h-4" />
+                          <span className="text-gray-500">Vázlat</span>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 align-middle hidden xl:table-cell">
+                    <span className="text-sm text-gray-600">
+                      {page.created_at ? new Date(page.created_at).toLocaleDateString('hu-HU') : '—'}
+                    </span>
+                  </td>
+                  <td className="pl-3 align-middle w-[140px] min-w-[140px]">
+                    <div className="flex items-center justify-end gap-0 h-[56px]">
+                      <Link
+                        href={`/p/${encodeURIComponent(page.slug || "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Megnyitás új lapon"
+                        className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                      >
+                        <TbExternalLink className="text-[var(--pink)] w-5 h-auto" />
+                      </Link>
+                      <Link
+                        href={`/admin/oldalkeszito/${page.id}`}
+                        aria-label="Szerkesztés"
+                        className="flex items-center justify-center hover:bg-white w-1/2 h-full"
+                      >
+                        <TbEdit className="w-5 h-auto" />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {/* ====== Kártyás nézet (mobil, md alatt) ====== */}
+      <div className="md:hidden px-3 space-y-2">
+        {filteredPages.map((page) => (
+          <div
+            key={page.id}
+            className="ring ring-[var(--border,#e5e7eb)] rounded-2xl p-3 border-l-4 border-white"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-16 h-16 relative rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                {page.fokep ? (
+                  <Image
+                    src={page.fokep}
+                    alt={page.fokep_alt || page.cim || "Oldal kép"}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                    —
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">{page.cim}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  <code className="bg-gray-100 px-2 py-1 rounded">/p/{page.slug}</code>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  {page.kozzeteve ? (
+                    <>
+                      <TbEye className="text-[var(--green)] w-4 h-4" />
+                      <span className="text-[var(--green)] text-xs font-semibold">Közzétéve</span>
+                    </>
+                  ) : (
+                    <>
+                      <TbEyeOff className="text-gray-400 w-4 h-4" />
+                      <span className="text-gray-500 text-xs">Vázlat</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <span className="text-xs text-gray-500">
+                  {page.created_at ? new Date(page.created_at).toLocaleDateString('hu-HU') : '—'}
+                </span>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/p/${encodeURIComponent(page.slug || "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Megnyitás új lapon"
+                  >
+                    <TbExternalLink className="text-[var(--pink)] w-5 h-5" />
+                  </Link>
+                  <Link
+                    href={`/admin/oldalkeszito/${page.id}`}
+                    aria-label="Szerkesztés"
+                  >
+                    <TbEdit className="w-5 h-5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }

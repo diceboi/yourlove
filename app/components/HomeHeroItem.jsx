@@ -41,13 +41,13 @@ export default function HomeHeroItem({
         <div className="flex flex-col gap-4 z-10 h-1/2 justify-end">
           <H1 classname={`${titlescolor}`}>{title}</H1>
           {subtitle && (
-          <H2 classname={`${titlescolor}`}>{subtitle}</H2>
+            <H2 classname={`${titlescolor}`}>{subtitle}</H2>
           )}
           {description && (
             <Paragraph classname={`${titlescolor} md:w-1/2 w-10/12`}>{description}</Paragraph>
           )}
         </div>
-        <div className="flex flex-col md:items-start items-end w-full">
+        <div className="flex flex-col md:items-start items-end w-full relative z-20 swiper-no-swiping">
           {buttontype === "pink" && (
             <PinkButton
               title={buttontitle}

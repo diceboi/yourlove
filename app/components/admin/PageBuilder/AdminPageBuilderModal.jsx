@@ -3,9 +3,10 @@
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
+import { motion } from "framer-motion"
 import PageBuilder from "./PageBuilder"
 import { createClient } from "@/utils/supabase/client"
-import { TbX, TbDeviceFloppy, TbEye } from "react-icons/tb"
+import { TbX, TbDeviceFloppy, TbEye, TbTrash } from "react-icons/tb"
 
 function parseBlocks(value) {
   if (!value) return []
@@ -38,6 +39,7 @@ export default function AdminPageBuilderModal({ page, isNew }) {
   })
   const [showPreview, setShowPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
@@ -53,7 +55,7 @@ export default function AdminPageBuilderModal({ page, isNew }) {
           .insert([payload])
           .select()
           .single()
-        
+
         if (error) throw error
         toast.success('Oldal létrehozva!')
       } else {
@@ -61,7 +63,7 @@ export default function AdminPageBuilderModal({ page, isNew }) {
           .from('custom_pages')
           .update(payload)
           .eq('id', page.id)
-        
+
         if (error) throw error
         toast.success('Oldal mentve!')
       }
@@ -77,13 +79,57 @@ export default function AdminPageBuilderModal({ page, isNew }) {
     }
   }
 
+  const handleDelete = async () => {
+    if (isNew) return // Új oldalnál ne legyen törlés
+
+    const confirmed = window.confirm(
+      `Biztosan törölni szeretnéd a(z) "${pageData.cim || 'Névtelen oldal'}" oldalt? Ez a művelet nem vonható vissza.`
+    )
+
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('custom_pages')
+        .delete()
+        .eq('id', page.id)
+
+      if (error) throw error
+
+      toast.success('Oldal törölve!')
+      window.dispatchEvent(new CustomEvent('admin:custom_pages:changed'))
+      router.back()
+      router.refresh()
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast.error('Hiba történt a törlés során')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const handleClose = () => {
     router.back()
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white w-full h-full flex flex-col">
+    <motion.section
+      className="fixed inset-0 z-[998] flex justify-end bg-black/20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+      onClick={handleClose}
+    >
+      <motion.div
+        className="relative bg-white w-[90%] h-full shadow-xl flex flex-col overflow-hidden"
+        initial={{ x: 2000, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: 2000, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[#f5f5f5]">
           <div className="flex items-center gap-4">
@@ -110,6 +156,16 @@ export default function AdminPageBuilderModal({ page, isNew }) {
               <TbEye className="w-5 h-5" />
               <span>Előnézet</span>
             </button>
+            {!isNew && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors disabled:opacity-50"
+              >
+                <TbTrash className="w-5 h-5" />
+                <span>{deleting ? 'Törlés...' : 'Törlés'}</span>
+              </button>
+            )}
             <button
               onClick={handleSave}
               disabled={saving}
@@ -130,7 +186,7 @@ export default function AdminPageBuilderModal({ page, isNew }) {
           showPreview={showPreview}
           setShowPreview={setShowPreview}
         />
-      </div>
-    </div>
+      </motion.div>
+    </motion.section>
   )
 }

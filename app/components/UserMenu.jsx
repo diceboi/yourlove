@@ -60,14 +60,26 @@ export default function UserMenu() {
   useEffect(() => {
     if (!user) return;
 
+    // First wave shortly after load
+    const firstWaveTimeout = setTimeout(() => {
+      setShowWave(true);
+      setTimeout(() => {
+        setShowWave(false);
+      }, 2500); // Wave stays for 2.5s then goes away
+    }, 1000); // 1 second after load
+
+    // Then repeat every 8 seconds
     const interval = setInterval(() => {
       setShowWave(true);
       setTimeout(() => {
         setShowWave(false);
       }, 2500); // Wave stays for 2.5s then goes away
-    }, 8000); // Every 3 seconds
+    }, 8000); // Every 8 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(firstWaveTimeout);
+      clearInterval(interval);
+    };
   }, [user]);
 
   const firstWord = (s) =>
@@ -125,16 +137,16 @@ export default function UserMenu() {
                   <motion.div
                     key="wave"
                     initial={{ y: 20, opacity: 0 }}
-                    animate={{ 
-                      y: 0, 
+                    animate={{
+                      y: 0,
                       opacity: 1,
                       rotate: [0, 0, 20, -10, 25, 0] // Smoother waving with more keyframes
                     }}
                     exit={{ y: -20, opacity: 0 }}
-                    transition={{ 
+                    transition={{
                       y: { duration: 0.5, ease: "easeInOut" },
                       opacity: { duration: 0.5 },
-                      rotate: { 
+                      rotate: {
                         duration: 1.4,
                         times: [0, 0.36, 0.5, 0.64, 0.78, 0.86, 0.93, 1], // More gradual timing
                         ease: [0.4, 0, 0.2, 1] // Custom smooth easing

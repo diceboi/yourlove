@@ -20,7 +20,7 @@ export default function WhiteButton({
       bgcolor={"bg-white"}
       bordercolor={""}
       hoverbgcolor={"hover:bg-[var(--border)]"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={onclick}
       beforeicon={null}
       aftericon={
         IconComponent ? (

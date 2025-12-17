@@ -18,7 +18,7 @@ export default function BlackButton({
       bgcolor={"bg-[var(--black)]"}
       bordercolor={""}
       hoverbgcolor={"hover:bg-black"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={onclick}
       beforeicon={null}
       aftericon={
         IconComponent ? (

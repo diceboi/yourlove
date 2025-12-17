@@ -18,7 +18,7 @@ export default function CreamPinkButton({
       bgcolor={"bg-[var(--cream-pink)]"}
       bordercolor={""}
       hoverbgcolor={"hover:bg-[var(--cream-pink-hover)]"}
-      onclick={onclick || (() => console.log("Clicked"))}
+      onclick={onclick}
       beforeicon={null}
       aftericon={
         IconComponent ? (

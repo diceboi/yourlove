@@ -55,6 +55,16 @@ const PAGE_CONFIG = [
     title: "Felhasználók",
     subtitle: "Vásárlói fiókok és jogosultságok kezelése",
   },
+  {
+    match: "/admin/sliderek",
+    title: "Sliderek",
+    subtitle: "Főoldali slider beállítása és kezelése",
+  },
+  {
+    match: "/admin/oldalkeszito",
+    title: "Oldalkészítő",
+    subtitle: "Egyedi oldalak létrehozása és szerkesztése",
+  },
   // ide nyugodtan vehetsz fel még útvonalakat...
 ];
 

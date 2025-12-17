@@ -2,15 +2,18 @@
 
 // Egyszerűsített Text, Image, CTA, Gallery blokkok
 
+import { useState } from "react"
 import H1 from "@/app/components/UI/Texts/H1"
 import H2 from "@/app/components/UI/Texts/H2"
 import H3 from "@/app/components/UI/Texts/H3"
 import H4 from "@/app/components/UI/Texts/H4"
 import Paragraph from "@/app/components/UI/Texts/Paragraph"
-import { TbH1, TbH2, TbH3, TbH4, TbAlignLeft, TbTrash, TbGripVertical, TbArrowUp, TbArrowDown } from "react-icons/tb"
+import { TbH1, TbH2, TbH3, TbH4, TbAlignLeft, TbTrash, TbGripVertical, TbArrowUp, TbArrowDown, TbPhoto } from "react-icons/tb"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import MediaLibraryModal from "@/app/components/admin/MediaLibraryModal"
+import Image from "next/image"
 
 // Helper to parse content (backward compatibility)
 function parseContent(value) {
@@ -25,13 +28,13 @@ function parseContent(value) {
 // TEXT BLOCK
 export function TextBlockPreview({ config }) {
   const blocks = parseContent(config.content)
-  
+
   return (
     <div className="p-6 prose max-w-none space-y-4">
       {blocks.length === 0 && <p className="text-gray-400">Nincs tartalom...</p>}
       {blocks.map((block, index) => {
         const style = block.color ? { color: block.color } : {}
-        switch(block.type) {
+        switch (block.type) {
           case 'h1':
             return <H1 key={index} style={style}>{block.text || 'Címsor'}</H1>
           case 'h2':
@@ -111,7 +114,7 @@ function SortableBlockItem({ block, index, blockTypeLabels, updateBlock, deleteB
           placeholder={`${blockTypeLabels[block.type]} szövege...`}
           rows={block.type === 'paragraph' ? 3 : 1}
         />
-        
+
         {/* Color picker */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-600">Szín:</span>
@@ -121,9 +124,8 @@ function SortableBlockItem({ block, index, blockTypeLabels, updateBlock, deleteB
                 key={preset.value}
                 type="button"
                 onClick={() => updateBlock(index, 'color', preset.value)}
-                className={`w-6 h-6 rounded border-2 transition-all ${
-                  block.color === preset.value ? 'border-blue-500 scale-110' : 'border-gray-300'
-                }`}
+                className={`w-6 h-6 rounded border-2 transition-all ${block.color === preset.value ? 'border-blue-500 scale-110' : 'border-gray-300'
+                  }`}
                 style={{ backgroundColor: preset.value }}
                 title={preset.name}
               />
@@ -153,69 +155,69 @@ function SortableBlockItem({ block, index, blockTypeLabels, updateBlock, deleteB
 
 export function TextBlockSettings({ config, onChange }) {
   const blocks = parseContent(config.content)
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-  
+
   const addBlock = (type) => {
     const newBlocks = [...blocks, { type, text: '', color: '' }]
     onChange({ ...config, content: newBlocks })
   }
-  
+
   const updateBlock = (index, field, value) => {
     const newBlocks = [...blocks]
     newBlocks[index] = { ...newBlocks[index], [field]: value }
     onChange({ ...config, content: newBlocks })
   }
-  
+
   const deleteBlock = (index) => {
     const newBlocks = blocks.filter((_, i) => i !== index)
     onChange({ ...config, content: newBlocks })
   }
-  
+
   const moveUp = (index) => {
     if (index === 0) return
     const newBlocks = arrayMove(blocks, index, index - 1)
     onChange({ ...config, content: newBlocks })
   }
-  
+
   const moveDown = (index) => {
     if (index === blocks.length - 1) return
     const newBlocks = arrayMove(blocks, index, index + 1)
     onChange({ ...config, content: newBlocks })
   }
-  
+
   const handleDragEnd = (event) => {
     const { active, over } = event
-    
+
     if (active.id !== over.id) {
       const oldIndex = parseInt(active.id.replace('block-', ''))
       const newIndex = parseInt(over.id.replace('block-', ''))
-      
+
       const newBlocks = arrayMove(blocks, oldIndex, newIndex)
       onChange({ ...config, content: newBlocks })
     }
   }
-  
+
   const blockTypeLabels = {
     h1: 'H1',
-    h2: 'H2', 
+    h2: 'H2',
     h3: 'H3',
     h4: 'H4',
     paragraph: 'Bekezdés'
   }
-  
+
   const presetColors = [
     { name: 'Pink', value: 'var(--pink)' },
     { name: 'Zöld', value: 'var(--green)' },
     { name: 'Fekete', value: '#000000' },
     { name: 'Fehér', value: '#ffffff' },
   ]
-  
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -261,7 +263,7 @@ export function TextBlockSettings({ config, onChange }) {
           <TbAlignLeft className="w-5 h-5" />
         </button>
       </div>
-      
+
       {/* Blocks */}
       <DndContext
         sensors={sensors}
@@ -278,7 +280,7 @@ export function TextBlockSettings({ config, onChange }) {
                 Használd a fenti gombokat tartalom hozzáadásához
               </p>
             )}
-            
+
             {blocks.map((block, index) => (
               <SortableBlockItem
                 key={`block-${index}`}
@@ -296,7 +298,7 @@ export function TextBlockSettings({ config, onChange }) {
           </div>
         </SortableContext>
       </DndContext>
-      
+
       {/* Live Preview */}
       {blocks.length > 0 && (
         <div className="border-t pt-4">
@@ -304,7 +306,7 @@ export function TextBlockSettings({ config, onChange }) {
           <div className="border border-gray-200 rounded-md p-4 bg-white space-y-4">
             {blocks.map((block, index) => {
               const style = block.color ? { color: block.color } : {}
-              switch(block.type) {
+              switch (block.type) {
                 case 'h1':
                   return <H1 key={index} classname={block.color ? '' : ''} style={style}>{block.text || 'Címsor'}</H1>
                 case 'h2':
@@ -328,15 +330,15 @@ export function TextBlockSettings({ config, onChange }) {
 
 export function TextBlockPublic({ config }) {
   const blocks = parseContent(config.content)
-  
+
   if (blocks.length === 0) return null
-  
+
   return (
     <div className="py-12 px-4 md:px-8 lg:px-12">
       <div className="max-w-4xl mx-auto space-y-6">
         {blocks.map((block, index) => {
           const style = block.color ? { color: block.color } : {}
-          switch(block.type) {
+          switch (block.type) {
             case 'h1':
               return <H1 key={index} style={style}>{block.text}</H1>
             case 'h2':
@@ -375,30 +377,68 @@ export function ImageBlockPreview({ config }) {
 }
 
 export function ImageBlockSettings({ config, onChange }) {
+  const [mediaModalOpen, setMediaModalOpen] = useState(false)
+
   return (
-    <div className="space-y-4">
-      <input
-        type="text"
-        className="w-full border border-gray-300 rounded p-2"
-        placeholder="Kép URL"
-        value={config.image || ''}
-        onChange={(e) => onChange({ ...config, image: e.target.value })}
+    <>
+      <MediaLibraryModal
+        isOpen={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        onSelect={(imageUrl) => {
+          if (imageUrl) {
+            onChange({ ...config, image: imageUrl })
+          }
+          setMediaModalOpen(false)
+        }}
       />
-      <input
-        type="text"
-        className="w-full border border-gray-300 rounded p-2"
-        placeholder="Alt text"
-        value={config.imageAlt || ''}
-        onChange={(e) => onChange({ ...config, imageAlt: e.target.value })}
-      />
-      <input
-        type="text"
-        className="w-full border border-gray-300 rounded p-2"
-        placeholder="Képaláírás"
-        value={config.caption || ''}
-        onChange={(e) => onChange({ ...config, caption: e.target.value })}
-      />
-    </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-bold text-gray-600 mb-2 block">Kép</label>
+          {config.image ? (
+            <div
+              className="relative cursor-pointer group border border-gray-300 rounded-md overflow-hidden"
+              onClick={() => setMediaModalOpen(true)}
+            >
+              <Image
+                src={config.image}
+                alt={config.imageAlt || 'Kép előnézet'}
+                width={400}
+                height={300}
+                className="w-full h-auto object-cover group-hover:opacity-70 transition-opacity"
+              />
+              <span className="absolute bottom-2 right-2 bg-white text-xs px-2 py-1 rounded shadow">
+                Kép módosítása
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMediaModalOpen(true)}
+              className="w-full border-2 border-dashed border-gray-300 rounded-md p-8 hover:border-[var(--pink)] hover:bg-gray-50 transition-colors flex flex-col items-center justify-center gap-2"
+            >
+              <TbPhoto className="w-12 h-12 text-gray-400" />
+              <span className="text-sm text-gray-600">Kattints a kép kiválasztásához</span>
+            </button>
+          )}
+        </div>
+
+        <input
+          type="text"
+          className="w-full border border-gray-300 rounded p-2"
+          placeholder="Alt text"
+          value={config.imageAlt || ''}
+          onChange={(e) => onChange({ ...config, imageAlt: e.target.value })}
+        />
+        <input
+          type="text"
+          className="w-full border border-gray-300 rounded p-2"
+          placeholder="Képaláírás"
+          value={config.caption || ''}
+          onChange={(e) => onChange({ ...config, caption: e.target.value })}
+        />
+      </div>
+    </>
   )
 }
 
@@ -420,10 +460,9 @@ export function ImageBlockPublic({ config }) {
 export function CTABlockPreview({ config }) {
   return (
     <div className="p-6 text-center">
-      <button className={`px-8 py-3 rounded-lg font-medium ${
-        config.style === 'green' ? 'bg-[var(--green)]' : 
+      <button className={`px-8 py-3 rounded-lg font-medium ${config.style === 'green' ? 'bg-[var(--green)]' :
         config.style === 'black' ? 'bg-black' : 'bg-[var(--pink)]'
-      } text-white`}>
+        } text-white`}>
         {config.text || 'Kattints ide'}
       </button>
     </div>
@@ -466,10 +505,9 @@ export function CTABlockPublic({ config }) {
     <div className="py-12 px-4 text-center">
       <a
         href={config.link}
-        className={`inline-block px-8 py-3 rounded-lg font-medium ${
-          config.style === 'green' ? 'bg-[var(--green)] hover:bg-[var(--green-hover)]' : 
+        className={`inline-block px-8 py-3 rounded-lg font-medium ${config.style === 'green' ? 'bg-[var(--green)] hover:bg-[var(--green-hover)]' :
           config.style === 'black' ? 'bg-black hover:bg-gray-800' : 'bg-[var(--pink)] hover:bg-[var(--pink-hover)]'
-        } text-white transition-colors`}
+          } text-white transition-colors`}
       >
         {config.text}
       </a>
@@ -491,7 +529,7 @@ export function GalleryBlockPreview({ config }) {
         ) : (
           [...Array(6)].map((_, i) => (
             <div key={i} className="aspect-square bg-gray-100 rounded flex items-center justify-center text-gray-400 text-xs">
-              Kép {i+1}
+              Kép {i + 1}
             </div>
           ))
         )}
@@ -511,7 +549,7 @@ export function GalleryBlockSettings({ config, onChange }) {
         onChange={(e) => {
           try {
             onChange({ ...config, images: JSON.parse(e.target.value) })
-          } catch {}
+          } catch { }
         }}
       />
     </div>

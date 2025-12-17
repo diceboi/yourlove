@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Modal from "@/app/components/UI/Modal";
 import { createClient } from "@/utils/supabase/client";
 import AdminPageBuilderModal from "@/app/components/admin/PageBuilder/AdminPageBuilderModal";
 
@@ -69,24 +68,12 @@ export default function CustomPageModal() {
   }, [identifier, supabase]);
 
   if (loading) {
-    return (
-      <Modal openstate={true} onClose={() => router.back()}>
-        <p>Betöltés…</p>
-      </Modal>
-    );
+    return null; // A modal betölti magát
   }
 
   if (!page) {
-    return (
-      <Modal openstate={true} onClose={() => router.back()}>
-        <p>Nem található oldal a(z) "{String(identifier)}" alapján.</p>
-      </Modal>
-    );
+    return null; // Ha nincs oldal, akkor ne jelenítsünk meg semmit
   }
 
-  return (
-    <Modal openstate={true} onClose={() => router.back()} closeButton={false}>
-      <AdminPageBuilderModal page={page} isNew={false} />
-    </Modal>
-  );
+  return <AdminPageBuilderModal page={page} isNew={false} />;
 }
