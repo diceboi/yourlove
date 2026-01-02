@@ -94,7 +94,8 @@ function buildCategoryTrail(current, catsById) {
   let c = current;
   while (c) {
     chain.push(c);
-    c = c.szulo ? catsById.get(c.szulo) : null;
+    // Fix: szulo lehet string az adatbázisból, de a Map numeric key-eket használ
+    c = c.szulo ? catsById.get(Number(c.szulo)) : null;
   }
   chain.reverse();
   return chain.map((c, i) => ({

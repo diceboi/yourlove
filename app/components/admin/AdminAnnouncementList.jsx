@@ -24,7 +24,7 @@ export default function AdminAnnouncementList({ announcements, loading }) {
         setFilteredAnnouncements(filtered)
     }, [searchTerm, announcements])
 
-    if (loading || !announcements || announcements.length === 0) {
+    if (loading) {
         return (
             <div className="flex flex-col gap-2 animate-pulse px-6">
                 {[...Array(5)].map((_, i) => (
@@ -33,6 +33,16 @@ export default function AdminAnnouncementList({ announcements, loading }) {
                         className="h-16 bg-[var(--border,#e5e7eb)] rounded-2xl w-full"
                     />
                 ))}
+            </div>
+        )
+    }
+
+    if (!announcements || announcements.length === 0) {
+        return (
+            <div className="px-6">
+                <p className="text-gray-500">
+                    Még nincsenek hirdetések. Hozz létre egyet az "Új hirdetés" gombbal!
+                </p>
             </div>
         )
     }
@@ -79,9 +89,9 @@ export default function AdminAnnouncementList({ announcements, loading }) {
                                     </td>
                                     <td className="px-3 py-3 align-middle hidden lg:table-cell">
                                         {announcement.link_url ? (
-                                            <a 
-                                                href={announcement.link_url} 
-                                                target="_blank" 
+                                            <a
+                                                href={announcement.link_url}
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-[var(--pink)] hover:underline text-xs truncate block max-w-[200px]"
                                             >
@@ -93,12 +103,12 @@ export default function AdminAnnouncementList({ announcements, loading }) {
                                     </td>
                                     <td className="px-3 py-3 align-middle hidden xl:table-cell">
                                         <div className="flex items-center gap-2">
-                                            <div 
+                                            <div
                                                 className="w-6 h-6 rounded border border-gray-300"
                                                 style={{ backgroundColor: announcement.bg_color }}
                                                 title={`BG: ${announcement.bg_color}`}
                                             />
-                                            <div 
+                                            <div
                                                 className="w-6 h-6 rounded border border-gray-300"
                                                 style={{ backgroundColor: announcement.text_color }}
                                                 title={`Text: ${announcement.text_color}`}

@@ -177,32 +177,6 @@ export default function AdminAnnouncementEdit({ announcementId, onClose }) {
                         placeholder="pl. /akciok"
                     />
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <Label>Háttérszín</Label>
-                            <input
-                                type="text"
-                                name="bg_color"
-                                value={form.bg_color}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded p-2 mt-1"
-                                placeholder="pl. var(--black) vagy #000000"
-                            />
-                        </div>
-
-                        <div>
-                            <Label>Szöveg szín</Label>
-                            <input
-                                type="text"
-                                name="text_color"
-                                value={form.text_color}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded p-2 mt-1"
-                                placeholder="pl. white vagy #ffffff"
-                            />
-                        </div>
-                    </div>
-
                     <div>
                         <Label>Sorrend</Label>
                         <input
@@ -221,11 +195,11 @@ export default function AdminAnnouncementEdit({ announcementId, onClose }) {
                     {/* Preview */}
                     <div className="border-t pt-4 mt-6">
                         <Label>Előnézet</Label>
-                        <div 
+                        <div
                             className="mt-2 p-4 rounded text-sm text-center"
-                            style={{ 
-                                backgroundColor: form.bg_color || 'var(--black)', 
-                                color: form.text_color || 'white' 
+                            style={{
+                                backgroundColor: form.bg_color || 'var(--black)',
+                                color: form.text_color || 'white'
                             }}
                         >
                             {form.content || "A hirdetés tartalma itt jelenik meg..."}

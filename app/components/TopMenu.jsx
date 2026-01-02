@@ -31,9 +31,9 @@ export default function TopMenu() {
         <div className="flex flex-nowrap min-h-8 items-center justify-between w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto">
           <div className="flex flex-nowrap gap-4 min-w-fit">
             <div className="flex flex-nowrap gap-2">
-              <TbBrandYoutube className="w-5 h-5 text-white"/>
-              <TbBrandTiktok className="w-5 h-5 text-white"/>
-              <TbBrandFacebook className="w-5 h-5 text-white"/>
+              <TbBrandYoutube className="w-5 h-5 text-white" />
+              <TbBrandTiktok className="w-5 h-5 text-white" />
+              <TbBrandFacebook className="w-5 h-5 text-white" />
             </div>
           </div>
 
@@ -41,22 +41,22 @@ export default function TopMenu() {
             <Link href="/blog">
               <MenuText classname={"text-white hover:underline"}>
                 Blog
-              </MenuText>    
+              </MenuText>
             </Link>
             <Link href="/gyik">
               <MenuText classname={"text-white hover:underline"}>
                 Gyik
-              </MenuText>    
+              </MenuText>
             </Link>
             <Link href="/rolunk">
               <MenuText classname={"text-white hover:underline"}>
                 Rólunk
-              </MenuText>    
+              </MenuText>
             </Link>
             <Link href="/kapcsolat">
               <MenuText classname={"text-white hover:underline"}>
                 Kapcsolat
-              </MenuText>    
+              </MenuText>
             </Link>
           </div>
         </div>
@@ -64,75 +64,82 @@ export default function TopMenu() {
     )
   }
 
-  // Create announcement text with separators
-  const announcementText = announcements.map(a => a.content).join(" • ")
   const firstAnnouncement = announcements[0]
+  // Calculate animation duration based on screen width
+  const animationDuration = 15 // seconds
 
   return (
-    <div 
+    <div
       className="z-[999]"
       style={{ backgroundColor: firstAnnouncement.bg_color || 'var(--black)' }}
     >
       <div className="flex flex-nowrap min-h-8 items-center justify-between w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto">
         <div className="flex flex-nowrap gap-4 min-w-fit">
           <div className="flex flex-nowrap gap-2">
-            <TbBrandYoutube className="w-5 h-5 text-white"/>
-            <TbBrandTiktok className="w-5 h-5 text-white"/>
-            <TbBrandFacebook className="w-5 h-5 text-white"/>
+            <TbBrandYoutube className="w-5 h-5 text-white" />
+            <TbBrandTiktok className="w-5 h-5 text-white" />
+            <TbBrandFacebook className="w-5 h-5 text-white" />
           </div>
         </div>
 
         <div className="relative w-full overflow-hidden h-6">
-          <div 
+          <div
             className="absolute top-0 left-0 w-[50px] h-full z-10"
-            style={{ 
-              background: `linear-gradient(to right, ${firstAnnouncement.bg_color || 'var(--black)'}, transparent)` 
+            style={{
+              background: `linear-gradient(to right, ${firstAnnouncement.bg_color || 'var(--black)'}, transparent)`
             }}
           ></div>
-          <div 
+          <div
             className="absolute top-0 right-0 w-[50px] h-full z-10"
-            style={{ 
-              background: `linear-gradient(to left, ${firstAnnouncement.bg_color || 'var(--black)'}, transparent)` 
+            style={{
+              background: `linear-gradient(to left, ${firstAnnouncement.bg_color || 'var(--black)'}, transparent)`
             }}
           ></div>
-          <div 
-            className="absolute whitespace-nowrap animate-marquee text-sm"
-            style={{ color: firstAnnouncement.text_color || 'white' }}
-          >
-            {announcementText}
-          </div>
+
+          {/* Create separate elements for each announcement with staggered delays */}
+          {announcements.map((announcement, index) => (
+            <div
+              key={`${announcement.id}-${index}`}
+              className="whitespace-nowrap text-sm absolute top-0"
+              style={{
+                color: announcement.text_color || 'white',
+                animation: `marquee-stagger ${animationDuration}s linear infinite`,
+                animationDelay: `${index * (animationDuration / announcements.length)}s`,
+                animationFillMode: 'backwards'
+              }}
+            >
+              {announcement.content}
+            </div>
+          ))}
         </div>
 
         <div className="flex flex-nowrap gap-4">
           <Link href="/blog">
             <MenuText classname={"text-white hover:underline"}>
               Blog
-            </MenuText>    
+            </MenuText>
           </Link>
           <Link href="/gyik">
             <MenuText classname={"text-white hover:underline"}>
               Gyik
-            </MenuText>    
+            </MenuText>
           </Link>
           <Link href="/rolunk">
             <MenuText classname={"text-white hover:underline"}>
               Rólunk
-            </MenuText>    
+            </MenuText>
           </Link>
           <Link href="/kapcsolat">
             <MenuText classname={"text-white hover:underline"}>
               Kapcsolat
-            </MenuText>    
+            </MenuText>
           </Link>
         </div>
 
         <style jsx>{`
-          @keyframes marquee {
-            0% { transform: translateX(150%); }
-            100% { transform: translateX(-100%); }
-          }
-          .animate-marquee {
-            animation: marquee 25s linear infinite;
+          @keyframes marquee-stagger {
+            from { left: 100%; }
+            to { left: -100%; }
           }
         `}</style>
 
