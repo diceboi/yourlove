@@ -20,7 +20,7 @@ export default function ProductList({products = [], slidesPerView640, slidesPerV
   return (
     <Swiper
       modules={[Navigation, Pagination, Scrollbar, A11y, Autoplay]}
-      spaceBetween={16}
+      spaceBetween={-20}
       slidesPerView={slidesPerView640}
       navigation
       pagination={{
@@ -34,29 +34,29 @@ export default function ProductList({products = [], slidesPerView640, slidesPerV
       breakpoints={{
         640: {
           slidesPerView: slidesPerView640,
-          spaceBetween: 0,
+          spaceBetween: -20,
         },
         768: {
           slidesPerView: slidesPerView768,
-          spaceBetween: 0,
+          spaceBetween: -20,
         },
         1024: {
           slidesPerView: slidesPerView1024,
-          spaceBetween: 0,
+          spaceBetween: -20,
         },
         1280: {
           slidesPerView: slidesPerView1280,
-          spaceBetween: 0,
+          spaceBetween: -20,
         },
         1440: {
           slidesPerView: slidesPerView1440,
-          spaceBetween: 0,
+          spaceBetween: -20,
         },
       }}
       className="w-full"
     >
       {products.map((product) => (
-        <SwiperSlide key={product.id || product.cikkszam} className="py-4 px-2">
+        <SwiperSlide key={product.id || product.cikkszam} className="py-10 px-6">
           <ProductListItem
             id={product.id}
             image={product.termekkep}

@@ -26,14 +26,92 @@ export default function AdminAnnouncementList({ announcements, loading }) {
 
     if (loading) {
         return (
-            <div className="flex flex-col gap-2 animate-pulse px-6">
-                {[...Array(5)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="h-16 bg-[var(--border,#e5e7eb)] rounded-2xl w-full"
-                    />
-                ))}
-            </div>
+            <>
+                {/* Desktop (táblázat) skeleton */}
+                <div className="hidden md:block px-3 md:px-6">
+                    <div className="relative w-full max-w-full overflow-x-auto border border-[var(--border,#e5e7eb)] rounded-2xl">
+                        <table className="min-w-full text-sm">
+                            <thead className="bg-[#f5f5f5]">
+                                <tr>
+                                    <th className="text-left px-3 py-3">
+                                        <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                                    </th>
+                                    <th className="text-left px-3 py-3">
+                                        <div className="h-4 w-20 bg-gray-300 rounded animate-pulse"></div>
+                                    </th>
+                                    <th className="text-left px-3 py-3 hidden lg:table-cell">
+                                        <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                                    </th>
+                                    <th className="text-left px-3 py-3 hidden xl:table-cell">
+                                        <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                                    </th>
+                                    <th className="text-left px-3 py-3 hidden xl:table-cell">
+                                        <div className="h-4 w-16 bg-gray-300 rounded animate-pulse"></div>
+                                    </th>
+                                    <th className="text-right px-3 py-3 w-[140px]">
+                                        <div className="h-4 w-20 bg-gray-300 rounded animate-pulse ml-auto"></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white">
+                                {[...Array(5)].map((_, i) => (
+                                    <tr key={i} className="border-t border-[var(--border,#e5e7eb)]">
+                                        <td className="px-3 py-3">
+                                            <div className="h-5 w-8 bg-gray-200 rounded animate-pulse"></div>
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <div className="h-5 w-48 bg-gray-200 rounded animate-pulse"></div>
+                                        </td>
+                                        <td className="px-3 py-3 hidden lg:table-cell">
+                                            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                                        </td>
+                                        <td className="px-3 py-3 hidden xl:table-cell">
+                                            <div className="flex gap-2">
+                                                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+                                                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3 hidden xl:table-cell">
+                                            <div className="h-5 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                        </td>
+                                        <td className="px-3 py-3 w-[140px]">
+                                            <div className="flex gap-2 justify-end">
+                                                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                                                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Mobil (kártya) skeleton */}
+                <div className="md:hidden px-3 space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="ring ring-[var(--border,#e5e7eb)] rounded-2xl p-3"
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-6 w-8 bg-gray-200 rounded animate-pulse"></div>
+                                        <div className="h-4 w-40 bg-gray-200 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </>
         )
     }
 

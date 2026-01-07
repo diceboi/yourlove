@@ -138,7 +138,7 @@ export default function Submenu() {
           transition={{ duration: 0.25, type: "spring", bounce: 0.25 }}
           onMouseEnter={cancelCloseSubmenu}
           onMouseLeave={() => scheduleCloseSubmenu(450)}
-          className="w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto"
+          className="w-[calc(100%-32px)] xl:w-[calc(100%-96px)] m-auto bg-white"
         >
           <Swiper
             modules={[Navigation, Pagination, Scrollbar, A11y]}

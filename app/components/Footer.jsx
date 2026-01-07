@@ -1,4 +1,6 @@
+"use client";
 
+import { useState } from "react";
 import Label from "@/app/components/UI/Texts/Label"
 import Image from "next/image"
 import Link from "next/link"
@@ -6,8 +8,11 @@ import Paragraph from "@/app/components/UI/Texts/Paragraph"
 import { TbBrandFacebook, TbBrandYoutube, TbBrandTiktok } from "react-icons/tb"
 import ButtonText from "@/app/components/UI/Texts/ButtonText"
 import NewsletterFooterBox from "./UI/NewsletterFooterBox"
+import CookieSettings from "./CookieSettings"
 
 export default function Footer() {
+  const [isCookieSettingsOpen, setIsCookieSettingsOpen] = useState(false);
+
   return (
     <div className="flex flex-col w-full min-h-[30vh]">
         <div className="flex lg:flex-row flex-col gap-8 pt-8 pb-8 px-4 xl:px-12 bg-[var(--border)]">
@@ -48,6 +53,14 @@ export default function Footer() {
                 <ButtonText><Link href="/termekek" className="hover:underline">Fizetés</Link></ButtonText>
                 <ButtonText><Link href="/termekek" className="hover:underline">Diszkrét csomagolás</Link></ButtonText>
                 <ButtonText><Link href="/termekek" className="hover:underline">Fontos tudnivalók a termékekről</Link></ButtonText>
+                <ButtonText>
+                  <button 
+                    onClick={() => setIsCookieSettingsOpen(true)}
+                    className="hover:underline text-left"
+                  >
+                    Süti beállítások
+                  </button>
+                </ButtonText>
               </div>
             </div>
           </div>
@@ -60,6 +73,12 @@ export default function Footer() {
             <Link href="/fizetes"><Image src="/simplepay_bankcard_logos_left_482x40_new.png" alt="SimplePay logos" width={1000} height={167} className="w-[400px] h-auto" /></Link>
             <Label classname={"flex flex-nowrap gap-1 min-w-fit"}>Made with <Image src="/yourlove-icon.svg" alt="Yourlove icon" width={15} height={15} /> by: <Link className="underline" href="mailto:szasz.szabolcs1995@gmail.com">Szász Szabolcs</Link></Label>
         </div>
+        
+        {/* Cookie Settings Modal */}
+        <CookieSettings 
+          isOpen={isCookieSettingsOpen}
+          onClose={() => setIsCookieSettingsOpen(false)}
+        />
     </div>
   )
 }

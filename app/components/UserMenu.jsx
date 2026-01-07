@@ -17,6 +17,7 @@ export default function UserMenu() {
   const { setActiveDrawer } = useContext(MenuContext);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [showWave, setShowWave] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,9 @@ export default function UserMenu() {
         } else if (error) {
           console.error("Profile fetch error:", error);
         }
+        setProfileLoading(false); // Profile betöltés befejezve (akár volt, akár nem)
+      } else {
+        setProfileLoading(false); // Nincs user, tehát nincs mit betölteni
       }
     });
 
@@ -48,6 +52,7 @@ export default function UserMenu() {
       (_event, session) => {
         setUser(session?.user ?? null);
         setUserProfile(null); // új login esetén reseteljük a profilt
+        setProfileLoading(true); // Újra töltjük
       }
     );
 
@@ -85,11 +90,15 @@ export default function UserMenu() {
   const firstWord = (s) =>
     (s ?? '').trim().split(/\s+/)[0] || '';
 
-  const displayName =
-    userProfile?.firstname
-    || firstWord(user?.user_metadata?.name)
-    || firstWord((user?.email || '').split('@')[0])  // végső fallback
-    || 'Felhasználó';
+  // Csak akkor használj fallbacket (email-es név), ha már biztosan betöltött a profil és nincs firstname
+  const displayName = 
+    userProfile?.firstname ||  // Ha van profil keresztnév, mindig azt használd
+    (!profileLoading && user ? (  // Csak ha már betöltött minden és nincs firstname
+      firstWord(user?.user_metadata?.name) ||
+      firstWord((user?.email || '').split('@')[0]) ||
+      'Felhasználó'
+    ) : '...');  // Betöltés alatt
+
 
   return (
     <div className="relative z-50 lg:w-full">

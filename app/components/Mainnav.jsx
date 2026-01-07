@@ -86,8 +86,8 @@ export default function MainNav() {
               </motion.div>
               <div className="flex flex-row min-w-fit items-center justify-end">
                 <UserMenu />
-                <Compare />
-                <Favourites />
+                <div className="xl:flex hidden"><Compare /></div>
+                <div className="xl:flex hidden"><Favourites /></div>
                 <CartButton />
                 <MobileToggle />
               </div>
@@ -96,7 +96,7 @@ export default function MainNav() {
         </div>
         <div
           id="desktop-menu"
-          className="hidden xl:flex flex-col bg-white"
+          className="hidden xl:flex flex-col"
         >
           <MainMenu />
           <Submenu />

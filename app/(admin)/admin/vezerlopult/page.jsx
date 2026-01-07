@@ -304,8 +304,10 @@ export default async function AdminVezerlopultPage() {
     <div className="flex md:flex-row flex-col xl:mt-0 mt-20 md:h-[91vh] h-full bg-[var(--grey-bg)]">
       <AdminSideMenu />
       <div className="flex-1 flex flex-col">
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 overflow-auto">
           <AdminHero />
+
+          <div className="px-6 pb-6">
 
           {/* Felső stat csempék */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -370,6 +372,7 @@ export default async function AdminVezerlopultPage() {
                 <li>Heti riport export (később automatizálható)</li>
               </ul>
             </div>
+          </div>
           </div>
         </div>
       </div>

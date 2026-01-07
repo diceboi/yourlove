@@ -66,7 +66,7 @@ export default function TopMenu() {
 
   const firstAnnouncement = announcements[0]
   // Calculate animation duration based on screen width
-  const animationDuration = 15 // seconds
+  const animationDuration = 25 // seconds
 
   return (
     <div

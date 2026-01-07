@@ -8,7 +8,7 @@ import { TbChevronDown } from "react-icons/tb";
 import AdminBlogCategoryCreate from "@/app/components/admin/AdminBlogCategoryCreate";
 import Modal from "@/app/components/UI/Modal";
 
-export default function AdminblogCategoryListSettings() {
+export default function AdminBlogCategoryListSettings() {
   const [openCreate, setOpenCreate] = useState(false);
 
   return (

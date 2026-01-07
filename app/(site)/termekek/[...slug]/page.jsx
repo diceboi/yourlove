@@ -18,6 +18,9 @@ import Link from 'next/link'
 import ProductImageGallerySwiper from "@/app/components/ProductImageGallerySwiper";
 import ProductFAQ from "@/app/components/products/ProductFAQ";
 import H3 from "@/app/components/UI/Texts/H3";
+import ProductInfoSection from "@/app/components/UI/ProductInfoSection";
+import ProductSpecsTable from "@/app/components/UI/ProductSpecsTable";
+import StickyAddToCart from "@/app/components/UI/StickyAddToCart";
 
 
 /* ---------- Segédfüggvények ---------- */
@@ -203,28 +206,54 @@ export default async function Page({ params, searchParams }) {
                   <ProductInfoPanel product={product} />
                 </div>
 
-                <div className="flex flex-col gap-4">
+                <ProductInfoSection show={product.termekleiras}>
                   <Paragraph>{product.termekleiras}</Paragraph>
-                </div>
+                </ProductInfoSection>
 
-                <div className="flex flex-col gap-4">
-                  {faqItems.length > 0 && <ProductFAQ items={faqItems} />}
-                </div>
+                <ProductInfoSection show={faqItems.length > 0}>
+                  <ProductFAQ items={faqItems} />
+                </ProductInfoSection>
 
-                <div className="flex flex-col gap-4">
-                  <H3>Tisztítás</H3>
+                <ProductInfoSection 
+                  title="Műszaki Adatok"
+                  show={product.meretek || product.suly || product.anyag || product.szin || product.zajszint || product.vizallosag}
+                >
+                  <ProductSpecsTable specs={[
+                    { label: "Méret", value: product.meretek, unit: "mm" },
+                    { label: "Súly", value: product.suly, unit: "g" },
+                    { label: "Anyag", value: product.anyag },
+                    { label: "Szín", value: product.szin },
+                    { label: "Zajszint", value: product.zajszint, unit: "dB" },
+                    { label: "Vízállóság", value: product.vizallosag },
+                  ]} />
+                </ProductInfoSection>
+
+                <ProductInfoSection 
+                  title="Működés"
+                  show={product.toltes || product.toltesi_ido || product.hasznalati_ido || product.vibracios_modok || product.sebessegfokozatok || product.vezerles || product.applikacio}
+                >
+                  <ProductSpecsTable specs={[
+                    { label: "Töltés", value: product.toltes },
+                    { label: "Töltési idő", value: product.toltesi_ido, unit: "perc" },
+                    { label: "Használati idő", value: product.hasznalati_ido, unit: "perc" },
+                    { label: "Vibrációs módok", value: product.vibracios_modok },
+                    { label: "Sebességfokozatok", value: product.sebessegfokozatok },
+                    { label: "Vezérlés", value: product.vezerles },
+                    { label: "Applikáció", value: product.applikacio },
+                  ]} />
+                </ProductInfoSection>
+
+                <ProductInfoSection title="Tisztítás" show={product.tisztitas}>
                   <Paragraph>{product.tisztitas}</Paragraph>
-                </div>
+                </ProductInfoSection>
 
-                <div className="flex flex-col gap-4">
-                  <H3>Tárolás</H3>
+                <ProductInfoSection title="Tárolás" show={product.tarolas}>
                   <Paragraph>{product.tarolas}</Paragraph>
-                </div>
+                </ProductInfoSection>
 
-                <div className="flex flex-col gap-4">
-                  <H3>Garancia</H3>
+                <ProductInfoSection title="Garancia" show={product.garancia}>
                   <Paragraph>{product.garancia} év</Paragraph>
-                </div>
+                </ProductInfoSection>
 
                 <UpsaleProducts products={productsUnderFreeShipping} />
               </div>
@@ -234,6 +263,15 @@ export default async function Page({ params, searchParams }) {
               </div>
             </div>
           </div>
+
+          <StickyAddToCart
+            productId={product.id}
+            product={{
+              name: `${product.fo_cim || ''} ${product.alcim || ''}`.trim(),
+              price_huf: product.eladasi_ar_brutto,
+              image_url: product.termekkep
+            }}
+          />
         </div>
       </div>
     );

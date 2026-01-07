@@ -3,6 +3,7 @@ import { Suspense, useEffect } from 'react'
 import { useCartUI } from './CartUIProvider'
 import { TbX } from "react-icons/tb";
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartDrawerClient({ content, footer }) {
   const { open, setOpen } = useCartUI()
@@ -28,28 +29,37 @@ export default function CartDrawerClient({ content, footer }) {
         onClick={() => setOpen(false)}
       />
 
-      {/* Panel */}
-      <div className={`fixed right-0 top-0 h-full w-[90vw] max-w-md bg-white shadow-2xl z-50
-                       transform transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-          <h3 className="text-lg font-semibold">Kosár</h3>
-          <button onClick={() => setOpen(false)} className="text-sm text-gray-500 hover:text-gray-800">
-            <TbX className='w-6 h-auto'/>
-          </button>
-        </div>
+      {/* Panel with AnimatePresence for smooth animation */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+            className="fixed right-0 top-0 h-full w-[90vw] max-w-md bg-white shadow-2xl z-50"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+              <h3 className="text-lg font-semibold">Kosár</h3>
+              <button onClick={() => setOpen(false)} className="text-sm text-gray-500 hover:text-gray-800">
+                <TbX className='w-6 h-auto'/>
+              </button>
+            </div>
 
-        <div className="h-[calc(100%-175px)] overflow-y-auto">
-          <Suspense fallback={<div className="p-4">Betöltés…</div>}>
-            {content}
-          </Suspense>
-        </div>
+            <div className="h-[calc(100%-175px)] overflow-y-auto">
+              <Suspense fallback={<div className="p-4">Betöltés…</div>}>
+                {content}
+              </Suspense>
+            </div>
 
-        <div className="p-4 border-t">
-          <Suspense fallback={<div className="p-2">...</div>}>
-            {footer}
-          </Suspense>
-        </div>
-      </div>
+            <div className="p-4 border-t">
+              <Suspense fallback={<div className="p-2">...</div>}>
+                {footer}
+              </Suspense>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

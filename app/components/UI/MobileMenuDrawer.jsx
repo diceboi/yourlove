@@ -5,13 +5,23 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { TbChevronLeft, TbX } from "react-icons/tb";
+import { TbChevronLeft, TbX, TbHeart, TbArrowsLeftRight } from "react-icons/tb";
 import { MenuContext } from "@/app/MenuContext";
 import { createClient } from "@/utils/supabase/client";
+import { useFavoritesUI } from "../favorites/FavoritesUIProvider";
+import { useCompareUI } from "../compare/CompareUIProvider";
 
 export default function MobileMenuDrawer() {
   const { isMobileOpen, closeMobileMenu } = useContext(MenuContext);
+  const { setOpen: setFavoritesOpen, count: favCount } = useFavoritesUI();
+  const { setOpen: setCompareOpen, count: compareCount } = useCompareUI();
   const supabase = useMemo(() => createClient(), []);
+
+  // Helper to open drawer and close mobile menu
+  const openDrawerAndCloseMenu = (setDrawerOpen) => {
+    closeMobileMenu();
+    setTimeout(() => setDrawerOpen(true), 300); // Wait for menu close animation
+  };
 
   // view state
   const [level, setLevel] = useState(0); // 0=topcats, 1=children/fallback
@@ -245,6 +255,40 @@ const TwoActionTile = ({ title, image, href, onChevron, classname }) => (
                             <Tile title="GYIK" image="/default.png" href="/gyik" />
                             <Tile title="Rólunk" image="/default.png" href="/rolunk" />
                             <Tile title="Kapcsolat" image="/default.png" href="/kapcsolat" />
+                            
+                            {/* Divider */}
+                            <div className="h-2 bg-[var(--border)]" />
+                            
+                            {/* Favourites and Compare - opens drawers */}
+                            <button
+                              onClick={() => openDrawerAndCloseMenu(setFavoritesOpen)}
+                              className="flex items-center gap-2 pl-3 border-b border-[var(--border)] bg-white active:bg-gray-50 w-full text-left relative"
+                            >
+                              <div className="w-10 h-10 flex items-center justify-center">
+                                <TbHeart className="w-6 h-6 text-[var(--pink)]" />
+                              </div>
+                              <div className="flex-1 font-medium truncate p-3">Kedvencek</div>
+                              {favCount > 0 && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--pink)] text-white text-xs font-semibold flex items-center justify-center">
+                                  {favCount > 99 ? '99+' : favCount}
+                                </span>
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={() => openDrawerAndCloseMenu(setCompareOpen)}
+                              className="flex items-center gap-2 pl-3 border-b border-[var(--border)] bg-white active:bg-gray-50 w-full text-left relative"
+                            >
+                              <div className="w-10 h-10 flex items-center justify-center">
+                                <TbArrowsLeftRight className="w-6 h-6 text-[var(--pink)]" />
+                              </div>
+                              <div className="flex-1 font-medium truncate p-3">Termék összehasonlítás</div>
+                              {compareCount > 0 && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--pink)] text-white text-xs font-semibold flex items-center justify-center">
+                                  {compareCount > 99 ? '99+' : compareCount}
+                                </span>
+                              )}
+                            </button>
                         </>
                     )}
 

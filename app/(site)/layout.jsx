@@ -15,6 +15,8 @@ import ScrollToTopButton from "../components/ScrollToTopButton";
 import Footer from "@/app/components/Footer"
 
 import UserMenuDrawer from "../components/UserMenuDrawer";
+import CookieConsent from "../components/CookieConsent";
+
 
 const sora = Sora({ subsets: ["latin"] });
 
@@ -52,6 +54,7 @@ export default function SiteLayout({ children }) {
                 <CompareDrawer />
                 <UserMenuDrawer />
                 <ScrollToTopButton />
+                <CookieConsent />
               </CompareUIProvider>
             </FavoritesUIProvider>
           </CartUIProvider>

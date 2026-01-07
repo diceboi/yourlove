@@ -9,6 +9,7 @@ export default function Modal({
   onClose,
   className = "",
   closeButton,
+  width = "90%",
 }) {
   if (typeof window === "undefined") return null; // SSR védőfal
 
@@ -24,7 +25,8 @@ export default function Modal({
           onClick={onClose} // háttérre kattintás zárja
         >
           <motion.div
-            className={`relative bg-[#f5f5f5] shadow-xl w-[90%] max-h-[100vh] overflow-y-auto ${className}`}
+            className={`relative bg-[#f5f5f5] shadow-xl max-h-[100vh] overflow-y-auto ${className}`}
+            style={{ width }}
             initial={{ x: 2000, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 2000, opacity: 0 }}

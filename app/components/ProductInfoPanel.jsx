@@ -1,4 +1,5 @@
 "use client";
+import { forwardRef } from "react";
 import { useRouter } from "next/navigation";
 import H1 from "@/app/components/UI/Texts/H1";
 import H2 from "@/app/components/UI/Texts/H2";
@@ -19,11 +20,11 @@ import UpsaleProducts from "@/app/components/UpsaleProducts";
 import ProductNameTextSmall from "./UI/Texts/ProductNameTextSmall";
 import SKUText from "./UI/Texts/SKUText";
 
-export default function ProductInfoPanel({product}) {
+const ProductInfoPanel = forwardRef(function ProductInfoPanel({product}, ref) {
   const sale = true;
 
   return (
-    <div className="lg:sticky relative lg:top-40 lg:left-0 flex flex-col gap-4">
+    <div ref={ref} className="lg:sticky relative lg:top-40 lg:left-0 flex flex-col gap-4">
       <div className="inline-flex gap-2">
         <TagButton
           title={"Akció"}
@@ -81,4 +82,6 @@ export default function ProductInfoPanel({product}) {
       </div>
     </div>
   );
-}
+});
+
+export default ProductInfoPanel;

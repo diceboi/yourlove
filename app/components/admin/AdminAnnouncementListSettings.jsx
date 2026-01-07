@@ -4,20 +4,14 @@ import { useContext } from "react"
 import Link from "next/link"
 import { AdminMenuContext } from "@/app/AdminContext"
 import { TbPlus } from "react-icons/tb"
+import AdminAnnouncementSearch from "./AdminAnnouncementSearch"
 
 export default function AdminAnnouncementListSettings() {
     const { setSearchTerm } = useContext(AdminMenuContext)
 
     return (
-        <div className="flex md:flex-row flex-col justify-between items-start md:items-center gap-4 px-6 pb-6">
-            <div className="relative w-full md:w-96">
-                <input
-                    type="text"
-                    placeholder="Hirdetés keresése..."
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-[var(--border)] rounded-full outline-none focus:border-[var(--pink)]"
-                />
-            </div>
+        <div className="flex md:flex-row flex-col justify-between items-start md:items-center gap-4 px-6 py-2 sticky xl:top-4 top-0 bg-[var(--grey-bg)] z-30">
+            <AdminAnnouncementSearch />
 
             <Link
                 href="/admin/hirdetesek/uj"
