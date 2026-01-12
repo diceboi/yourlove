@@ -21,6 +21,8 @@ import H3 from "@/app/components/UI/Texts/H3";
 import ProductInfoSection from "@/app/components/UI/ProductInfoSection";
 import ProductSpecsTable from "@/app/components/UI/ProductSpecsTable";
 import StickyAddToCart from "@/app/components/UI/StickyAddToCart";
+import ProductReviews from "@/app/components/products/ProductReviews";
+import { getProductReviews } from "@/app/_actions/review";
 
 
 /* ---------- Segédfüggvények ---------- */
@@ -179,6 +181,23 @@ export default async function Page({ params, searchParams }) {
 
     const faqItems = parseGyikString(product.gyik);
 
+    // Vélemények lekérdezése
+    const reviewsResult = await getProductReviews(product.id, { limit: 5, offset: 0 });
+    const initialReviews = reviewsResult.ok ? reviewsResult.data : [];
+    const reviewsTotal = reviewsResult.ok ? reviewsResult.total : 0;
+
+    // User profile lekérdezése (ha be van jelentkezve)
+    const { data: { user } } = await supabase.auth.getUser();
+    let userProfile = null;
+    if (user) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('id, firstname, lastname, email')
+        .eq('id', user.id)
+        .single();
+      userProfile = profile;
+    }
+
     return (
       <div className="w-full xl:pt-18 pt-18 xl:pb-8 pb-4 px-4 xl:px-12">
         <div className="flex flex-col lg:gap-8 gap-4">
@@ -214,7 +233,7 @@ export default async function Page({ params, searchParams }) {
                   <ProductFAQ items={faqItems} />
                 </ProductInfoSection>
 
-                <ProductInfoSection 
+                <ProductInfoSection
                   title="Műszaki Adatok"
                   show={product.meretek || product.suly || product.anyag || product.szin || product.zajszint || product.vizallosag}
                 >
@@ -228,7 +247,7 @@ export default async function Page({ params, searchParams }) {
                   ]} />
                 </ProductInfoSection>
 
-                <ProductInfoSection 
+                <ProductInfoSection
                   title="Működés"
                   show={product.toltes || product.toltesi_ido || product.hasznalati_ido || product.vibracios_modok || product.sebessegfokozatok || product.vezerles || product.applikacio}
                 >
@@ -254,6 +273,15 @@ export default async function Page({ params, searchParams }) {
                 <ProductInfoSection title="Garancia" show={product.garancia}>
                   <Paragraph>{product.garancia} év</Paragraph>
                 </ProductInfoSection>
+
+                {/* Vélemények szekció */}
+                <ProductReviews
+                  productId={product.id}
+                  initialReviews={initialReviews}
+                  initialTotal={reviewsTotal}
+                  averageRating={product.average_rating || 0}
+                  userProfile={userProfile}
+                />
 
                 <UpsaleProducts products={productsUnderFreeShipping} />
               </div>

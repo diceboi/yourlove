@@ -23,7 +23,8 @@ import {
   Layout,
   Images,
   Megaphone,
-  Ticket
+  Ticket,
+  MessageSquare
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -68,6 +69,7 @@ export default function AdminSideMenu() {
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
     { id: "akciok", label: "Akciók", icon: Tag },
     { id: "kuponok", label: "Kuponok", icon: Ticket },
+    { id: "velemenyek", label: "Vélemények", icon: MessageSquare },
   ];
 
   const renderBadge = (badge) =>
