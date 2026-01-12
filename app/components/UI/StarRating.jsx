@@ -56,21 +56,39 @@ export default function StarRating({
             fillClass = 'text-gray-300'
         }
 
+        const starContent = (
+            <StarIcon className="w-full h-full" />
+        )
+
+        const starClasses = `
+          ${iconSize}
+          ${fillClass}
+          ${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
+          focus:outline-none
+        `
+
+        // Use span for non-interactive to avoid nested buttons
+        if (!interactive) {
+            return (
+                <span
+                    key={index}
+                    className={starClasses}
+                    aria-label={`${starValue} csillag`}
+                >
+                    {starContent}
+                </span>
+            )
+        }
+
         return (
             <button
                 key={index}
                 type="button"
                 onClick={() => handleStarClick(index)}
-                disabled={!interactive}
-                className={`
-          ${iconSize}
-          ${fillClass}
-          ${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
-          focus:outline-none
-        `}
+                className={starClasses}
                 aria-label={`${starValue} csillag`}
             >
-                <StarIcon className="w-full h-full" />
+                {starContent}
             </button>
         )
     }

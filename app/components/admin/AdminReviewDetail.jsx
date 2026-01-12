@@ -91,7 +91,11 @@ export default function AdminReviewDetail({ review, onClose }) {
                 <div className="bg-gray-50 rounded-lg p-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Termék</h3>
                     <Link
-                        href={`/p/${review.products.seo_slug}`}
+                        href={
+                            review.products.canonical_path
+                                ? `/termekek/${review.products.canonical_path}/${review.products.seo_slug}`
+                                : `/termekek/${review.products.seo_slug}`
+                        }
                         target="_blank"
                         className="flex items-center gap-2 text-pink-600 hover:text-pink-700 font-medium"
                     >

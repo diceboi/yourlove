@@ -92,7 +92,7 @@ export default function ProductReviewForm({ productId, userProfile }) {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     maxLength={200}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--pink)] focus:border-transparent"
                     placeholder="pl. Nagyon elégedett vagyok!"
                 />
             </div>
@@ -155,7 +155,7 @@ export default function ProductReviewForm({ productId, userProfile }) {
             <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-pink-600 text-white py-3 rounded-full font-semibold hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-[var(--pink)] text-white py-3 rounded-full font-semibold hover:bg-[var(--pink-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
                 {submitting ? 'Küldés...' : 'Vélemény küldése'}
             </button>

@@ -13,6 +13,13 @@ export default function ProductReviews({ productId, initialReviews, initialTotal
     const [page, setPage] = useState(1)
     const [filterRating, setFilterRating] = useState(null)
     const [showReviewForm, setShowReviewForm] = useState(false)
+    const [ratingDistribution, setRatingDistribution] = useState([
+        { rating: 5, count: 0 },
+        { rating: 4, count: 0 },
+        { rating: 3, count: 0 },
+        { rating: 2, count: 0 },
+        { rating: 1, count: 0 }
+    ])
 
     const limit = 5
 
@@ -32,6 +39,9 @@ export default function ProductReviews({ productId, initialReviews, initialTotal
             if (result.ok) {
                 setReviews(result.data)
                 setTotal(result.total)
+                if (result.distribution) {
+                    setRatingDistribution(result.distribution)
+                }
             }
         } catch (error) {
             console.error('Hiba a vélemények betöltésekor:', error)
@@ -43,10 +53,10 @@ export default function ProductReviews({ productId, initialReviews, initialTotal
     const totalPages = Math.ceil(total / limit)
 
     // Rating distribution
-    const ratingCounts = [5, 4, 3, 2, 1].map(rating => {
-        // Ez egyszerűsített, ideálisan server-ről jönne
-        return { rating, count: 0 }
-    })
+    // const ratingCounts = [5, 4, 3, 2, 1].map(rating => {
+    //     // Ez egyszerűsített, ideálisan server-ről jönne
+    //     return { rating, count: 0 }
+    // })
 
     return (
         <div className="mt-12">
@@ -56,39 +66,43 @@ export default function ProductReviews({ productId, initialReviews, initialTotal
                 {/* Összesítő */}
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                     {/* Bal oldal: Átlag */}
-                    <div className="bg-gray-50 rounded-xl p-6 text-center">
-                        <div className="text-5xl font-bold text-gray-900 mb-2">
+                    <div className="bg-gray-50 rounded-xl p-6 flex flex-col items-center justify-center">
+                        <div className="text-5xl font-bold text-gray-900 mb-3">
                             {averageRating ? averageRating.toFixed(1) : '0.0'}
                         </div>
-                        <StarRating rating={averageRating || 0} size="lg" />
-                        <p className="text-gray-600 mt-2">
+                        <div className="mb-2">
+                            <StarRating rating={averageRating || 0} size="lg" />
+                        </div>
+                        <p className="text-gray-600">
                             {total} értékelés alapján
                         </p>
                     </div>
 
                     {/* Jobb oldal: Rating eloszlás */}
                     <div className="space-y-2">
-                        {ratingCounts.map(({ rating, count }) => (
-                            <button
+                        {ratingDistribution.map(({ rating, count }) => (
+                            <div
                                 key={rating}
                                 onClick={() => setFilterRating(filterRating === rating ? null : rating)}
                                 className={`
-                  w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors
-                  ${filterRating === rating ? 'bg-pink-50 border border-pink-200' : ''}
+                  w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer
+                  ${filterRating === rating ? 'bg-[var(--cream-pink)] border border-[var(--pink)]' : ''}
                 `}
                             >
-                                <div className="flex items-center gap-1 w-16">
+                                <div className="flex items-center gap-1 min-w-[60px]">
                                     <span className="font-medium">{rating}</span>
-                                    <StarRating rating={rating} size="sm" showHalf={false} className="gap-0" />
+                                    <div className="flex">
+                                        <StarRating rating={rating} size="sm" showHalf={false} className="gap-0" />
+                                    </div>
                                 </div>
-                                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="flex-1 min-w-0 h-2 bg-gray-200 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-yellow-400"
                                         style={{ width: `${total > 0 ? (count / total) * 100 : 0}%` }}
                                     />
                                 </div>
-                                <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
-                            </button>
+                                <span className="text-sm text-gray-600 w-12 text-right shrink-0">{count}</span>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -97,7 +111,7 @@ export default function ProductReviews({ productId, initialReviews, initialTotal
                 <div className="mb-6">
                     <button
                         onClick={() => setShowReviewForm(!showReviewForm)}
-                        className="bg-pink-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-pink-700 transition-colors"
+                        className="bg-[var(--pink)] text-white px-6 py-3 rounded-full font-semibold hover:bg-[var(--pink-hover)] transition-colors"
                     >
                         {showReviewForm ? 'Mégse' : '✍️ Vélemény írása'}
                     </button>

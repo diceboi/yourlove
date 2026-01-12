@@ -28,7 +28,7 @@ export default function ReviewModal() {
                     .from("product_reviews")
                     .select(`
             *,
-            user_profiles (
+            user_profiles!product_reviews_user_id_fkey (
               firstname,
               lastname,
               email
@@ -36,7 +36,8 @@ export default function ReviewModal() {
             products (
               id,
               fo_cim,
-              slug
+              seo_slug,
+              canonical_path
             )
           `)
                     .eq("id", reviewId)

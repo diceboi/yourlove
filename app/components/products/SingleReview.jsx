@@ -3,7 +3,7 @@ import { TbShieldCheck } from 'react-icons/tb'
 
 export default function SingleReview({ review }) {
     const reviewerName = review.user_profiles
-        ? `${review.user_profiles.lastname} ${review.user_profiles.firstname}`
+        ? review.user_profiles.firstname
         : review.reviewer_name || 'Névtelen'
 
     const reviewDate = new Date(review.created_at).toLocaleDateString('hu-HU', {
@@ -15,11 +15,11 @@ export default function SingleReview({ review }) {
     return (
         <div className={`
       bg-white border border-gray-200 rounded-xl p-6
-      ${review.is_featured ? 'ring-2 ring-pink-500' : ''}
+      ${review.is_featured ? 'ring-2 ring-[var(--pink)]' : ''}
     `}>
             {/* Kiemelt jelző */}
             {review.is_featured && (
-                <div className="inline-block bg-pink-100 text-pink-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
+                <div className="inline-block bg-[var(--cream-pink)] text-[var(--pink)] text-xs font-semibold px-3 py-1 rounded-full mb-3">
                     ⭐ Kiemelt vélemény
                 </div>
             )}

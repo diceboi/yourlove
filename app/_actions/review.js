@@ -54,7 +54,24 @@ export async function getProductReviews(productId, options = {}) {
         return { ok: false, data: [], total: 0, error: error.message }
     }
 
-    return { ok: true, data: data || [], total: count || 0 }
+    // Calculate rating distribution
+    const distribution = await Promise.all([5, 4, 3, 2, 1].map(async rating => {
+        const { count: ratingCount } = await sb
+            .from('product_reviews')
+            .select('*', { count: 'exact', head: true })
+            .eq('product_id', productId)
+            .eq('is_approved', true)
+            .eq('rating', rating)
+
+        return { rating, count: ratingCount || 0 }
+    }))
+
+    return {
+        ok: true,
+        data: data || [],
+        total: count || 0,
+        distribution
+    }
 }
 
 /**
@@ -172,7 +189,9 @@ export async function getAllReviews(filters = {}, pagination = {}) {
       products (
         id,
         fo_cim,
-        seo_slug
+        seo_slug,
+        kategoria,
+        canonical_path
       )
     `, { count: 'exact' })
 

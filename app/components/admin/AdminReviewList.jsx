@@ -8,13 +8,22 @@ import Link from 'next/link'
 import StarRating from '@/app/components/UI/StarRating'
 import Label from '../UI/Texts/Label'
 
+// Helper: Generate product URL from canonical path
+function getProductUrl(product) {
+    // Use canonical_path if available, otherwise fallback to just slug
+    if (product.canonical_path) {
+        return `/termekek/${product.canonical_path}/${product.seo_slug}`
+    }
+    return `/termekek/${product.seo_slug}`
+}
+
 export default function AdminReviewList() {
     const [reviews, setReviews] = useState([])
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [filters, setFilters] = useState({
-        status: 'pending', // 'all' | 'pending' | 'approved'
+        status: 'all',
         minRating: null,
         search: ''
     })
@@ -89,12 +98,8 @@ export default function AdminReviewList() {
     }
 
     const totalPages = Math.ceil(total / limit)
-
-    const statusCounts = {
-        all: total,
-        pending: reviews.filter(r => !r.is_approved).length,
-        approved: reviews.filter(r => r.is_approved).length
-    }
+    const pendingInPage = reviews.filter(r => !r.is_approved).length
+    const approvedInPage = reviews.filter(r => r.is_approved).length
 
     if (loading && reviews.length === 0) {
         return (
@@ -108,23 +113,29 @@ export default function AdminReviewList() {
 
     return (
         <div className="px-6">
-            {/* Statisztikák */}
+            {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
-                    <div className="text-2xl font-bold text-yellow-700">{statusCounts.pending}</div>
+                    <div className="text-2xl font-bold text-yellow-700">
+                        {filters.status === 'pending' ? total : pendingInPage}
+                    </div>
                     <div className="text-sm text-yellow-600">Moderálásra vár</div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <div className="text-2xl font-bold text-green-700">{statusCounts.approved}</div>
+                    <div className="text-2xl font-bold text-green-700">
+                        {filters.status === 'approved' ? total : approvedInPage}
+                    </div>
                     <div className="text-sm text-green-600">Jóváhagyott</div>
                 </div>
                 <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
                     <div className="text-2xl font-bold text-gray-700">{total}</div>
-                    <div className="text-sm text-gray-600">Összes</div>
+                    <div className="text-sm text-gray-600">
+                        {filters.status === 'all' ? 'Összes' : 'A szűrésben'}
+                    </div>
                 </div>
             </div>
 
-            {/* Szűrők */}
+            {/* Filters */}
             <div className="bg-white border border-[var(--border)] rounded-2xl p-4 mb-6">
                 <div className="grid md:grid-cols-4 gap-4">
                     <div>
@@ -135,7 +146,7 @@ export default function AdminReviewList() {
                                 setFilters({ ...filters, status: e.target.value })
                                 setPage(1)
                             }}
-                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-pink-500"
+                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--pink)]"
                         >
                             <option value="all">Összes</option>
                             <option value="pending">Moderálásra vár</option>
@@ -151,7 +162,7 @@ export default function AdminReviewList() {
                                 setFilters({ ...filters, minRating: e.target.value ? Number(e.target.value) : null })
                                 setPage(1)
                             }}
-                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-pink-500"
+                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--pink)]"
                         >
                             <option value="">Összes</option>
                             <option value="5">5 csillag</option>
@@ -170,13 +181,13 @@ export default function AdminReviewList() {
                                 setPage(1)
                             }}
                             placeholder="Keresés vélemény szövegben..."
-                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-pink-500"
+                            className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--pink)]"
                         />
                     </div>
                 </div>
             </div>
 
-            {/* Táblázat */}
+            {/* Table */}
             <div className="hidden md:block">
                 <div className="relative max-w-full overflow-x-auto border border-[var(--border)] rounded-2xl">
                     <table className="min-w-full table-auto text-sm">
@@ -211,9 +222,9 @@ export default function AdminReviewList() {
                                         >
                                             <td className="px-3 py-3 align-middle">
                                                 <Link
-                                                    href={`/p/${review.products.seo_slug}`}
+                                                    href={getProductUrl(review.products)}
                                                     target="_blank"
-                                                    className="font-medium text-pink-600 hover:text-pink-700 flex items-center gap-1"
+                                                    className="font-medium text-[var(--pink)] hover:text-[var(--pink-hover)] flex items-center gap-1"
                                                 >
                                                     {review.products.fo_cim}
                                                     <TbExternalLink className="w-3 h-3" />
@@ -265,7 +276,7 @@ export default function AdminReviewList() {
                                                             </span>
                                                         )}
                                                         {review.is_featured && (
-                                                            <TbStar className="w-4 h-4 text-pink-600" title="Kiemelt" />
+                                                            <TbStar className="w-4 h-4 text-[var(--pink)]" title="Kiemelt" />
                                                         )}
                                                     </div>
                                                 </Link>
@@ -286,7 +297,7 @@ export default function AdminReviewList() {
                                                         <button
                                                             onClick={(e) => handleToggleFeatured(review.id, review.is_featured, e)}
                                                             className={`p-1.5 rounded-md transition-colors ${review.is_featured
-                                                                ? 'text-pink-600 bg-pink-50'
+                                                                ? 'text-[var(--pink)] bg-[var(--cream-pink)]'
                                                                 : 'text-gray-600 hover:bg-gray-50'
                                                                 }`}
                                                             title={review.is_featured ? 'Kiemelés törlése' : 'Kiemelés'}
@@ -311,7 +322,7 @@ export default function AdminReviewList() {
                     </table>
                 </div>
 
-                {/* Lapozás */}
+                {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="mt-4 flex items-center justify-between">
                         <div className="text-sm text-gray-600">
@@ -340,7 +351,7 @@ export default function AdminReviewList() {
                 )}
             </div>
 
-            {/* Mobil lista */}
+            {/* Mobile */}
             <div className="md:hidden flex flex-col gap-2">
                 {reviews.length === 0 ? (
                     <div className="text-center py-8 text-gray-600">
@@ -378,7 +389,7 @@ export default function AdminReviewList() {
                                         </span>
                                     )}
                                     {review.is_featured && (
-                                        <TbStar className="w-4 h-4 text-pink-600" />
+                                        <TbStar className="w-4 h-4 text-[var(--pink)]" />
                                     )}
                                 </div>
                             </Link>
