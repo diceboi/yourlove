@@ -19,6 +19,12 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
   const [dial, setDial] = useState('+36')
   const [touched, setTouched] = useState({})
 
+  // Kupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [couponError, setCouponError] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+
   // számlázási cím állapot
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true)
   const [saveShippingAddress, setSaveShippingAddress] = useState(false)
@@ -57,6 +63,63 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
 
   const update = (k, v) => setForm(s => ({ ...s, [k]: v }))
   const markTouched = (k) => setTouched(s => ({ ...s, [k]: true }))
+
+  // Kupon alkalmazása
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Kérlek add meg a kupon kódot')
+      return
+    }
+
+    setCouponLoading(true)
+    setCouponError('')
+
+    try {
+      // Calculate current order total (termékek + szállítás)
+      // TODO: Ez egy egyszerűsített verzió, a tényleges kosár érték kellene
+      const orderTotal = 10000 // Placeholder - a tényleges kosár összegét be kell szerezni
+      const shippingCost = form.shipping === 'gls' ? 1499 : 999
+
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode,
+          orderTotal,
+          shippingCost
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setAppliedCoupon(data)
+        setCouponError('')
+
+        // Store in localStorage for Summary component
+        localStorage.setItem('appliedCoupon', JSON.stringify(data))
+
+        // Emit event for Summary component
+        window.dispatchEvent(new CustomEvent('couponApplied', { detail: data }))
+
+        toast.success(`Kupon sikeresen alkalmazva!`)
+      } else {
+        setCouponError(data.message || 'Érvénytelen kuponkód')
+        setAppliedCoupon(null)
+      }
+    } catch (error) {
+      setCouponError('Hiba történt a kupon ellenőrzése során')
+      setAppliedCoupon(null)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setCouponCode('')
+    setAppliedCoupon(null)
+    setCouponError('')
+  }
 
   // --- Telefonszám parse a DB-ből (06, +36, stb. levágás) ---
   function parsePhoneFromDB(phone) {
@@ -111,19 +174,19 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
     if (zip.length !== 4) { setCityOptions([]); return }
 
     let stop = false
-    ;(async () => {
-      try {
-        setZipLoading(true)
-        const res = await fetch(`/api/zip?zip=${zip}`)
-        const json = await res.json()
-        if (!stop) {
-          setCityOptions(json.cities || [])
-          if ((json.cities || []).length === 1) update('city', json.cities[0])
+      ; (async () => {
+        try {
+          setZipLoading(true)
+          const res = await fetch(`/api/zip?zip=${zip}`)
+          const json = await res.json()
+          if (!stop) {
+            setCityOptions(json.cities || [])
+            if ((json.cities || []).length === 1) update('city', json.cities[0])
+          }
+        } finally {
+          setZipLoading(false)
         }
-      } finally {
-        setZipLoading(false)
-      }
-    })()
+      })()
     return () => { stop = true }
   }, [form.zip])
 
@@ -256,6 +319,9 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
         billingDifferent: !billingSameAsShipping,
         saveShippingAddress,
         wantsInvoice,
+        // Kupon adatok
+        couponCode: appliedCoupon ? couponCode : null,
+        couponData: appliedCoupon || null,
       })
 
       if (!res?.ok) throw new Error(res?.message || 'Hiba történt a rendelés leadása során.')
@@ -320,8 +386,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
               <div className={`w-8 h-8 mx-auto mb-2 rounded-full border-2 flex items-center justify-center
                 ${done ? 'bg-[var(--green)] border-[var(--green)] text-white'
                   : active ? 'border-[var(--green)] text-[var(--green)]'
-                  : 'border-gray-300 text-gray-400'}`}>
-                {done ? <TbCheck/> : i + 1}
+                    : 'border-gray-300 text-gray-400'}`}>
+                {done ? <TbCheck /> : i + 1}
               </div>
               <div className={`text-sm ${active ? 'font-semibold text-[var(--green)]' : 'text-gray-500'}`}>{label}</div>
               {i < 3 && (
@@ -369,8 +435,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
               type="email"
               placeholder="E-mail*"
               value={form.email}
-              onChange={e=>update('email', e.target.value)}
-              onBlur={()=>markTouched('email')}
+              onChange={e => update('email', e.target.value)}
+              onBlur={() => markTouched('email')}
               required
             />
             {errorText('email') && <p className="text-red-500 text-xs mt-1">{errorText('email')}</p>}
@@ -392,7 +458,6 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                 <option value="+40">🇷🇴 +40</option>
                 <option value="+49">🇩🇪 +49</option>
               </select>
-
               <input
                 className={`input col-span-2 ${errorText('phone') ? 'border-red-500' : ''}`}
                 placeholder={dial === '+36' ? '30 123 4567 vagy 1 234 5678' : 'Telefonszám'}
@@ -451,10 +516,57 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
               ${form.shipping === opt.id ? 'border-[var(--pink)] bg-pink-50' : 'border-gray-200'}`}>
               <div>{opt.name}</div>
               <div className="font-semibold">{opt.price}</div>
-              <input type="radio" name="shipping" value={opt.id} checked={form.shipping===opt.id} onChange={e=>update('shipping', e.target.value)} className="hidden" />
+              <input type="radio" name="shipping" value={opt.id} checked={form.shipping === opt.id} onChange={e => update('shipping', e.target.value)} className="hidden" />
             </label>
           ))}
           {errorText('shipping') && <p className="text-red-500 text-xs mt-1">{errorText('shipping')}</p>}
+
+          {/* Kupon mező */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Kuponkód</h3>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <TbCheck className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="font-mono font-semibold text-green-900">{couponCode}</p>
+                    <p className="text-xs text-green-700">Kupon alkalmazva</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Eltávolítás
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="input flex-1"
+                    placeholder="Add meg a kuponkódot"
+                    disabled={couponLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-4 py-2 bg-[var(--pink)] text-white rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {couponLoading ? 'Ellenőrzés...' : 'Alkalmazás'}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="text-red-600 text-sm">{couponError}</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -519,9 +631,9 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                 className={`input ${errorText('zip') ? 'border-red-500' : ''} w-full`}
                 placeholder="Irányítószám"
                 value={form.zip}
-                onChange={e=>update('zip', e.target.value.replace(/\D/g, '').slice(0,4))}
+                onChange={e => update('zip', e.target.value.replace(/\D/g, '').slice(0, 4))}
                 inputMode="numeric"
-                onBlur={()=>markTouched('zip')}
+                onBlur={() => markTouched('zip')}
               />
               {errorText('zip') && <p className="text-red-500 text-xs mt-1">{errorText('zip')}</p>}
             </div>
@@ -530,9 +642,9 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
               <select
                 className={`input col-span-2 ${errorText('city') ? 'border-red-500' : ''} w-full`}
                 value={form.city}
-                onChange={e=>update('city', e.target.value)}
+                onChange={e => update('city', e.target.value)}
                 disabled={zipLoading}
-                onBlur={()=>markTouched('city')}
+                onBlur={() => markTouched('city')}
               >
                 <option value="">{zipLoading ? 'Települések betöltése…' : 'Válassz várost'}</option>
                 {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
@@ -542,8 +654,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                 className={`input col-span-2 ${errorText('city') ? 'border-red-500' : ''}`}
                 placeholder={zipLoading ? 'Betöltés…' : 'Város'}
                 value={form.city}
-                onChange={e=>update('city', e.target.value)}
-                onBlur={()=>markTouched('city')}
+                onChange={e => update('city', e.target.value)}
+                onBlur={() => markTouched('city')}
                 disabled={zipLoading}
               />
             )}
@@ -555,8 +667,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
               className={`input ${errorText('address') ? 'border-red-500' : ''} w-full`}
               placeholder="Cím (utca, házszám)"
               value={form.address}
-              onChange={e=>update('address', e.target.value)}
-              onBlur={()=>markTouched('address')}
+              onChange={e => update('address', e.target.value)}
+              onBlur={() => markTouched('address')}
             />
             {errorText('address') && <p className="text-red-500 text-xs mt-1">{errorText('address')}</p>}
           </div>
@@ -660,9 +772,9 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                     className={`input ${errorText('billing_zip') ? 'border-red-500' : ''} w-full`}
                     placeholder="Irányítószám"
                     value={form.billing_zip}
-                    onChange={e=>update('billing_zip', e.target.value.replace(/\D/g, '').slice(0,4))}
+                    onChange={e => update('billing_zip', e.target.value.replace(/\D/g, '').slice(0, 4))}
                     inputMode="numeric"
-                    onBlur={()=>markTouched('billing_zip')}
+                    onBlur={() => markTouched('billing_zip')}
                   />
                   {errorText('billing_zip') && <p className="text-red-500 text-xs mt-1">{errorText('billing_zip')}</p>}
                 </div>
@@ -671,8 +783,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                   className={`input col-span-2 ${errorText('billing_city') ? 'border-red-500' : ''}`}
                   placeholder="Város"
                   value={form.billing_city}
-                  onChange={e=>update('billing_city', e.target.value)}
-                  onBlur={()=>markTouched('billing_city')}
+                  onChange={e => update('billing_city', e.target.value)}
+                  onBlur={() => markTouched('billing_city')}
                 />
                 {errorText('billing_city') && <p className="text-red-500 text-xs mt-1 col-span-3">{errorText('billing_city')}</p>}
               </div>
@@ -682,8 +794,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
                   className={`input ${errorText('billing_address') ? 'border-red-500' : ''} w-full`}
                   placeholder="Cím (utca, házszám)"
                   value={form.billing_address}
-                  onChange={e=>update('billing_address', e.target.value)}
-                  onBlur={()=>markTouched('billing_address')}
+                  onChange={e => update('billing_address', e.target.value)}
+                  onBlur={() => markTouched('billing_address')}
                 />
                 {errorText('billing_address') && <p className="text-red-500 text-xs mt-1">{errorText('billing_address')}</p>}
               </div>
@@ -709,6 +821,20 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
           <p><strong>Telefon:</strong> {`${dial} ${form.phone}`}</p>
           <p><strong>Szállítási mód:</strong> {form.shipping || '–'}</p>
 
+          {/* Alkalmazott kupon megjelenítés */}
+          {appliedCoupon && (
+            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="font-semibold text-green-900">Alkalmazott kupon</p>
+              <p className="font-mono text-sm">{couponCode}</p>
+              {appliedCoupon.discountAmount > 0 && (
+                <p className="text-sm text-green-700">Kedvezmény: -{appliedCoupon.discountAmount.toLocaleString('hu-HU')} Ft</p>
+              )}
+              {appliedCoupon.shippingDiscount > 0 && (
+                <p className="text-sm text-green-700">Ingyenes szállítás</p>
+              )}
+            </div>
+          )}
+
           <div className="mt-3">
             <p className="font-semibold">Szállítási cím</p>
             <p>{form.zip} {form.city}</p>
@@ -716,26 +842,26 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
           </div>
 
           <div className="mt-3">
-          <p className="font-semibold">Számlázási adatok</p>
-          {wantsInvoice && form.company_name && (
-            <p><strong>Cégnév:</strong> {form.company_name}</p>
-          )}
-          {wantsInvoice && form.company_tax_number && (
-            <p><strong>Adószám:</strong> {form.company_tax_number}</p>
-          )}
+            <p className="font-semibold">Számlázási adatok</p>
+            {wantsInvoice && form.company_name && (
+              <p><strong>Cégnév:</strong> {form.company_name}</p>
+            )}
+            {wantsInvoice && form.company_tax_number && (
+              <p><strong>Adószám:</strong> {form.company_tax_number}</p>
+            )}
 
-          {billingSameAsShipping ? (
-            <>
-              <p>{form.zip} {form.city}</p>
-              <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
-            </>
-          ) : (
-            <>
-              <p>{form.billing_zip} {form.billing_city}</p>
-              <p>{form.billing_address}{form.billing_address_extra && `, ${form.billing_address_extra}`}</p>
-            </>
-          )}
-        </div>
+            {billingSameAsShipping ? (
+              <>
+                <p>{form.zip} {form.city}</p>
+                <p>{form.address}{form.address_extra && `, ${form.address_extra}`}</p>
+              </>
+            ) : (
+              <>
+                <p>{form.billing_zip} {form.billing_city}</p>
+                <p>{form.billing_address}{form.billing_address_extra && `, ${form.billing_address_extra}`}</p>
+              </>
+            )}
+          </div>
 
 
           <textarea

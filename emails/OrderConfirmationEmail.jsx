@@ -35,6 +35,8 @@ export default function OrderConfirmationEmail({
   wantsInvoice,
   companyName,
   companyTaxNumber,
+  couponCode,
+  couponDiscount,
 }) {
   const safeTotal =
     typeof total === "number"
@@ -194,6 +196,37 @@ export default function OrderConfirmationEmail({
                         />
                       </td>
                     </tr>
+
+                    {/* K
+
+upon kedvezmény sor */}
+                    {couponCode && couponDiscount > 0 && (
+                      <tr>
+                        <td
+                          style={{
+                            padding: "8px 4px 0 0",
+                            fontSize: "16px",
+                            fontWeight: 600,
+                            color: "#9ec775",
+                          }}
+                        >
+                          Kupon ({couponCode})
+                        </td>
+                        <td style={{ paddingTop: "8px" }} />
+                        <td
+                          style={{
+                            padding: "8px 0 0 4px",
+                            fontSize: "16px",
+                            fontWeight: 600,
+                            textAlign: "right",
+                            color: "#9ec775",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          -{Number(couponDiscount).toLocaleString("hu-HU")} Ft
+                        </td>
+                      </tr>
+                    )}
 
                     {/* Összesen sor */}
                     <tr>
@@ -375,6 +408,8 @@ export function OrderConfirmationEmailPreview() {
       wantsInvoice={true}
       companyName="YourLove Kft."
       companyTaxNumber="12345678-1-12"
+      couponCode="WELCOME10"
+      couponDiscount={2097}
     />
   );
 }

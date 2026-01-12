@@ -7,10 +7,11 @@ const PAGE_SIZE = 12
 
 export default async function BlogPage({ searchParams }) {
   const supabase = await createClient()
+  const params = await searchParams
 
-  const category = (searchParams.category || 'osszes').toLowerCase()
-  const tag = (searchParams.tag || '').toLowerCase().trim()
-  const page = Math.max(1, parseInt(searchParams.page || '1', 10))
+  const category = (params.category || 'osszes').toLowerCase()
+  const tag = (params.tag || '').toLowerCase().trim()
+  const page = Math.max(1, parseInt(params.page || '1', 10))
   const from = (page - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
 

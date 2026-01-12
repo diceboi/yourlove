@@ -22,7 +22,8 @@ import {
   Minus,
   Layout,
   Images,
-  Megaphone
+  Megaphone,
+  Ticket
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -66,6 +67,7 @@ export default function AdminSideMenu() {
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
     { id: "akciok", label: "Akciók", icon: Tag },
+    { id: "kuponok", label: "Kuponok", icon: Ticket },
   ];
 
   const renderBadge = (badge) =>
@@ -89,8 +91,8 @@ export default function AdminSideMenu() {
                 key={item.id}
                 onClick={() => { router.push(`/admin/${item.id}`); setActiveMenu(item.id); }}
                 className={`w-54 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${isActive
-                    ? "bg-[var(--border)] text-gray-900 font-medium"
-                    : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
+                  ? "bg-[var(--border)] text-gray-900 font-medium"
+                  : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -119,8 +121,8 @@ export default function AdminSideMenu() {
                   <button
                     onClick={() => { router.push(`/admin/${item.id}`); setActiveMenu(item.id); }}
                     className={`w-44 flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${isActive
-                        ? "bg-[var(--border)] text-gray-900 font-medium"
-                        : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
+                      ? "bg-[var(--border)] text-gray-900 font-medium"
+                      : "text-gray-600 hover:bg-[var(--grey-bg)] hover:text-gray-900"
                       }`}
                   >
                     <Icon className="w-4 h-4" />

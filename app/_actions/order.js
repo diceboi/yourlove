@@ -10,7 +10,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 function toInt(x) {
   if (x == null) return null
-  const n = Number(String(x).replace(/\s+/g,'').replace(',','.'))
+  const n = Number(String(x).replace(/\s+/g, '').replace(',', '.'))
   return Number.isFinite(n) ? Math.round(n) : null
 }
 
@@ -43,6 +43,8 @@ export async function sendOrderEmail({
   wantsInvoice,
   companyName,
   companyTaxNumber,
+  couponCode,
+  couponDiscount,
 }) {
   await resend.emails.send({
     from: "Rendelés visszaigazolás <info@yourlove.hu>",
@@ -65,6 +67,8 @@ export async function sendOrderEmail({
       wantsInvoice,
       companyName,
       companyTaxNumber,
+      couponCode,
+      couponDiscount,
     }),
   })
 }
@@ -78,7 +82,7 @@ export async function createOrderFromCart(payload) {
   const sb = await createClient()
 
   // 1) user session
-  const { data: { user } } = await sb.auth.getUser().catch(() => ({ data: { user: null }}))
+  const { data: { user } } = await sb.auth.getUser().catch(() => ({ data: { user: null } }))
 
   // 2) kosár
   const cart = await getOrCreateCart()
@@ -92,8 +96,8 @@ export async function createOrderFromCart(payload) {
 
   // 3) kosár tételek
   const { data: items, error: ciErr } = await sb
-  .from('cart_items')
-  .select(`
+    .from('cart_items')
+    .select(`
     id,
     product_id,
     qty,
@@ -104,7 +108,7 @@ export async function createOrderFromCart(payload) {
       termekkep
     )
   `)
-  .eq('cart_id', cart.id)
+    .eq('cart_id', cart.id)
 
 
   if (ciErr) return { ok: false, message: ciErr.message }
@@ -116,14 +120,24 @@ export async function createOrderFromCart(payload) {
     product_name: [it.product?.fo_cim, it.product?.alcim]
       .filter(Boolean)
       .join(" "),
-    product_image: it.product?.termekkep || null,  // <-- ÚJ
+    product_image: it.product?.termekkep || null,
     qty: toInt(it.qty) || 1,
     unit_price_huf: toInt(it.unit_price_huf) || 0,
     line_total_huf: (toInt(it.unit_price_huf) || 0) * (toInt(it.qty) || 1),
   }))
 
+  let order_total = lines.reduce((s, l) => s + l.line_total_huf, 0)
+  let coupon_discount = 0
+  let shipping_discount = 0
 
-  const order_total = lines.reduce((s, l) => s + l.line_total_huf, 0)
+  // Kupon feldolgozása
+  if (payload.couponCode && payload.couponData) {
+    coupon_discount = payload.couponData.discountAmount || 0
+    shipping_discount = payload.couponData.shippingDiscount || 0
+
+    // Levon az összegből
+    order_total = Math.max(0, order_total - coupon_discount)
+  }
 
   // --- Címek összerakása (szállítási + számlázási) ---
 
@@ -177,6 +191,9 @@ export async function createOrderFromCart(payload) {
     company_name: payload.company_name || null,
     company_tax_number: payload.company_tax_number || null,
     wants_vat_invoice: !!payload.wantsInvoice,
+    // Kupon mezők
+    coupon_code: payload.couponCode || null,
+    coupon_discount: coupon_discount,
   }
 
   const { data: created, error: oErr } = await sb
@@ -191,8 +208,8 @@ export async function createOrderFromCart(payload) {
   const oiRows = lines.map(l => ({
     order_id: created.id,
     product_id: l.product_id,
-    name: l.product_name,  
-    image_url: l.product_image, 
+    name: l.product_name,
+    image_url: l.product_image,
     qty: l.qty,
     unit_price_huf: l.unit_price_huf,
     vat_rate: 27,
@@ -205,6 +222,21 @@ export async function createOrderFromCart(payload) {
   // 7) kosár lezárása
   await sb.from('carts').update({ status: 'converted' }).eq('id', cart.id)
   await sb.from('cart_items').delete().eq('cart_id', cart.id)
+
+  // 7b) Kupon használat naplózása
+  if (payload.couponCode && payload.couponData?.coupon?.id) {
+    try {
+      const { logCouponUse } = await import('./coupon')
+      await logCouponUse(
+        payload.couponData.coupon.id,
+        created.id,
+        user?.id || null,
+        coupon_discount + shipping_discount
+      )
+    } catch (e) {
+      console.error('Kupon használat naplózása sikertelen:', e)
+    }
+  }
 
   // 8) cím mentése user_addresses-be, ha kérte és be van jelentkezve
   try {
@@ -274,6 +306,8 @@ export async function createOrderFromCart(payload) {
     wantsInvoice: !!payload.wantsInvoice,
     companyName: payload.company_name || null,
     companyTaxNumber: payload.company_tax_number || null,
+    couponCode: payload.couponCode || null,
+    couponDiscount: coupon_discount || 0,
   })
 
   return { ok: true, orderId: displayOrderId }
