@@ -51,6 +51,7 @@ export default function SiteLayout({ children, termekszerkeszto, termekkategoria
             {pontok}
           </body>
         </AdminMenuContextProvider>
+      </MenuContextProvider>
     </html>
   );
 }
