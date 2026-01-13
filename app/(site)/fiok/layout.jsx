@@ -32,6 +32,7 @@ export default function AccountLayout({ children }) {
             <MenuLink href="/fiok/cimadatok" active={pathname === "/fiok/cimadatok"} label="Címadatok" />
             <MenuLink href="/fiok/rendelesek" active={pathname === "/fiok/rendelesek"} label="Korábbi rendelések" />
             <MenuLink href="/fiok/kedvencek" active={pathname === "/fiok/kedvencek"} label="Kedvencek" />
+            <MenuLink href="/fiok/pontok" active={pathname === "/fiok/pontok"} label="Pontjaim" />
             <div className="my-2 h-px bg-gray-200" />
             <MenuLink href="/fiok/jelszo" active={pathname === "/fiok/jelszo"} label="Jelszó változtatás" />
             <MenuLink href="/fiok/visszakuldes" active={pathname === "/fiok/visszakuldes"} label="Termék visszaküldés" />

@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getOrCreateCart } from '@/app/_actions/cart'
 import { Resend } from "resend"
 import OrderConfirmationEmail from '../../emails/OrderConfirmationEmail'
+import { calculatePointsForOrder, awardPoints, redeemPoints } from '@/app/_actions/loyalty-points'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -45,32 +46,46 @@ export async function sendOrderEmail({
   companyTaxNumber,
   couponCode,
   couponDiscount,
+  pointsEarned = 0,
+  pointsRedeemed = 0,
 }) {
-  await resend.emails.send({
-    from: "Rendelés visszaigazolás <info@yourlove.hu>",
-    to,
-    subject: `Rendelés visszaigazolás – #${orderId}`,
-    react: OrderConfirmationEmail({
-      name,
-      orderId,
-      items,
-      total,
-      orderDate,
-      billingName,
-      billingZip,
-      billingCity,
-      billingAddress,
-      shippingMethod,
-      shippingZip,
-      shippingCity,
-      shippingAddress,
-      wantsInvoice,
-      companyName,
-      companyTaxNumber,
-      couponCode,
-      couponDiscount,
-    }),
-  })
+  try {
+    const result = await resend.emails.send({
+      from: "Rendelés visszaigazolás <info@yourlove.hu>",
+      to,
+      subject: `Rendelés visszaigazolás – #${orderId}`,
+      react: OrderConfirmationEmail({
+        name,
+        orderId,
+        items,
+        total,
+        orderDate,
+        billingName,
+        billingZip,
+        billingCity,
+        billingAddress,
+        shippingMethod,
+        shippingZip,
+        shippingCity,
+        shippingAddress,
+        wantsInvoice,
+        companyName,
+        companyTaxNumber,
+        couponCode,
+        couponDiscount,
+        pointsEarned,
+        pointsRedeemed,
+      }),
+    })
+
+    console.log('✅ Email sent successfully:', result)
+    return { ok: true, result }
+  } catch (error) {
+    console.error('❌ Email sending failed:', error)
+    console.error('Email details:', { to, orderId, name })
+    // Don't throw - order should succeed even if email fails
+    return { ok: false, error: error.message }
+  }
 }
 
 /* -------------------------------------------------
@@ -137,6 +152,14 @@ export async function createOrderFromCart(payload) {
 
     // Levon az összegből
     order_total = Math.max(0, order_total - coupon_discount)
+  }
+
+  // Pontbeváltás feldolgozása
+  let points_discount = 0
+  if (payload.pointsToRedeem && payload.pointsDiscount) {
+    points_discount = payload.pointsDiscount || 0
+    // Levon az összegből
+    order_total = Math.max(0, order_total - points_discount)
   }
 
   // --- Címek összerakása (szállítási + számlázási) ---
@@ -241,7 +264,7 @@ export async function createOrderFromCart(payload) {
   // 8) cím mentése user_addresses-be, ha kérte és be van jelentkezve
   try {
     if (user && payload.saveShippingAddress) {
-      const line1 = shippingAddressLine
+      const line1 = shipping_address
 
       // meglévő címek betöltése userhez
       const { data: existing, error: addrErr } = await sb
@@ -278,10 +301,54 @@ export async function createOrderFromCart(payload) {
   }
 
   /* -------------------------------------------------
+     8) LOYALTY POINTS feldolgozása
+  -------------------------------------------------- */
+
+  let pointsEarned = 0
+
+  try {
+    // Ha a user beváltott pontokat, akkor azt levonjuk
+    if (user && payload.pointsToRedeem && payload.pointsToRedeem > 0) {
+      await redeemPoints(
+        user.id,
+        created.id,
+        payload.pointsToRedeem,
+        'Pontbeváltás rendelésnél'
+      )
+    }
+
+    // Számítsuk ki és írjuk jóvá a pontokat (ha be van jelentkezve)
+    if (user) {
+      // A pontokat az eredeti order_total alapján számítjuk (kupon és pontlevonás előtt)
+      const originalTotal = lines.reduce((s, l) => s + l.line_total_huf, 0)
+      const pointsResult = await calculatePointsForOrder(originalTotal)
+
+      if (pointsResult.ok && pointsResult.points > 0) {
+        pointsEarned = pointsResult.points
+        await awardPoints(
+          user.id,
+          created.id,
+          pointsEarned,
+          `Vásárlás után (Rendelés #${String(created.order_number).padStart(6, '0')})`
+        )
+      }
+    }
+  } catch (e) {
+    console.error('Pontok feldolgozása sikertelen:', e)
+    // nem dobunk hibát, az order attól még sikeres marad
+  }
+
+  /* -------------------------------------------------
      9) EMAIL KÜLDÉS – immár a végleges billing címmel
   -------------------------------------------------- */
 
   const displayOrderId = String(created.order_number).padStart(6, '0')
+
+  // Log email data for debugging
+  console.log('📧 Preparing to send email...')
+  console.log('Email to:', payload.email)
+  console.log('Points earned:', pointsEarned)
+  console.log('Order ID:', displayOrderId)
 
   await sendOrderEmail({
     to: payload.email,
@@ -308,6 +375,8 @@ export async function createOrderFromCart(payload) {
     companyTaxNumber: payload.company_tax_number || null,
     couponCode: payload.couponCode || null,
     couponDiscount: coupon_discount || 0,
+    pointsEarned: pointsEarned || 0,
+    pointsRedeemed: payload.pointsToRedeem || 0,
   })
 
   return { ok: true, orderId: displayOrderId }

@@ -25,7 +25,8 @@ import {
   Images,
   Megaphone,
   Ticket,
-  MessageSquare
+  MessageSquare,
+  Coins
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -64,10 +65,11 @@ export default function AdminSideMenu() {
     { id: "blogcimkek", label: "Blog cimkék", icon: Minus },
     { id: "oldalkeszito", label: "Oldalak", icon: Layout },
     { id: "sliderek", label: "Sliderek", icon: Images },
-    { id: "hirdetesek", label: "Hirdetések", icon: Megaphone },
+    { id: "hirdetesek", label: "Hírdetőfal", icon: Megaphone },
     { id: "rendelesek", label: "Rendelések", icon: ShoppingCart },
     { id: "vasarlok", label: "Vásárlók", icon: Users },
     { id: "felhasznalok", label: "Felhasználók", icon: UserCog },
+    { id: "pontok", label: "Pontok", icon: Coins },
     { id: "fizetesek", label: "Fizetések", icon: CreditCard },
     { id: "akciok", label: "Akciók", icon: Tag },
     { id: "kuponok", label: "Kuponok", icon: Ticket },

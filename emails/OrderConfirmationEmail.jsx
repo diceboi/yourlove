@@ -37,6 +37,8 @@ export default function OrderConfirmationEmail({
   companyTaxNumber,
   couponCode,
   couponDiscount,
+  pointsEarned = 0,
+  pointsRedeemed = 0,
 }) {
   const safeTotal =
     typeof total === "number"
@@ -197,9 +199,7 @@ export default function OrderConfirmationEmail({
                       </td>
                     </tr>
 
-                    {/* K
-
-upon kedvezmény sor */}
+                    {/* Kupon kedvezmény sor */}
                     {couponCode && couponDiscount > 0 && (
                       <tr>
                         <td
@@ -224,6 +224,96 @@ upon kedvezmény sor */}
                           }}
                         >
                           -{Number(couponDiscount).toLocaleString("hu-HU")} Ft
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* Pontok felhasználása sor */}
+                    {pointsRedeemed > 0 && (
+                      <tr>
+                        <td colSpan={3} style={{ paddingTop: "12px" }}>
+                          <div
+                            style={{
+                              backgroundColor: "#f0fdf4",
+                              border: "1px solid #22c55e",
+                              borderRadius: "8px",
+                              padding: "12px",
+                              textAlign: "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                color: "#111111",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              ✨ Hűségpontok felhasználva
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "18px",
+                                fontWeight: 700,
+                                color: "#22c55e",
+                              }}
+                            >
+                              -{pointsRedeemed} pont
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#767676",
+                                marginTop: "4px",
+                              }}
+                            >
+                              ebből a rendelésből
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* Pontok megszerzése sor */}
+                    {pointsEarned > 0 && (
+                      <tr>
+                        <td colSpan={3} style={{ paddingTop: "12px" }}>
+                          <div
+                            style={{
+                              backgroundColor: "#f0f9ff",
+                              border: "1px solid #b60c3f",
+                              borderRadius: "8px",
+                              padding: "12px",
+                              textAlign: "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                color: "#111111",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              🎉 Gratulálunk!
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "18px",
+                                fontWeight: 700,
+                                color: "#b60c3f",
+                              }}
+                            >
+                              +{pointsEarned} hűségpont
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#767676",
+                                marginTop: "4px",
+                              }}
+                            >
+                              a következő vásárlásodhoz
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}

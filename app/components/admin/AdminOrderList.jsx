@@ -91,9 +91,21 @@ export default function AdminOrderList({ orders }) {
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select(`
+        *,
+        loyalty_points_transactions(
+          points_spent
+        )
+      `)
       .order("created_at", { ascending: false });
-    if (!error) setRows(data || []);
+
+    if (!error) {
+      const ordersWithPoints = data?.map(order => ({
+        ...order,
+        points_redeemed: order.loyalty_points_transactions?.reduce((sum, t) => sum + (t.points_spent || 0), 0) || 0
+      })) || []
+      setRows(ordersWithPoints);
+    }
   }, [supabase]);
 
   // custom event figyelése (új event név: admin:orders:changed)
@@ -109,15 +121,13 @@ export default function AdminOrderList({ orders }) {
     const term = searchTerm.toLowerCase();
 
     return (rows || []).filter((o) => {
-      const fullName = `${o.customer_firstname || ""} ${
-        o.customer_lastname || ""
-      }`
+      const fullName = `${o.customer_firstname || ""} ${o.customer_lastname || ""
+        }`
         .trim()
         .toLowerCase();
       const contact = `${o.email || ""} ${o.phone || ""}`.toLowerCase();
-      const addr = `${o.billing_zip || ""} ${o.billing_city || ""} ${
-        o.billing_address || ""
-      }`.toLowerCase();
+      const addr = `${o.billing_zip || ""} ${o.billing_city || ""} ${o.billing_address || ""
+        }`.toLowerCase();
       const notes = (o.notes || "").toLowerCase();
       const status = (o.status || "").toLowerCase();
 
@@ -158,7 +168,7 @@ export default function AdminOrderList({ orders }) {
                 <th className="text-left font-semibold px-3 py-3">
                   Rendelés
                 </th>
-                
+
                 {/* Státusz – mindig látszik */}
                 <th className="text-left font-semibold px-3 py-3">
                   Státusz
@@ -184,6 +194,11 @@ export default function AdminOrderList({ orders }) {
                   Összeg
                 </th>
 
+                {/* Pontok – lg-től */}
+                <th className="text-left font-semibold px-3 py-3 hidden lg:table-cell">
+                  Pontok
+                </th>
+
                 {/* Műveletek – fix szélesség */}
                 <th className="text-right font-semibold px-3 py-3 w-[140px] min-w-[140px]">
                   Műveletek
@@ -194,23 +209,20 @@ export default function AdminOrderList({ orders }) {
             <tbody className="bg-white">
               {filtered.map((order) => {
                 const fullName =
-                  `${order.customer_firstname || ""} ${
-                    order.customer_lastname || ""
-                  }`.trim() || "Vendég";
+                  `${order.customer_firstname || ""} ${order.customer_lastname || ""
+                    }`.trim() || "Vendég";
                 const { text: statusText, className: statusClass } =
                   statusLabel(order.status);
 
                 const contactSummary =
                   order.email || order.phone
-                    ? `${order.email || ""}${
-                        order.email && order.phone ? " • " : ""
-                      }${order.phone || ""}`
+                    ? `${order.email || ""}${order.email && order.phone ? " • " : ""
+                    }${order.phone || ""}`
                     : "—";
 
                 const addressSummary =
                   order.billing_city || order.billing_address
-                    ? `${order.billing_zip || ""} ${
-                        order.billing_city || ""
+                    ? `${order.billing_zip || ""} ${order.billing_city || ""
                       }, ${order.billing_address || ""}`.trim()
                     : "";
 
@@ -268,6 +280,17 @@ export default function AdminOrderList({ orders }) {
                       </span>
                     </td>
 
+                    {/* Pontok – lg+ */}
+                    <td className="px-3 py-3 align-middle hidden lg:table-cell">
+                      {order.points_redeemed > 0 ? (
+                        <span className="text-purple-600 font-semibold">
+                          -{order.points_redeemed} pont
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+
                     {/* Műveletek */}
                     <td className="pl-3 align-middle w-[140px] min-w-[140px]">
                       <div className="flex items-center justify-end gap-0 h-[56px]">
@@ -301,9 +324,8 @@ export default function AdminOrderList({ orders }) {
       <div className="md:hidden px-3 space-y-2">
         {filtered.map((order) => {
           const fullName =
-            `${order.customer_firstname || ""} ${
-              order.customer_lastname || ""
-            }`.trim() || "Vendég";
+            `${order.customer_firstname || ""} ${order.customer_lastname || ""
+              }`.trim() || "Vendég";
           const { text: statusText, className: statusClass } = statusLabel(
             order.status
           );
@@ -311,15 +333,13 @@ export default function AdminOrderList({ orders }) {
 
           const contactSummary =
             order.email || order.phone
-              ? `${order.email || ""}${
-                  order.email && order.phone ? " • " : ""
-                }${order.phone || ""}`
+              ? `${order.email || ""}${order.email && order.phone ? " • " : ""
+              }${order.phone || ""}`
               : "—";
 
           const addressSummary =
             order.billing_city || order.billing_address
-              ? `${order.billing_zip || ""} ${order.billing_city || ""}, ${
-                  order.billing_address || ""
+              ? `${order.billing_zip || ""} ${order.billing_city || ""}, ${order.billing_address || ""
                 }`.trim()
               : "";
 
@@ -380,6 +400,15 @@ export default function AdminOrderList({ orders }) {
                     <span className="text-gray-500">—</span>
                   )}
                 </div>
+
+                {order.points_redeemed > 0 && (
+                  <>
+                    <div className="text-gray-500">Felhasznált pontok</div>
+                    <div className="font-semibold text-purple-600">
+                      -{order.points_redeemed} pont
+                    </div>
+                  </>
+                )}
 
                 {order.notes ? (
                   <>

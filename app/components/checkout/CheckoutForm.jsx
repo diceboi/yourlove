@@ -25,6 +25,10 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
   const [couponError, setCouponError] = useState('')
   const [couponLoading, setCouponLoading] = useState(false)
 
+  // Pontbeváltás state
+  const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [pointsDiscount, setPointsDiscount] = useState(0)
+
   // számlázási cím állapot
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true)
   const [saveShippingAddress, setSaveShippingAddress] = useState(false)
@@ -119,6 +123,8 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
     setCouponCode('')
     setAppliedCoupon(null)
     setCouponError('')
+    localStorage.removeItem('appliedCoupon')
+    window.dispatchEvent(new Event('couponRemoved'))
   }
 
   // --- Telefonszám parse a DB-ből (06, +36, stb. levágás) ---
@@ -167,6 +173,27 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
       // address_extra marad, mert a line1-ben lehet minden
     }))
   }, [defaultAddress])
+
+  // --- PONTBEVÁLTÁS EVENT LISTENER ---
+  useEffect(() => {
+    const handlePointsRedemption = (e) => {
+      setPointsToRedeem(e.detail.pointsToRedeem || 0)
+      setPointsDiscount(e.detail.discountAmount || 0)
+    }
+
+    const handlePointsRedemptionRemoved = () => {
+      setPointsToRedeem(0)
+      setPointsDiscount(0)
+    }
+
+    window.addEventListener('pointsRedemption', handlePointsRedemption)
+    window.addEventListener('pointsRedemptionRemoved', handlePointsRedemptionRemoved)
+
+    return () => {
+      window.removeEventListener('pointsRedemption', handlePointsRedemption)
+      window.removeEventListener('pointsRedemptionRemoved', handlePointsRedemptionRemoved)
+    }
+  }, [])
 
   // --- ZIP autokitöltés ---
   useEffect(() => {
@@ -322,6 +349,9 @@ export default function CheckoutStepper({ initialProfile, savedAddresses = [], d
         // Kupon adatok
         couponCode: appliedCoupon ? couponCode : null,
         couponData: appliedCoupon || null,
+        // Pontbeváltás adatok
+        pointsToRedeem: pointsToRedeem || 0,
+        pointsDiscount: pointsDiscount || 0,
       })
 
       if (!res?.ok) throw new Error(res?.message || 'Hiba történt a rendelés leadása során.')
